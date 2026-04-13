@@ -1,0 +1,669 @@
+{
+  "project_id": "building_vh1z9chps72913h9",
+  "mapping_data": {
+    "zone_2d77gq12yp4uaz32": {
+      "zone_name": "餐厅",
+      "components": [
+        {
+          "id": "item_3xzpk29lsbivpcr7",
+          "name": "吸顶灯",
+          "type": "item"
+        },
+        {
+          "id": "item_kyr5xc2wrz0wef3e",
+          "name": "吸顶灯",
+          "type": "item"
+        },
+        {
+          "id": "item_lz9p21g20m23kfj6",
+          "name": "吸顶灯",
+          "type": "item"
+        },
+        {
+          "id": "item_hsapyxt0uxo4zip8",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_ilzhh8r521yrg5wl",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_lu06clncbojjkp92",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_n2akfu6z8fpt2upn",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_on9s0gc5pv3ox3s4",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_onkj9b0av4xmgi2g",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_r0n9x845dfskx26g",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_t4n690ccfnknj7d7",
+          "name": "餐椅",
+          "type": "item"
+        },
+        {
+          "id": "item_wj824qydqqrhre8t",
+          "name": "餐桌",
+          "type": "item"
+        },
+        {
+          "id": "item_6msz2zrht2vw4uxe",
+          "name": "斗柜",
+          "type": "item"
+        },
+        {
+          "id": "item_k1typxqe78awq53q",
+          "name": "小型绿植",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_ig7y13t6j1jhh6bt": {
+      "zone_name": "入口",
+      "components": [
+        {
+          "id": "door_eetu5y1buz8vo1g9",
+          "name": "门",
+          "type": "door"
+        },
+        {
+          "id": "door_nynd2ikvxxdy9kch",
+          "name": "门",
+          "type": "door"
+        }
+      ]
+    },
+    "zone_g3n9cravedqogu8i": {
+      "zone_name": "车库 1",
+      "components": [
+        {
+          "id": "item_zzao9lvlzhbncprv",
+          "name": "杠铃架",
+          "type": "item"
+        },
+        {
+          "id": "item_o77sixshrvfurir9",
+          "name": "冰箱",
+          "type": "item"
+        },
+        {
+          "id": "window_oc22p8ao8lmx9a6g",
+          "name": "窗户",
+          "type": "window"
+        },
+        {
+          "id": "window_pzvf6er2y35p5gka",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_w9cq41mupk00bq2x": {
+      "zone_name": "车库 2",
+      "components": [
+        {
+          "id": "door_frb1cohdnhdrdevh",
+          "name": "门",
+          "type": "door"
+        },
+        {
+          "id": "window_761dcxu5hpjlm3z3",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_a9s6m7j1vi1t7msv": {
+      "zone_name": "客用卫生间",
+      "components": [
+        {
+          "id": "window_6fh4swgbjf7z28hs",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_ijeu8ymtxhxc6xy8": {
+      "zone_name": "客卧",
+      "components": [
+        {
+          "id": "item_dfqu2amo69v8x2dq",
+          "name": "吊扇",
+          "type": "item"
+        },
+        {
+          "id": "item_u9hca7qlom67w7ts",
+          "name": "双人床",
+          "type": "item"
+        },
+        {
+          "id": "item_9nep4tx0q6vb1e42",
+          "name": "办公椅",
+          "type": "item"
+        },
+        {
+          "id": "item_dch3o2vd0cni1cbq",
+          "name": "办公桌",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_gfx8fyun3ojk3cn5": {
+      "zone_name": "厨房",
+      "components": [
+        {
+          "id": "item_at5cj3onqzdxn85k",
+          "name": "吸顶灯",
+          "type": "item"
+        },
+        {
+          "id": "item_nacaauoz7lxrpytw",
+          "name": "吸顶灯",
+          "type": "item"
+        },
+        {
+          "id": "item_q06ovdgypp1i3b7i",
+          "name": "冰箱",
+          "type": "item"
+        },
+        {
+          "id": "item_hlkcpmv0qvwtt2ry",
+          "name": "整体厨房",
+          "type": "item"
+        },
+        {
+          "id": "item_aylrrzrrmlaml0al",
+          "name": "厨房吊柜",
+          "type": "item"
+        },
+        {
+          "id": "item_u7vmg3o77t8pjr2t",
+          "name": "厨房吊柜",
+          "type": "item"
+        },
+        {
+          "id": "item_71dvyrof0qlvm1tb",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_dsjvjah3n97l2a4m",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_e3v93tm8mgoonb6s",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_l2anc9l48mq5mbge",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_pdq3te4l7aplspm1",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_t7f6jprbsxgtskgc",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_ryt0te30rfk8dqns",
+          "name": "炉灶",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_9o40yzmvf32v2bew": {
+      "zone_name": "儿童卫生间",
+      "components": [
+        {
+          "id": "window_8e4c5mei3bpwfe2v",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_0mflfucaeqme4ndg": {
+      "zone_name": "儿童卧室 1",
+      "components": [
+        {
+          "id": "item_1cycxsnu8z3gb1ub",
+          "name": "吊扇",
+          "type": "item"
+        },
+        {
+          "id": "item_7gz8uq8dk96767h7",
+          "name": "落地灯",
+          "type": "item"
+        },
+        {
+          "id": "item_rqcfwexxulwpb0jj",
+          "name": "圆形地毯",
+          "type": "item"
+        },
+        {
+          "id": "window_d8cyodrfdils1dmo",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_b7jg5hdg1dnggfe4": {
+      "zone_name": "儿童卧室 2",
+      "components": [
+        {
+          "id": "item_jhnjntl72g79v4t1",
+          "name": "吊扇",
+          "type": "item"
+        },
+        {
+          "id": "window_ea59qk0ze9jdt85v",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_u9hr1o4kuqn8c7wt": {
+      "zone_name": "露台",
+      "components": [
+        {
+          "id": "item_fdvl09wkguzruxle",
+          "name": "茶几",
+          "type": "item"
+        },
+        {
+          "id": "item_xyqdzww3227h5xzv",
+          "name": "餐桌",
+          "type": "item"
+        },
+        {
+          "id": "door_bke8eemh0xf7gls2",
+          "name": "门 3",
+          "type": "door"
+        },
+        {
+          "id": "item_rkq1ziusz6njoi1q",
+          "name": "沙发",
+          "type": "item"
+        },
+        {
+          "id": "window_1pqppe4c3y1uemnr",
+          "name": "窗户",
+          "type": "window"
+        },
+        {
+          "id": "window_li01p88af1ffd66i",
+          "name": "窗户",
+          "type": "window"
+        },
+        {
+          "id": "window_oph1uqysgsc37okp",
+          "name": "窗户",
+          "type": "window"
+        },
+        {
+          "id": "window_xn6puupcubsv0pob",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_5j3yms8is2bz1ukw": {
+      "zone_name": "洗衣房",
+      "components": [
+        {
+          "id": "item_7n83e1hol3y7ngbt",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "window_20wje8t1eie1fnhy",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_0hvwuqj341mqdkw6": {
+      "zone_name": "客厅",
+      "components": [
+        {
+          "id": "item_jqcmu5b06tjc5c8c",
+          "name": "茶几",
+          "type": "item"
+        },
+        {
+          "id": "item_183myf4mw4zlzfw5",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_4eunjokn28ygwip4",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_5obpjoae56j3k2kc",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_5vb60o05x2fd8p1o",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_euhui0kberybqd4r",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_hvq4ecp0hlemkfz3",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_j3muqpdsfne86wm0",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_janztudfpnhl1pux",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_lfzkv1o9dbtsdvgz",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_mb6icnclt9qvbdiw",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_nge79611lhd0r3lb",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_pmm6spodxr484ig5",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_pps55oedmm43azll",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_qswvbz6azk47ojdg",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_upvmrisf41zk7hus",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_yf5ruyxjb23soedm",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_zqg8nb37mz2ok2qr",
+          "name": "门",
+          "type": "item"
+        },
+        {
+          "id": "item_9gypcpv11im6udgf",
+          "name": "配电箱",
+          "type": "item"
+        },
+        {
+          "id": "item_k6ji80pvq0nkgkb7",
+          "name": "配电箱",
+          "type": "item"
+        },
+        {
+          "id": "item_wicdltv24goy8azw",
+          "name": "壁挂充电器",
+          "type": "item"
+        },
+        {
+          "id": "item_vijooy21z52a23yc",
+          "name": "抽油烟机",
+          "type": "item"
+        },
+        {
+          "id": "item_mwxeim3drf3tt56b",
+          "name": "室内绿植",
+          "type": "item"
+        },
+        {
+          "id": "item_pgbtsleig8folt11",
+          "name": "厨房置物架",
+          "type": "item"
+        },
+        {
+          "id": "item_eaqkua5wqjyy5q5j",
+          "name": "休闲椅",
+          "type": "item"
+        },
+        {
+          "id": "item_gl3ol3ip488lhqyn",
+          "name": "沙发",
+          "type": "item"
+        },
+        {
+          "id": "item_scm6gxjowklpzjt9",
+          "name": "沙发",
+          "type": "item"
+        },
+        {
+          "id": "item_p98h0tvv2a1l7sy4",
+          "name": "台灯",
+          "type": "item"
+        },
+        {
+          "id": "item_rasfdbj702sq8lsh",
+          "name": "台灯",
+          "type": "item"
+        },
+        {
+          "id": "item_7suwedffl8tbzkvo",
+          "name": "温控器",
+          "type": "item"
+        },
+        {
+          "id": "item_bl92epopk9wsp2dt",
+          "name": "温控器",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_ls102j2iounuxprb": {
+      "zone_name": "主卫",
+      "components": [
+        {
+          "id": "item_yu9x24b3ujf9jkg0",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_giquhr05mye91ghr",
+          "name": "马桶",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_xwvi4lsckpyb2nt9": {
+      "zone_name": "主卧",
+      "components": [
+        {
+          "id": "item_w0ruuwffjouezhdj",
+          "name": "床头柜",
+          "type": "item"
+        },
+        {
+          "id": "item_y0k5fwbmgbjvzeuy",
+          "name": "床头柜",
+          "type": "item"
+        },
+        {
+          "id": "item_m8k0radc317ocnh7",
+          "name": "吊扇",
+          "type": "item"
+        },
+        {
+          "id": "item_66hn6u50usr93elf",
+          "name": "双人床",
+          "type": "item"
+        },
+        {
+          "id": "item_9lx73fuf8xojqapr",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_assl2s58bsos3uhe",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_c3ozm2nimg01zz6t",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_mazwdekuas59pns9",
+          "name": "筒灯",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_lua1xd2tvqtwm04k": {
+      "zone_name": "主衣帽间",
+      "components": [
+        {
+          "id": "item_28ys5mztr0j70svc",
+          "name": "衣柜",
+          "type": "item"
+        },
+        {
+          "id": "item_jdpzxf7lho9zgwh9",
+          "name": "衣柜",
+          "type": "item"
+        },
+        {
+          "id": "item_nj5mzgax7ct8wyfv",
+          "name": "斗柜",
+          "type": "item"
+        },
+        {
+          "id": "item_3hsx1461ji1zf3ew",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_ks3yyt87pqzbzxbb",
+          "name": "筒灯",
+          "type": "item"
+        }
+      ]
+    },
+    "zone_73gb68ks4h8x1a61": {
+      "zone_name": "办公室",
+      "components": [
+        {
+          "id": "item_ki8y6r148fc76hum",
+          "name": "吊扇",
+          "type": "item"
+        },
+        {
+          "id": "item_y8pdpgkjienj80gf",
+          "name": "衣帽架",
+          "type": "item"
+        },
+        {
+          "id": "door_bwtm9lmnvz8469qk",
+          "name": "门",
+          "type": "door"
+        },
+        {
+          "id": "door_skgau827qdml0ntf",
+          "name": "门",
+          "type": "door"
+        },
+        {
+          "id": "item_ndw7abgq6dlsjaou",
+          "name": "办公椅",
+          "type": "item"
+        },
+        {
+          "id": "item_nsd359f0qrmf769t",
+          "name": "办公桌",
+          "type": "item"
+        },
+        {
+          "id": "item_6fmeggd3xes4e4ra",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_dswmt6z2b4x4440f",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_e2v0nqo6ziygfk7g",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "item_pgxmspvbemj6prh6",
+          "name": "筒灯",
+          "type": "item"
+        },
+        {
+          "id": "window_jel63f5cjo47e8o4",
+          "name": "窗户",
+          "type": "window"
+        },
+        {
+          "id": "window_ut8xtexssxd99n36",
+          "name": "窗户",
+          "type": "window"
+        }
+      ]
+    },
+    "zone_vhsu5276u0u9o9a8": {
+      "zone_name": "泳池",
+      "components": []
+    }
+  }
+}
