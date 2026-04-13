@@ -1,0 +1,16 @@
+{
+  "name": "@pascal-app/editor-assets",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "pascal-editor-assets": "./bin/pascal-editor-assets.mjs"
+  },
+  "files": [
+    "bin",
+    "public"
+  ],
+  "scripts": {
+    "sync": "node ./bin/pascal-editor-assets.mjs sync"
+  }
+}
