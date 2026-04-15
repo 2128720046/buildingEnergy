@@ -2,12 +2,23 @@ import { createServer } from 'node:http'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import 'dotenv/config'
+import mysql from 'mysql2/promise'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const port = Number(process.env.PORT ?? 3010)
 const host = process.env.HOST ?? '0.0.0.0'
 const dataRoot = resolve(__dirname, process.env.EDITOR_API_DATA_DIR ?? './data/projects')
 const allowOrigin = process.env.EDITOR_API_ALLOW_ORIGIN ?? '*'
+
+const pool = mysql.createPool({
+  host: '62.234.36.130',
+  port: 3306,
+  user: 'root',
+  password: process.env.DB_PASSWORD,
+  database: 'campus_energy_db',
+  charset: 'utf8mb4'
+})
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
@@ -67,41 +78,6 @@ function isSceneGraph(scene) {
   if (!scene.nodes || typeof scene.nodes !== 'object') return false
   if (!Array.isArray(scene.rootNodeIds)) return false
   return true
-}
-
-function seededNumber(input, offset) {
-  let value = 0
-
-  for (let index = 0; index < input.length; index += 1) {
-    value += input.charCodeAt(index) * (index + 1 + offset)
-  }
-
-  return value
-}
-
-function buildEnergyPayload(projectId, componentId) {
-  const seed = seededNumber(`${projectId}:${componentId}`, 7)
-  const series = Array.from({ length: 8 }, (_, index) => {
-    const base = ((seed % 80) + index * 11) % 42
-    return {
-      time: `${String(index * 3).padStart(2, '0')}:00`,
-      value: Number((base / 3.5 + 1.2).toFixed(2)),
-    }
-  })
-
-  return {
-    projectId,
-    componentId,
-    binding: {
-      bindingType: 'mock-meter',
-      bindingTargetId: `meter-${componentId}`,
-    },
-    currentPower: Number((((seed % 90) / 10) + 1.4).toFixed(1)),
-    todayUsage: Number((((seed % 320) / 4) + 9).toFixed(1)),
-    monthUsage: Number((((seed % 2800) / 2.2) + 180).toFixed(1)),
-    series,
-    updatedAt: new Date().toISOString(),
-  }
 }
 
 async function loadProjectScene(projectId) {
@@ -179,7 +155,7 @@ const server = createServer(async (request, response) => {
 
     if (request.method === 'GET' && energyMatch?.[1] && energyMatch?.[2]) {
       const projectId = energyMatch[1]
-      const componentId = energyMatch[2]
+      const componentId = energyMatch[2] // 这里前端传过来的 componentId 就当作数据库里的 device_id
 
       if (!isValidProjectId(projectId)) {
         sendJson(response, 400, { error: 'Invalid projectId' })
@@ -191,10 +167,49 @@ const server = createServer(async (request, response) => {
         return
       }
 
-      sendJson(response, 200, buildEnergyPayload(projectId, componentId))
+      // 👇 新增：执行真实的数据库查询
+      try {
+        const [rows] = await pool.execute(
+          `SELECT item_type, item_name, electricity_kwh,operating_status ,light_brightness_pct,fridge_temp_setting,motor_speed_level,stove_power_level,electric_voltage_v,electric_current_a,seat_temp_setting
+           From appliances
+           WHERE item_id = ?`,
+          [componentId] 
+        )
+
+        if (rows.length === 0) {
+          sendJson(response, 404, { error: '未找到该设备的数据' })
+          return
+        }
+
+        // 将查到的第一条真实数据以 JSON 格式返回
+        sendJson(response, 200, rows[0])
+      } catch (dbError) {
+        console.error('[editor-api] Database query failed', dbError)
+        sendJson(response, 500, { error: '数据库查询异常' })
+      }
       return
     }
-
+    const zoneMatch = requestUrl.pathname.match(/^\/projects\/([a-zA-Z0-9_-]+)\/energy\/zones\/([a-zA-Z0-9_:-]+)$/)
+if (request.method === 'GET' && zoneMatch?.[1] && zoneMatch?.[2]) {
+  const zoneId = zoneMatch[2]
+  try {
+    const [rows] = await pool.execute(
+      `SELECT total_electricity_kwh, indoor_temp, indoor_humidity ,occupancy_density
+       FROM rooms
+       WHERE room_id = ?`,
+      [zoneId]
+      
+    )
+    if (rows.length === 0) {
+      sendJson(response, 404, { error: '未找到该房间的数据' })
+      return
+    }
+    sendJson(response, 200, { type: 'zone', ...rows[0] }) // 返回时带上类型标识，方便前端区分
+  } catch (error) {
+    sendJson(response, 500, { error: '数据库查询异常' })
+  }
+  return
+}
     const projectMatch = requestUrl.pathname.match(/^\/projects\/([a-zA-Z0-9_-]+)\/scene$/)
     if (!projectMatch?.[1]) {
       sendJson(response, 404, { error: 'Not found' })
