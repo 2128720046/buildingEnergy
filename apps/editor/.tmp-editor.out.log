@@ -1,0 +1,49 @@
+[pascal-editor-assets] synced assets to C:\Users\yxzdt\Desktop\服务外包\buildingEnergy\apps\editor\public
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3002
+- Network:       http://26.174.124.60:3002
+- Environments: .env.local
+✓ Ready in 764ms
+Creating turbopack project {
+  dir: 'C:\\Users\\yxzdt\\Desktop\\服务外包\\buildingEnergy\\apps\\editor',
+  testMode: true
+}
+- Experiments (use with caution):
+  · serverActions
+
+○ Compiling / ...
+ GET / 500 in 78ms (next.js: 71ms, application-code: 8ms)
+ GET / 500 in 72ms (next.js: 65ms, application-code: 6ms)
+ GET / 500 in 94ms (next.js: 88ms, application-code: 6ms)
+ GET / 500 in 84ms (next.js: 78ms, application-code: 6ms)
+ GET / 500 in 73ms (next.js: 67ms, application-code: 6ms)
+ GET / 500 in 75ms (next.js: 69ms, application-code: 6ms)
+ GET / 500 in 72ms (next.js: 66ms, application-code: 6ms)
+ GET / 500 in 68ms (next.js: 61ms, application-code: 7ms)
+ GET / 500 in 75ms (next.js: 68ms, application-code: 6ms)
+ GET / 500 in 69ms (next.js: 63ms, application-code: 6ms)
+ GET / 500 in 78ms (next.js: 72ms, application-code: 6ms)
+ GET / 500 in 70ms (next.js: 64ms, application-code: 6ms)
+ GET / 500 in 69ms (next.js: 63ms, application-code: 6ms)
+ GET / 500 in 72ms (next.js: 66ms, application-code: 6ms)
+ GET / 500 in 72ms (next.js: 65ms, application-code: 7ms)
+ GET / 500 in 92ms (next.js: 85ms, application-code: 6ms)
+ GET / 500 in 74ms (next.js: 68ms, application-code: 6ms)
+ GET / 500 in 74ms (next.js: 67ms, application-code: 7ms)
+ GET / 500 in 72ms (next.js: 64ms, application-code: 7ms)
+ GET / 500 in 78ms (next.js: 71ms, application-code: 7ms)
+ GET / 500 in 93ms (next.js: 86ms, application-code: 7ms)
+ GET / 500 in 85ms (next.js: 78ms, application-code: 6ms)
+ GET / 500 in 105ms (next.js: 95ms, application-code: 10ms)
+ GET / 500 in 98ms (next.js: 88ms, application-code: 10ms)
+ GET / 500 in 73ms (next.js: 65ms, application-code: 7ms)
+ GET / 500 in 82ms (next.js: 75ms, application-code: 7ms)
+ GET / 500 in 92ms (next.js: 86ms, application-code: 7ms)
+ GET / 500 in 75ms (next.js: 67ms, application-code: 8ms)
+ GET / 500 in 88ms (next.js: 80ms, application-code: 8ms)
+ GET / 500 in 78ms (next.js: 70ms, application-code: 8ms)
+✓ Compiled in 752ms
+ GET / 200 in 1013ms (next.js: 365ms, application-code: 647ms)
+✓ Compiled in 720ms
+ GET / 200 in 547ms (next.js: 219ms, application-code: 327ms)
+ GET / 200 in 74ms (next.js: 5ms, application-code: 69ms)

@@ -4,12 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build:workspace-deps": "bun run --cwd ../../packages/core build && bun run --cwd ../../packages/viewer build",
     "sync-assets": "node ../../packages/editor-assets/bin/pascal-editor-assets.mjs sync --target ./public --clean",
-    "dev": "bun run sync-assets && dotenv -e ./.env.local --override -- next dev --port 3002",
-    "build": "bun run sync-assets && dotenv -e ./.env.local --override -- next build",
+    "dev": "bun run build:workspace-deps && bun run sync-assets && dotenv -e ./.env.local --override -- next dev --port 3002",
+    "build": "bun run build:workspace-deps && bun run sync-assets && dotenv -e ./.env.local --override -- next build",
     "start": "bun run sync-assets && next start",
     "lint": "biome lint",
-    "check-types": "bun run sync-assets && next typegen && tsc --noEmit"
+    "check-types": "bun run build:workspace-deps && bun run sync-assets && next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@number-flow/react": "^0.5.14",

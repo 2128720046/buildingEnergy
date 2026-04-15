@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import { loadComponentEnergy, type EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import { buildHostQueryModel, type HostQueryFilters } from '@/features/energy-insights/lib/host-query'
+import type { HostBusinessModule } from '@/features/host-shell/lib/host-modules'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
 
 const DEFAULT_PROJECT_ID = 'local-editor'
@@ -45,6 +46,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [energyError, setEnergyError] = useState<string | null>(null)
   const [insightsCollapsed, setInsightsCollapsed] = useState(false)
   const [insightsWidth, setInsightsWidth] = useState(432)
+  const [activeModule, setActiveModule] = useState<HostBusinessModule>('query')
   const [filters, setFilters] = useState<HostQueryFilters>({
     keyword: '',
     levelId: '',
@@ -190,6 +192,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           </div>
 
           <HostRightRail
+            activeModule={activeModule}
             energyError={energyError}
             energyLoading={energyLoading}
             energyResult={energyResult}
@@ -198,6 +201,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
             levelOptions={queryModel.levelOptions}
             onFiltersChange={setFilters}
             onInsightsCollapsedChange={setInsightsCollapsed}
+            onModuleChange={setActiveModule}
             onProjectChange={setProjectId}
             onWidthChange={setInsightsWidth}
             projectId={projectId}

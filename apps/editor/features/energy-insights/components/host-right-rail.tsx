@@ -2,16 +2,25 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ModelingSelectionSnapshot } from '@pascal-app/editor/modeling'
-import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
+import EnergyQueryPanel from '@/features/energy-insights/components/energy-query-panel'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
-import type { HostFilterOption, HostQueryFilters, HostQueryResult } from '@/features/energy-insights/lib/host-query'
+import type {
+  HostFilterOption,
+  HostQueryFilters,
+  HostQueryResult,
+} from '@/features/energy-insights/lib/host-query'
+import {
+  HOST_BUSINESS_MODULES,
+  type HostBusinessModule,
+} from '@/features/host-shell/lib/host-modules'
+import OperationsOverviewPanel from '@/features/operations/components/operations-overview-panel'
 import { cn } from '@/lib/utils'
 
 type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'paused' | 'error'
 
 const COLLAPSED_INSIGHTS_WIDTH = 8
 const MIN_INSIGHTS_WIDTH = 420
-const MAX_INSIGHTS_WIDTH = 620
+const MAX_INSIGHTS_WIDTH = 680
 const TOGGLE_GAP = 12
 const TOGGLE_SIZE = 32
 
@@ -19,7 +28,11 @@ function ToggleChevronIcon({ collapsed }: { collapsed: boolean }) {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
       <path
-        d={collapsed ? 'M14.5 5.5 8.5 12l6 6M18.5 5.5 12.5 12l6 6' : 'M9.5 5.5l6 6-6 6M5.5 5.5l6 6-6 6'}
+        d={
+          collapsed
+            ? 'M14.5 5.5 8.5 12l6 6M18.5 5.5 12.5 12l6 6'
+            : 'M9.5 5.5l6 6-6 6M5.5 5.5l6 6-6 6'
+        }
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -30,20 +43,30 @@ function ToggleChevronIcon({ collapsed }: { collapsed: boolean }) {
   )
 }
 
-function SpinnerIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" fill="none" opacity="0.2" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    </svg>
-  )
-}
+function ModuleIcon({ active, kind }: { active: boolean; kind: HostBusinessModule }) {
+  if (kind === 'query') {
+    return (
+      <svg
+        aria-hidden="true"
+        className={cn('h-4 w-4', active ? 'text-white' : 'text-slate-400')}
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M5 18.25h14v1.5H5Zm1.25-2.5V9.63h1.5v6.12Zm5 0V5.75h1.5v10Zm5 0v-3.5h1.5v3.5Z"
+          fill="currentColor"
+        />
+      </svg>
+    )
+  }
 
-function QueryIcon() {
   return (
-    <svg aria-hidden="true" className="h-4 w-4 text-sky-200" viewBox="0 0 24 24">
+    <svg
+      aria-hidden="true"
+      className={cn('h-4 w-4', active ? 'text-white' : 'text-slate-400')}
+      viewBox="0 0 24 24"
+    >
       <path
-        d="M10 4.75a5.25 5.25 0 1 0 3.17 9.43l4.58 4.57 1.06-1.06-4.57-4.58A5.25 5.25 0 0 0 10 4.75Zm0 1.5a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm8.72 9.97-2.47 2.47-.9-.9 2.47-2.47.9.9Z"
+        d="M12 3.75 4.5 7.5v9L12 20.25l7.5-3.75v-9ZM6 8.41l6-3 6 3V16L12 19l-6-3Zm2 2.09h8V12H8Zm0 3.5h5v1.5H8Z"
         fill="currentColor"
       />
     </svg>
@@ -66,6 +89,7 @@ function RailToggleButton({ collapsed, onClick }: { collapsed: boolean; onClick:
 }
 
 export interface HostRightRailProps {
+  activeModule: HostBusinessModule
   energyError: string | null
   energyLoading: boolean
   energyResult: EnergyApiResponse | null
@@ -74,6 +98,7 @@ export interface HostRightRailProps {
   levelOptions: HostFilterOption[]
   onFiltersChange: (nextFilters: HostQueryFilters) => void
   onInsightsCollapsedChange: (collapsed: boolean) => void
+  onModuleChange: (module: HostBusinessModule) => void
   onProjectChange: (projectId: string) => void
   onWidthChange: (width: number) => void
   projectId: string
@@ -87,6 +112,7 @@ export interface HostRightRailProps {
 }
 
 export default function HostRightRail({
+  activeModule,
   energyError,
   energyLoading,
   energyResult,
@@ -95,6 +121,7 @@ export default function HostRightRail({
   levelOptions,
   onFiltersChange,
   onInsightsCollapsedChange,
+  onModuleChange,
   onProjectChange,
   onWidthChange,
   projectId,
@@ -113,7 +140,7 @@ export default function HostRightRail({
 
   const selectedComponentId = selection?.selectedIds[0] ?? null
   const selectedComponentName =
-    (selection?.selectedNodes[0]?.name as string | undefined) ?? selectedComponentId ?? '未选择构件'
+    (selection?.selectedNodes[0]?.name as string | undefined) ?? selectedComponentId ?? '未选中构件'
 
   const clampWidth = useCallback((nextWidth: number) => {
     return Math.max(MIN_INSIGHTS_WIDTH, Math.min(MAX_INSIGHTS_WIDTH, nextWidth))
@@ -199,177 +226,117 @@ export default function HostRightRail({
           />
         ) : (
           <section className="dark relative flex h-full w-full flex-col overflow-hidden border-l border-border bg-sidebar text-sidebar-foreground">
-              <div
-                className="absolute inset-y-0 -left-3 z-20 flex w-6 cursor-col-resize items-center justify-center"
-                onPointerDown={handleResizeStart}
-                title="拖拽调整右侧业务栏宽度"
-              >
-                <div className="h-8 w-1 rounded-full bg-neutral-500" />
-              </div>
+            <div
+              className="absolute inset-y-0 -left-3 z-20 flex w-6 cursor-col-resize items-center justify-center"
+              onPointerDown={handleResizeStart}
+              title="拖拽调整右侧业务栏宽度"
+            >
+              <div className="h-8 w-1 rounded-full bg-neutral-500" />
+            </div>
 
-              <div className="border-border/50 border-b px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-semibold tracking-[0.28em] text-sidebar-foreground/55 uppercase">
-                      宿主业务区
-                    </div>
-                    <h2 className="mt-2 font-semibold text-lg text-sidebar-foreground">能耗与查询面板</h2>
-
-                    <div className="mt-3">
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-                          当前项目
-                        </span>
-                        <select
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 outline-none focus:border-white/20"
-                          disabled={projectLoading || projectOptions.length === 0}
-                          onChange={(event) => onProjectChange(event.target.value)}
-                          value={projectId}
-                        >
-                          {projectOptions.length === 0 ? (
-                            <option value={projectId}>{projectLoading ? '正在加载项目...' : projectId}</option>
-                          ) : (
-                            projectOptions.map((option) => (
-                              <option key={option.projectId} value={option.projectId}>
-                                {option.projectId}
-                              </option>
-                            ))
-                          )}
-                        </select>
-                      </label>
-                    </div>
+            <div className="border-border/50 border-b px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-semibold tracking-[0.28em] text-sidebar-foreground/55 uppercase">
+                    Host Workspace
                   </div>
+                  <h2 className="mt-2 font-semibold text-lg text-sidebar-foreground">业务工作台</h2>
+                  <p className="mt-2 max-w-md text-xs leading-5 text-slate-300">
+                    在建模主画布旁接入能耗查询和智慧运维两个业务模块，形成可扩展的前端宿主壳。
+                  </p>
 
-                  <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-sidebar-foreground/85">
-                    保存状态：{saveStatus}
+                  <div className="mt-3">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
+                        当前项目
+                      </span>
+                      <select
+                        className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 outline-none focus:border-white/20"
+                        disabled={projectLoading || projectOptions.length === 0}
+                        onChange={(event) => onProjectChange(event.target.value)}
+                        value={projectId}
+                      >
+                        {projectOptions.length === 0 ? (
+                          <option value={projectId}>
+                            {projectLoading ? '正在加载项目...' : projectId}
+                          </option>
+                        ) : (
+                          projectOptions.map((option) => (
+                            <option key={option.projectId} value={option.projectId}>
+                              {option.projectId}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </label>
                   </div>
+                </div>
+
+                <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-sidebar-foreground/85">
+                  保存状态：{saveStatus}
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-auto p-4">
-                <section className="rounded-2xl border border-white/10 bg-white/6 p-4">
-                  <HostFilterBar
-                    filters={filters}
-                    levelOptions={levelOptions}
-                    onFiltersChange={onFiltersChange}
-                    resultCount={queryResults.length}
-                    variant="sidebar"
-                    zoneOptions={zoneOptions}
-                  />
-                </section>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {HOST_BUSINESS_MODULES.map((module) => {
+                  const isActive = activeModule === module.key
 
-                <section className="mt-4 rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
-                  <div className="text-xs text-slate-300">当前选中的组件</div>
-                  <div className="mt-2 break-all rounded-xl border border-white/10 bg-slate-950/45 px-3 py-3 font-mono text-sm text-white">
-                    {selectedComponentId ?? '还没有选中任何组件'}
-                  </div>
-                  <div className="mt-3 text-xs text-slate-300">组件名称：{selectedComponentName}</div>
-
-                  {energyLoading ? (
-                    <div className="mt-4 inline-flex items-center gap-2 text-sm text-sky-200">
-                      <SpinnerIcon />
-                      正在向后端查询组件能耗...
-                    </div>
-                  ) : null}
-
-                  {energyError ? (
-                    <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-500/10 px-3 py-3 text-sm text-rose-100">
-                      能耗查询失败：{energyError}
-                    </div>
-                  ) : null}
-
-                  {energyResult ? (
-                    <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
-                      <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-                        <div className="text-xs text-slate-300">当前功率</div>
-                        <div className="mt-2 text-2xl font-semibold text-white">
-                          {energyResult.currentPower.toFixed(1)}
-                          <span className="ml-1 text-sm text-slate-300">kW</span>
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-                        <div className="text-xs text-slate-300">今日耗电</div>
-                        <div className="mt-2 text-2xl font-semibold text-white">
-                          {energyResult.todayUsage.toFixed(1)}
-                          <span className="ml-1 text-sm text-slate-300">kWh</span>
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-                        <div className="text-xs text-slate-300">本月累计</div>
-                        <div className="mt-2 text-2xl font-semibold text-white">
-                          {energyResult.monthUsage.toFixed(1)}
-                          <span className="ml-1 text-sm text-slate-300">kWh</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {energyResult?.series?.length ? (
-                    <div className="mt-4 space-y-2">
-                      {energyResult.series.map((point) => (
-                        <div
-                          className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-sm"
-                          key={point.time}
+                  return (
+                    <button
+                      className={cn(
+                        'rounded-2xl border px-3 py-3 text-left transition-all',
+                        isActive
+                          ? 'border-sky-400/30 bg-sky-500/15 shadow-[0_14px_30px_rgba(14,165,233,0.14)]'
+                          : 'border-white/10 bg-black/10 hover:bg-white/8',
+                      )}
+                      key={module.key}
+                      onClick={() => onModuleChange(module.key)}
+                      type="button"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ModuleIcon active={isActive} kind={module.key} />
+                        <span
+                          className={cn(
+                            'font-medium text-sm',
+                            isActive ? 'text-white' : 'text-slate-200',
+                          )}
                         >
-                          <span className="text-slate-300">{point.time}</span>
-                          <span className="font-medium text-white">{point.value.toFixed(2)} kWh</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-
-                <section className="mt-4 rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <QueryIcon />
-                    <h3 className="font-semibold text-white">筛选查询结果</h3>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {queryResults.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/30 px-4 py-5 text-sm text-slate-300">
-                        当前筛选条件下没有命中结果。
+                          {module.label}
+                        </span>
                       </div>
-                    ) : (
-                      queryResults.map((result) => (
-                        <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4" key={result.componentId}>
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="truncate font-medium text-white">{result.componentName}</div>
-                              <div className="mt-1 text-xs text-slate-300">
-                                {result.componentTypeLabel} · {result.levelName} · {result.zoneName}
-                              </div>
-                            </div>
-                            <span
-                              className={cn(
-                                'rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                                result.energyLevel === '高'
-                                  ? 'bg-rose-500/20 text-rose-100'
-                                  : result.energyLevel === '中'
-                                    ? 'bg-amber-500/20 text-amber-100'
-                                    : 'bg-emerald-500/20 text-emerald-100',
-                              )}
-                            >
-                              {result.energyLevel}能耗
-                            </span>
-                          </div>
-
-                          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                            <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
-                              <div className="text-xs text-slate-400">预测能耗</div>
-                              <div className="mt-1 font-semibold text-white">{result.predictedUsage} kWh</div>
-                            </div>
-                            <div className="rounded-xl border border-white/8 bg-black/10 px-3 py-2">
-                              <div className="text-xs text-slate-400">统计区间</div>
-                              <div className="mt-1 font-semibold text-white">{result.timeRangeLabel}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </section>
+                      <div className="mt-2 text-xs leading-5 text-slate-300">{module.description}</div>
+                    </button>
+                  )
+                })}
               </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-auto p-4">
+              {activeModule === 'query' ? (
+                <EnergyQueryPanel
+                  energyError={energyError}
+                  energyLoading={energyLoading}
+                  energyResult={energyResult}
+                  filters={filters}
+                  levelOptions={levelOptions}
+                  onFiltersChange={onFiltersChange}
+                  projectId={projectId}
+                  queryResults={queryResults}
+                  selectedComponentId={selectedComponentId}
+                  selectedComponentName={selectedComponentName}
+                  zoneOptions={zoneOptions}
+                />
+              ) : (
+                <OperationsOverviewPanel
+                  energyResult={energyResult}
+                  projectId={projectId}
+                  queryResults={queryResults}
+                  saveStatus={saveStatus}
+                  selectedComponentId={selectedComponentId}
+                  selectedComponentName={selectedComponentName}
+                />
+              )}
+            </div>
           </section>
         )}
       </div>
