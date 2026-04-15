@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ModelingSelectionSnapshot } from '@pascal-app/editor/modeling'
+import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyQueryPanel from '@/features/energy-insights/components/energy-query-panel'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type {
@@ -9,20 +10,15 @@ import type {
   HostQueryFilters,
   HostQueryResult,
 } from '@/features/energy-insights/lib/host-query'
-import {
-  HOST_BUSINESS_MODULES,
-  type HostBusinessModule,
-} from '@/features/host-shell/lib/host-modules'
-import OperationsOverviewPanel from '@/features/operations/components/operations-overview-panel'
 import { cn } from '@/lib/utils'
-
-type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'paused' | 'error'
 
 const COLLAPSED_INSIGHTS_WIDTH = 8
 const MIN_INSIGHTS_WIDTH = 420
 const MAX_INSIGHTS_WIDTH = 680
 const TOGGLE_GAP = 12
 const TOGGLE_SIZE = 32
+
+type RailView = 'agent' | 'query'
 
 function ToggleChevronIcon({ collapsed }: { collapsed: boolean }) {
   return (
@@ -43,43 +39,13 @@ function ToggleChevronIcon({ collapsed }: { collapsed: boolean }) {
   )
 }
 
-function ModuleIcon({ active, kind }: { active: boolean; kind: HostBusinessModule }) {
-  if (kind === 'query') {
-    return (
-      <svg
-        aria-hidden="true"
-        className={cn('h-4 w-4', active ? 'text-white' : 'text-slate-400')}
-        viewBox="0 0 24 24"
-      >
-        <path
-          d="M5 18.25h14v1.5H5Zm1.25-2.5V9.63h1.5v6.12Zm5 0V5.75h1.5v10Zm5 0v-3.5h1.5v3.5Z"
-          fill="currentColor"
-        />
-      </svg>
-    )
-  }
-
-  return (
-    <svg
-      aria-hidden="true"
-      className={cn('h-4 w-4', active ? 'text-white' : 'text-slate-400')}
-      viewBox="0 0 24 24"
-    >
-      <path
-        d="M12 3.75 4.5 7.5v9L12 20.25l7.5-3.75v-9ZM6 8.41l6-3 6 3V16L12 19l-6-3Zm2 2.09h8V12H8Zm0 3.5h5v1.5H8Z"
-        fill="currentColor"
-      />
-    </svg>
-  )
-}
-
 function RailToggleButton({ collapsed, onClick }: { collapsed: boolean; onClick: () => void }) {
   return (
     <div className="inline-flex h-8 items-stretch overflow-hidden rounded-xl border border-border bg-background/90 shadow-2xl backdrop-blur-md">
       <button
         className="flex w-8 items-center justify-center text-muted-foreground/80 transition-colors hover:bg-white/8 hover:text-foreground/90"
         onClick={onClick}
-        title={collapsed ? '展开右侧业务栏' : '收起右侧业务栏'}
+        title={collapsed ? '展开右侧工作台' : '收起右侧工作台'}
         type="button"
       >
         <ToggleChevronIcon collapsed={collapsed} />
@@ -88,8 +54,32 @@ function RailToggleButton({ collapsed, onClick }: { collapsed: boolean; onClick:
   )
 }
 
+function RailTabButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      className={cn(
+        'flex-1 rounded-2xl px-3 py-2 text-sm transition-colors',
+        active
+          ? 'bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.14)]'
+          : 'text-slate-600 hover:bg-white hover:text-slate-950',
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
+  )
+}
+
 export interface HostRightRailProps {
-  activeModule: HostBusinessModule
   energyError: string | null
   energyLoading: boolean
   energyResult: EnergyApiResponse | null
@@ -98,21 +88,15 @@ export interface HostRightRailProps {
   levelOptions: HostFilterOption[]
   onFiltersChange: (nextFilters: HostQueryFilters) => void
   onInsightsCollapsedChange: (collapsed: boolean) => void
-  onModuleChange: (module: HostBusinessModule) => void
-  onProjectChange: (projectId: string) => void
   onWidthChange: (width: number) => void
   projectId: string
-  projectLoading: boolean
-  projectOptions: Array<{ projectId: string; updatedAt?: string }>
   queryResults: HostQueryResult[]
-  saveStatus: SaveStatus
   selection: ModelingSelectionSnapshot | null
   width: number
   zoneOptions: HostFilterOption[]
 }
 
 export default function HostRightRail({
-  activeModule,
   energyError,
   energyLoading,
   energyResult,
@@ -121,14 +105,9 @@ export default function HostRightRail({
   levelOptions,
   onFiltersChange,
   onInsightsCollapsedChange,
-  onModuleChange,
-  onProjectChange,
   onWidthChange,
   projectId,
-  projectLoading,
-  projectOptions,
   queryResults,
-  saveStatus,
   selection,
   width,
   zoneOptions,
@@ -137,10 +116,13 @@ export default function HostRightRail({
   const isResizing = useRef(false)
   const isExpanding = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [activeView, setActiveView] = useState<RailView>('query')
 
   const selectedComponentId = selection?.selectedIds[0] ?? null
   const selectedComponentName =
-    (selection?.selectedNodes[0]?.name as string | undefined) ?? selectedComponentId ?? '未选中构件'
+    (selection?.selectedNodes[0]?.name as string | undefined) ??
+    selectedComponentId ??
+    '未选中构件'
 
   const clampWidth = useCallback((nextWidth: number) => {
     return Math.max(MIN_INSIGHTS_WIDTH, Math.min(MAX_INSIGHTS_WIDTH, nextWidth))
@@ -222,97 +204,52 @@ export default function HostRightRail({
           <div
             className="h-full w-full cursor-col-resize transition-colors hover:bg-primary/20"
             onPointerDown={handleExpandStart}
-            title="展开右侧业务栏"
+            title="展开右侧工作台"
           />
         ) : (
-          <section className="dark relative flex h-full w-full flex-col overflow-hidden border-l border-border bg-sidebar text-sidebar-foreground">
+          <aside className="relative flex h-full w-full flex-col overflow-hidden border-l border-slate-200 bg-[linear-gradient(180deg,#fbfdff_0%,#f3f7fc_100%)] text-slate-950">
             <div
               className="absolute inset-y-0 -left-3 z-20 flex w-6 cursor-col-resize items-center justify-center"
               onPointerDown={handleResizeStart}
-              title="拖拽调整右侧业务栏宽度"
+              title="拖拽调整右侧工作台宽度"
             >
-              <div className="h-8 w-1 rounded-full bg-neutral-500" />
+              <div className="h-8 w-1 rounded-full bg-slate-400" />
             </div>
 
-            <div className="border-border/50 border-b px-4 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-semibold tracking-[0.28em] text-sidebar-foreground/55 uppercase">
-                    Host Workspace
-                  </div>
-                  <h2 className="mt-2 font-semibold text-lg text-sidebar-foreground">业务工作台</h2>
-                  <p className="mt-2 max-w-md text-xs leading-5 text-slate-300">
-                    在建模主画布旁接入能耗查询和智慧运维两个业务模块，形成可扩展的前端宿主壳。
-                  </p>
+            <div className="border-b border-slate-200 px-4 py-4">
+              <div className="text-[11px] font-semibold tracking-[0.28em] text-slate-400 uppercase">
+                Workspace Panel
+              </div>
 
-                  <div className="mt-3">
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-300 uppercase">
-                        当前项目
-                      </span>
-                      <select
-                        className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2 text-sm text-slate-100 outline-none focus:border-white/20"
-                        disabled={projectLoading || projectOptions.length === 0}
-                        onChange={(event) => onProjectChange(event.target.value)}
-                        value={projectId}
-                      >
-                        {projectOptions.length === 0 ? (
-                          <option value={projectId}>
-                            {projectLoading ? '正在加载项目...' : projectId}
-                          </option>
-                        ) : (
-                          projectOptions.map((option) => (
-                            <option key={option.projectId} value={option.projectId}>
-                              {option.projectId}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-sidebar-foreground/85">
-                  保存状态：{saveStatus}
+              <div className="mt-3 rounded-[22px] border border-slate-200 bg-slate-100/80 p-1">
+                <div className="flex gap-1">
+                  <RailTabButton
+                    active={activeView === 'query'}
+                    label="能耗查询"
+                    onClick={() => setActiveView('query')}
+                  />
+                  <RailTabButton
+                    active={activeView === 'agent'}
+                    label="智能体问答"
+                    onClick={() => setActiveView('agent')}
+                  />
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                {HOST_BUSINESS_MODULES.map((module) => {
-                  const isActive = activeModule === module.key
-
-                  return (
-                    <button
-                      className={cn(
-                        'rounded-2xl border px-3 py-3 text-left transition-all',
-                        isActive
-                          ? 'border-sky-400/30 bg-sky-500/15 shadow-[0_14px_30px_rgba(14,165,233,0.14)]'
-                          : 'border-white/10 bg-black/10 hover:bg-white/8',
-                      )}
-                      key={module.key}
-                      onClick={() => onModuleChange(module.key)}
-                      type="button"
-                    >
-                      <div className="flex items-center gap-2">
-                        <ModuleIcon active={isActive} kind={module.key} />
-                        <span
-                          className={cn(
-                            'font-medium text-sm',
-                            isActive ? 'text-white' : 'text-slate-200',
-                          )}
-                        >
-                          {module.label}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-xs leading-5 text-slate-300">{module.description}</div>
-                    </button>
-                  )
-                })}
+                <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                  <div className="text-[11px] tracking-[0.16em] text-slate-400 uppercase">项目</div>
+                  <div className="mt-2 truncate text-sm text-slate-950">{projectId}</div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                  <div className="text-[11px] tracking-[0.16em] text-slate-400 uppercase">选中</div>
+                  <div className="mt-2 truncate text-sm text-slate-950">{selectedComponentName}</div>
+                </div>
               </div>
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto p-4">
-              {activeModule === 'query' ? (
+              {activeView === 'query' ? (
                 <EnergyQueryPanel
                   energyError={energyError}
                   energyLoading={energyLoading}
@@ -327,17 +264,18 @@ export default function HostRightRail({
                   zoneOptions={zoneOptions}
                 />
               ) : (
-                <OperationsOverviewPanel
+                <EnergyAssistantChat
                   energyResult={energyResult}
                   projectId={projectId}
                   queryResults={queryResults}
-                  saveStatus={saveStatus}
                   selectedComponentId={selectedComponentId}
                   selectedComponentName={selectedComponentName}
+                  tone="light"
+                  variant="panel"
                 />
               )}
             </div>
-          </section>
+          </aside>
         )}
       </div>
     </div>

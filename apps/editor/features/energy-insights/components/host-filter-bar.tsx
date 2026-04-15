@@ -66,7 +66,7 @@ export default function HostFilterBar({
     <section
       className={cn(
         isSidebar
-          ? 'rounded-none border-0 bg-transparent p-0 shadow-none backdrop-blur-none'
+          ? 'rounded-none border-0 bg-transparent p-0 shadow-none'
           : 'rounded-[24px] border border-white/70 bg-white/88 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl',
       )}
     >
@@ -75,7 +75,7 @@ export default function HostFilterBar({
           className={cn(
             'flex min-w-[220px] flex-1 items-center gap-2 rounded-2xl px-3 py-2',
             isSidebar
-              ? 'border border-white/10 bg-slate-950/40 text-slate-100'
+              ? 'border border-slate-200 bg-white text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.04)]'
               : 'border border-slate-200/80 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]',
           )}
         >
@@ -84,11 +84,11 @@ export default function HostFilterBar({
             className={cn(
               'w-full bg-transparent text-sm outline-none',
               isSidebar
-                ? 'text-slate-100 placeholder:text-slate-500'
+                ? 'text-slate-700 placeholder:text-slate-400'
                 : 'text-slate-700 placeholder:text-slate-400',
             )}
             onChange={(event) => updateField('keyword', event.target.value)}
-            placeholder="按楼层、房间、构件名称筛选"
+            placeholder="按楼层、房间或构件名称搜索"
             value={filters.keyword}
           />
         </div>
@@ -97,7 +97,7 @@ export default function HostFilterBar({
           className={cn(
             'flex items-center gap-2 rounded-2xl px-3 py-2 text-xs',
             isSidebar
-              ? 'w-fit border border-white/10 bg-white/6 text-slate-300'
+              ? 'w-fit border border-slate-200 bg-slate-50 text-slate-500'
               : 'border border-slate-200/80 bg-slate-50/90 text-slate-500',
           )}
         >
@@ -109,18 +109,25 @@ export default function HostFilterBar({
       <div
         className={cn(
           'mt-3 grid gap-3',
-          isSidebar ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]',
+          isSidebar
+            ? 'grid-cols-1 sm:grid-cols-2'
+            : 'grid-cols-1 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]',
         )}
       >
         <label className="flex flex-col gap-1.5">
-          <span className={cn('text-[11px] font-semibold tracking-[0.18em] uppercase', isSidebar ? 'text-slate-300' : 'text-slate-500')}>
+          <span
+            className={cn(
+              'text-[11px] font-semibold tracking-[0.18em] uppercase',
+              isSidebar ? 'text-slate-500' : 'text-slate-500',
+            )}
+          >
             楼层
           </span>
           <select
             className={cn(
               'rounded-2xl px-3 py-2 text-sm outline-none',
               isSidebar
-                ? 'border border-white/10 bg-slate-950/40 text-slate-100 focus:border-white/20'
+                ? 'border border-slate-200 bg-white text-slate-700 focus:border-slate-400'
                 : 'border border-slate-200/80 bg-white text-slate-700 focus:border-slate-400',
             )}
             onChange={(event) => updateField('levelId', event.target.value)}
@@ -136,14 +143,19 @@ export default function HostFilterBar({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className={cn('text-[11px] font-semibold tracking-[0.18em] uppercase', isSidebar ? 'text-slate-300' : 'text-slate-500')}>
+          <span
+            className={cn(
+              'text-[11px] font-semibold tracking-[0.18em] uppercase',
+              isSidebar ? 'text-slate-500' : 'text-slate-500',
+            )}
+          >
             房间
           </span>
           <select
             className={cn(
               'rounded-2xl px-3 py-2 text-sm outline-none',
               isSidebar
-                ? 'border border-white/10 bg-slate-950/40 text-slate-100 focus:border-white/20'
+                ? 'border border-slate-200 bg-white text-slate-700 focus:border-slate-400'
                 : 'border border-slate-200/80 bg-white text-slate-700 focus:border-slate-400',
             )}
             onChange={(event) => updateField('zoneId', event.target.value)}
@@ -159,14 +171,19 @@ export default function HostFilterBar({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className={cn('text-[11px] font-semibold tracking-[0.18em] uppercase', isSidebar ? 'text-slate-300' : 'text-slate-500')}>
+          <span
+            className={cn(
+              'text-[11px] font-semibold tracking-[0.18em] uppercase',
+              isSidebar ? 'text-slate-500' : 'text-slate-500',
+            )}
+          >
             时间
           </span>
           <select
             className={cn(
               'rounded-2xl px-3 py-2 text-sm outline-none',
               isSidebar
-                ? 'border border-white/10 bg-slate-950/40 text-slate-100 focus:border-white/20'
+                ? 'border border-slate-200 bg-white text-slate-700 focus:border-slate-400'
                 : 'border border-slate-200/80 bg-white text-slate-700 focus:border-slate-400',
             )}
             onChange={(event) => updateField('timeRange', event.target.value)}
@@ -179,14 +196,19 @@ export default function HostFilterBar({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className={cn('text-[11px] font-semibold tracking-[0.18em] uppercase', isSidebar ? 'text-slate-300' : 'text-slate-500')}>
+          <span
+            className={cn(
+              'text-[11px] font-semibold tracking-[0.18em] uppercase',
+              isSidebar ? 'text-slate-500' : 'text-slate-500',
+            )}
+          >
             能耗等级
           </span>
           <select
             className={cn(
               'rounded-2xl px-3 py-2 text-sm outline-none',
               isSidebar
-                ? 'border border-white/10 bg-slate-950/40 text-slate-100 focus:border-white/20'
+                ? 'border border-slate-200 bg-white text-slate-700 focus:border-slate-400'
                 : 'border border-slate-200/80 bg-white text-slate-700 focus:border-slate-400',
             )}
             onChange={(event) => updateField('energyLevel', event.target.value)}
@@ -204,7 +226,7 @@ export default function HostFilterBar({
             'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 font-medium text-sm transition-transform hover:-translate-y-0.5',
             isSidebar && 'sm:col-span-2',
             isSidebar
-              ? 'border border-white/10 bg-white/10 text-white shadow-none hover:bg-white/14'
+              ? 'border border-slate-200 bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.12)] hover:bg-slate-800'
               : 'bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]',
           )}
           onClick={() =>

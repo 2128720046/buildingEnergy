@@ -119,7 +119,7 @@ export function buildHostQueryModel(
     zonesByLevel.set(levelId, current)
   }
 
-  const results = Object.values(nodes)
+  const rawResults: Array<HostQueryResult | null> = Object.values(nodes)
     .filter((node) => COMPONENT_TYPES.has(node.type))
     .map((node) => {
       const levelId = resolveLevelId(nodes, node)
@@ -136,7 +136,7 @@ export function buildHostQueryModel(
       const timeRangeLabel = TIME_RANGE_LABELS[filters.timeRange] ?? TIME_RANGE_LABELS['24h']!
       const multiplier = filters.timeRange === '30d' ? 2.8 : filters.timeRange === '7d' ? 1.7 : 1
 
-      const result: HostQueryResult = {
+      return {
         componentId: node.id,
         componentName: node.name || node.id,
         componentType: node.type,
@@ -148,10 +148,10 @@ export function buildHostQueryModel(
         energyLevel,
         predictedUsage: Number((((seed % 90) + 10) * multiplier).toFixed(1)),
         timeRangeLabel,
-      }
-
-      return result
+      } satisfies HostQueryResult
     })
+
+  const results = rawResults
     .filter(isQueryResult)
     .filter((item) => {
       if (filters.levelId && item.levelId !== filters.levelId) return false

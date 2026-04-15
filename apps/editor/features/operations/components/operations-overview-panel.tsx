@@ -12,10 +12,10 @@ function severityClassName(alert: OperationsAlert) {
   return cn(
     'rounded-full px-2.5 py-1 text-[11px] font-semibold',
     alert.severity === 'high'
-      ? 'bg-rose-500/20 text-rose-100'
+      ? 'bg-rose-50 text-rose-700'
       : alert.severity === 'medium'
-        ? 'bg-amber-500/20 text-amber-100'
-        : 'bg-emerald-500/20 text-emerald-100',
+        ? 'bg-amber-50 text-amber-700'
+        : 'bg-emerald-50 text-emerald-700',
   )
 }
 
@@ -47,20 +47,20 @@ export default function OperationsOverviewPanel({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
               Operations
             </div>
-            <h3 className="mt-2 font-semibold text-white">智慧运维模块</h3>
+            <h3 className="mt-2 font-semibold text-slate-950">智慧运维模块</h3>
           </div>
-          <div className="rounded-full border border-white/10 bg-black/10 px-3 py-1 text-xs text-slate-200">
+          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
             第一版概览
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-cyan-400/15 bg-cyan-400/8 px-4 py-4 text-sm text-slate-100">
+        <div className="mt-4 rounded-[28px] border border-sky-100 bg-sky-50 px-4 py-4 text-sm text-slate-700">
           {dashboard.summary}
         </div>
       </section>
@@ -68,41 +68,41 @@ export default function OperationsOverviewPanel({
       <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         {dashboard.metrics.map((metric) => (
           <div
-            className="rounded-2xl border border-white/10 bg-slate-950/35 p-4"
+            className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
             key={metric.label}
           >
             <div className="text-xs text-slate-400">{metric.label}</div>
-            <div className="mt-2 text-3xl font-semibold text-white">{metric.value}</div>
-            <div className="mt-2 text-xs text-slate-300">{metric.detail}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-950">{metric.value}</div>
+            <div className="mt-2 text-xs text-slate-500">{metric.detail}</div>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
               Alerts
             </div>
-            <h3 className="mt-2 font-semibold text-white">告警中心</h3>
+            <h3 className="mt-2 font-semibold text-slate-950">告警中心</h3>
           </div>
-          <div className="rounded-full border border-white/10 bg-black/10 px-3 py-1 text-xs text-slate-200">
+          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
             基于当前筛选结果生成
           </div>
         </div>
 
         <div className="mt-4 space-y-3">
           {dashboard.alerts.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/15 bg-slate-950/30 px-4 py-5 text-sm text-slate-300">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
               当前没有足够的数据生成运维告警。
             </div>
           ) : (
             dashboard.alerts.map((alert) => (
-              <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4" key={alert.id}>
+              <div className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-4" key={alert.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-medium text-white">{alert.title}</div>
-                    <div className="mt-1 text-xs text-slate-300">{alert.detail}</div>
+                    <div className="font-medium text-slate-950">{alert.title}</div>
+                    <div className="mt-1 text-xs text-slate-500">{alert.detail}</div>
                   </div>
                   <span className={severityClassName(alert)}>
                     {alert.severity === 'high'
@@ -112,7 +112,7 @@ export default function OperationsOverviewPanel({
                         : '低优先级'}
                   </span>
                 </div>
-                <div className="mt-3 rounded-xl border border-white/8 bg-black/10 px-3 py-3 text-sm text-slate-200">
+                <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
                   {alert.recommendation}
                 </div>
               </div>
@@ -121,28 +121,28 @@ export default function OperationsOverviewPanel({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
               Tasks
             </div>
-            <h3 className="mt-2 font-semibold text-white">巡检与工单</h3>
+            <h3 className="mt-2 font-semibold text-slate-950">巡检与工单</h3>
           </div>
-          <div className="rounded-full border border-white/10 bg-black/10 px-3 py-1 text-xs text-slate-200">
+          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
             待推进 {dashboard.tasks.length} 项
           </div>
         </div>
 
         <div className="mt-4 space-y-3">
           {dashboard.tasks.map((task) => (
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4" key={task.id}>
-              <div className="font-medium text-white">{task.title}</div>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-300">
-                <span className="rounded-full border border-white/10 bg-black/10 px-2.5 py-1">
+            <div className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-4" key={task.id}>
+              <div className="font-medium text-slate-950">{task.title}</div>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
+                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
                   负责人 {task.assignee}
                 </span>
-                <span className="rounded-full border border-white/10 bg-black/10 px-2.5 py-1">
+                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
                   截止 {task.due}
                 </span>
               </div>
@@ -151,19 +151,22 @@ export default function OperationsOverviewPanel({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div>
           <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
             Strategy
           </div>
-          <h3 className="mt-2 font-semibold text-white">下一步设计建议</h3>
+          <h3 className="mt-2 font-semibold text-slate-950">下一步建设建议</h3>
         </div>
 
         <div className="mt-4 space-y-3">
           {dashboard.strategies.map((strategy) => (
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4" key={strategy.title}>
-              <div className="font-medium text-white">{strategy.title}</div>
-              <div className="mt-2 text-sm text-slate-300">{strategy.description}</div>
+            <div
+              className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-4"
+              key={strategy.title}
+            >
+              <div className="font-medium text-slate-950">{strategy.title}</div>
+              <div className="mt-2 text-sm text-slate-600">{strategy.description}</div>
             </div>
           ))}
         </div>

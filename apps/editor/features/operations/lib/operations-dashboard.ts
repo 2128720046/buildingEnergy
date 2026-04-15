@@ -38,19 +38,11 @@ export interface OperationsDashboardData {
 function resolveSeverity(result: HostQueryResult): 'high' | 'low' | 'medium' {
   const normalized = result.energyLevel.toLowerCase()
 
-  if (
-    result.energyLevel.includes('高') ||
-    result.energyLevel.includes('楂') ||
-    normalized.includes('high')
-  ) {
+  if (result.energyLevel.includes('高') || normalized.includes('high')) {
     return 'high'
   }
 
-  if (
-    result.energyLevel.includes('中') ||
-    result.energyLevel.includes('涓') ||
-    normalized.includes('mid')
-  ) {
+  if (result.energyLevel.includes('中') || normalized.includes('mid')) {
     return 'medium'
   }
 
@@ -89,9 +81,9 @@ export function buildOperationsDashboardData({
       detail: `${item.levelName} / ${item.zoneName} · 预测能耗 ${item.predictedUsage} kWh`,
       recommendation:
         severity === 'high'
-          ? '建议优先生成现场巡检任务，并比对设备额定参数。'
+          ? '建议优先生成现场巡检任务，并比对设备额定参数与当前负荷。'
           : severity === 'medium'
-            ? '建议纳入本轮运维观察名单，关注峰值时段策略。'
+            ? '建议纳入本轮运维观察名单，重点关注峰值时段策略。'
             : '保持监测，当前优先级较低。',
     } satisfies OperationsAlert
   })
@@ -106,7 +98,7 @@ export function buildOperationsDashboardData({
   if (energyResult && selectedComponentId) {
     tasks.unshift({
       id: `${selectedComponentId}-calibration`,
-      title: `复核 ${selectedComponentName} 的实时功率采集`,
+      title: `复核 ${selectedComponentName} 的实时功率采样`,
       assignee: '数据诊断组',
       due: '今天 15:00',
     })
@@ -116,7 +108,7 @@ export function buildOperationsDashboardData({
     {
       label: '站点健康度',
       value: `${siteHealthScore}`,
-      detail: `项目 ${projectId} 的综合评分`,
+      detail: `项目 ${projectId} 的综合评估`,
     },
     {
       label: '活跃告警',
@@ -144,21 +136,21 @@ export function buildOperationsDashboardData({
           : '当前没有高优先级告警，可以先按楼层规划巡检路线。',
     },
     {
-      title: '把查询模块和工单联动',
+      title: '把查询结果直接联动成工单',
       description:
-        '建议下一步把能耗查询模块中的高耗能结果一键转成运维工单，提高从分析到处置的闭环效率。',
+        '建议下一步把能耗查询中的高能耗结果一键转换成运维工单，提高从分析到处置的闭环效率。',
     },
     {
-      title: '为智能体补充运维知识库',
+      title: '补充智能体的运维知识',
       description:
-        '后续可以接入设备台账、保养标准和告警阈值，让智能体回答更偏运维决策，而不只是做能耗解释。',
+        '后续可接入设备台账、保养标准和告警阈值，让智能体的建议更偏向运维决策而不只是能耗解释。',
     },
   ]
 
   const summary =
     alerts.length > 0
-      ? `当前更值得优先处理的是 ${alerts[0]!.title.replace(' 负荷偏高', '')}，建议把它作为智慧运维模块的首个告警闭环样板。`
-      : '当前筛选范围内没有明显异常对象，这个模块可以先用来沉淀巡检、工单和知识问答的结构。'
+      ? `当前最值得优先处理的是 ${alerts[0]!.title.replace(' 负荷偏高', '')}，建议把它作为智慧运维的首个告警闭环样板。`
+      : '当前筛选范围内没有明显异常对象，这个模块可以先沉淀巡检、工单和知识问答结构。'
 
   return {
     alerts,
