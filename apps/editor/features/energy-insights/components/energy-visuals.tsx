@@ -231,7 +231,7 @@ export default function EnergyVisuals({
   energyResult,
   selectedComponentName,
 }: EnergyVisualsProps) {
-  const hasRealSeries = Boolean(energyResult && energyResult.series.length > 0)
+  const hasRealSeries = Boolean(energyResult && energyResult.series?.length > 0)
 
   if (!hasRealSeries) {
     return (

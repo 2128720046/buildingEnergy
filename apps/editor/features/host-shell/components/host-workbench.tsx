@@ -14,9 +14,10 @@ import {
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
-import { loadComponentEnergy, type EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
+import { loadComponentEnergy, loadZoneEnergy, type EnergyApiResponse, type ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
 import { buildHostQueryModel, type HostQueryFilters } from '@/features/energy-insights/lib/host-query'
-import type { HostBusinessModule } from '@/features/host-shell/lib/host-modules'
+// 👇 保留队友引入的模块类型
+import type { HostBusinessModule } from '@/features/host-shell/lib/host-modules' 
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
 
 const DEFAULT_PROJECT_ID = 'local-editor'
@@ -33,7 +34,7 @@ export interface HostWorkbenchProps {
  * 2. 维护宿主业务查询状态。
  * 3. 把业务面板作为独立 feature 叠加到编辑器右侧。
  */
-export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
+export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: HostWorkbenchProps) {
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT_ID)
   const [projectOptions, setProjectOptions] = useState<ProjectSummary[]>([
     { projectId: DEFAULT_PROJECT_ID },
@@ -42,11 +43,12 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [selection, setSelection] = useState<ModelingSelectionSnapshot | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [energyResult, setEnergyResult] = useState<EnergyApiResponse | null>(null)
+  const [energyResultZone, setEnergyResultZone] = useState<ZoneEnergyResponse | null>(null) // 👈 你的房间状态
   const [energyLoading, setEnergyLoading] = useState(false)
   const [energyError, setEnergyError] = useState<string | null>(null)
   const [insightsCollapsed, setInsightsCollapsed] = useState(false)
   const [insightsWidth, setInsightsWidth] = useState(432)
-  const [activeModule, setActiveModule] = useState<HostBusinessModule>('query')
+  const [activeModule, setActiveModule] = useState<HostBusinessModule>('query') // 👈 队友的模块切换状态
   const [filters, setFilters] = useState<HostQueryFilters>({
     keyword: '',
     levelId: '',
@@ -123,6 +125,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   useEffect(() => {
     setSelection(null)
     setEnergyResult(null)
+    setEnergyResultZone(null)
     setEnergyError(null)
     setEnergyLoading(false)
   }, [projectId])
@@ -133,6 +136,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     async function syncEnergyResult() {
       if (!selectedComponentId) {
         setEnergyResult(null)
+        setEnergyResultZone(null)
         setEnergyError(null)
         setEnergyLoading(false)
         return
@@ -142,11 +146,38 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
       setEnergyError(null)
 
       try {
-        const response = await loadComponentEnergy(apiBaseUrl, projectId, selectedComponentId)
-        if (!cancelled) {
-          setEnergyResult(response)
+        let response;
+        const selectedNode = selection?.selectedNodes[0]; 
+    
+        if (selectedNode?.type === 'zone') {
+          // 情况 1：直接选中房间
+          response = await loadZoneEnergy(apiBaseUrl, projectId, selectedComponentId);
+          if (!cancelled) {
+            setEnergyResultZone(response);
+            setEnergyResult(null); 
+          }   
+        } else {
+          // 情况 2：选中的是具体设备、家具或地板
+          
+          // A. 先查设备本身的数据
+          const itemResponse = await loadComponentEnergy(apiBaseUrl, projectId, selectedComponentId);
+          if (!cancelled) {
+            setEnergyResult(itemResponse);
+          }
+
+          // B. 智能推断：去 queryModel 里查它属于哪个房间 (你的高级逻辑)
+          const componentInfo = queryModel.results.find(r => r.componentId === selectedComponentId);
+          
+          if (componentInfo && componentInfo.zoneId) {
+             const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, componentInfo.zoneId);
+             if (!cancelled) {
+               setEnergyResultZone(zoneResponse);
+             }
+          } else {
+             if (!cancelled) setEnergyResultZone(null);
+          }
         }
-      } catch (error) {
+       } catch (error) {
         if (!cancelled) {
           setEnergyResult(null)
           setEnergyError(error instanceof Error ? error.message : '未知错误')
@@ -163,7 +194,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     return () => {
       cancelled = true
     }
-  }, [apiBaseUrl, projectId, selectedComponentId])
+  }, [apiBaseUrl, projectId, selectedComponentId, queryModel.results]) // 👈 补充依赖
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]">
@@ -192,16 +223,17 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           </div>
 
           <HostRightRail
-            activeModule={activeModule}
+            activeModule={activeModule}               // 👈 队友加的参数
             energyError={energyError}
             energyLoading={energyLoading}
             energyResult={energyResult}
+            energyResultZone={energyResultZone}       // 👈 你加的参数
             filters={filters}
             insightsCollapsed={insightsCollapsed}
             levelOptions={queryModel.levelOptions}
             onFiltersChange={setFilters}
             onInsightsCollapsedChange={setInsightsCollapsed}
-            onModuleChange={setActiveModule}
+            onModuleChange={setActiveModule}          // 👈 队友加的参数
             onProjectChange={setProjectId}
             onWidthChange={setInsightsWidth}
             projectId={projectId}

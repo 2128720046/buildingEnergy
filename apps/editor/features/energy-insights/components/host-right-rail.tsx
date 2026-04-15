@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ModelingSelectionSnapshot } from '@pascal-app/editor/modeling'
 import EnergyQueryPanel from '@/features/energy-insights/components/energy-query-panel'
-import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
+// 👇 引入你的 ZoneEnergyResponse
+import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api' 
 import type {
   HostFilterOption,
   HostQueryFilters,
@@ -88,11 +89,13 @@ function RailToggleButton({ collapsed, onClick }: { collapsed: boolean; onClick:
   )
 }
 
+// 👇 合并后的 Props，加入了 activeModule 和 energyResultZone
 export interface HostRightRailProps {
   activeModule: HostBusinessModule
   energyError: string | null
   energyLoading: boolean
   energyResult: EnergyApiResponse | null
+  energyResultZone: ZoneEnergyResponse | null 
   filters: HostQueryFilters
   insightsCollapsed: boolean
   levelOptions: HostFilterOption[]
@@ -116,6 +119,7 @@ export default function HostRightRail({
   energyError,
   energyLoading,
   energyResult,
+  energyResultZone, // 👇 记得在这里解构
   filters,
   insightsCollapsed,
   levelOptions,
@@ -276,39 +280,39 @@ export default function HostRightRail({
                   保存状态：{saveStatus}
                 </div>
               </div>
+            </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {HOST_BUSINESS_MODULES.map((module) => {
-                  const isActive = activeModule === module.key
+            <div className="mt-4 grid grid-cols-2 gap-2 px-4">
+              {HOST_BUSINESS_MODULES.map((module) => {
+                const isActive = activeModule === module.key
 
-                  return (
-                    <button
-                      className={cn(
-                        'rounded-2xl border px-3 py-3 text-left transition-all',
-                        isActive
-                          ? 'border-sky-400/30 bg-sky-500/15 shadow-[0_14px_30px_rgba(14,165,233,0.14)]'
-                          : 'border-white/10 bg-black/10 hover:bg-white/8',
-                      )}
-                      key={module.key}
-                      onClick={() => onModuleChange(module.key)}
-                      type="button"
-                    >
-                      <div className="flex items-center gap-2">
-                        <ModuleIcon active={isActive} kind={module.key} />
-                        <span
-                          className={cn(
-                            'font-medium text-sm',
-                            isActive ? 'text-white' : 'text-slate-200',
-                          )}
-                        >
-                          {module.label}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-xs leading-5 text-slate-300">{module.description}</div>
-                    </button>
-                  )
-                })}
-              </div>
+                return (
+                  <button
+                    className={cn(
+                      'rounded-2xl border px-3 py-3 text-left transition-all',
+                      isActive
+                        ? 'border-sky-400/30 bg-sky-500/15 shadow-[0_14px_30px_rgba(14,165,233,0.14)]'
+                        : 'border-white/10 bg-black/10 hover:bg-white/8',
+                    )}
+                    key={module.key}
+                    onClick={() => onModuleChange(module.key)}
+                    type="button"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ModuleIcon active={isActive} kind={module.key} />
+                      <span
+                        className={cn(
+                          'font-medium text-sm',
+                          isActive ? 'text-white' : 'text-slate-200',
+                        )}
+                      >
+                        {module.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs leading-5 text-slate-300">{module.description}</div>
+                  </button>
+                )
+              })}
             </div>
 
             <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -317,6 +321,7 @@ export default function HostRightRail({
                   energyError={energyError}
                   energyLoading={energyLoading}
                   energyResult={energyResult}
+                  energyResultZone={energyResultZone} // 👇 这里！把你查到的房间数据传给子组件
                   filters={filters}
                   levelOptions={levelOptions}
                   onFiltersChange={onFiltersChange}
