@@ -1,8 +1,8 @@
 'use client'
 
-import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
+import { useEffect, useRef } from 'react'
 import EnergyVisuals from '@/features/energy-insights/components/energy-visuals'
-// 👇 1. 在这里引入了 ZoneEnergyResponse
+import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
 import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
 import type {
   HostFilterOption,
@@ -29,7 +29,7 @@ export interface EnergyQueryPanelProps {
   energyError: string | null
   energyLoading: boolean
   energyResult: EnergyApiResponse | null
-  energyResultZone: ZoneEnergyResponse | null // 👇 2. 在 Props 中加上这个属性
+  energyResultZone: ZoneEnergyResponse | null
   filters: HostQueryFilters
   levelOptions: HostFilterOption[]
   onFiltersChange: (nextFilters: HostQueryFilters) => void
@@ -101,11 +101,181 @@ function QueryResultsSection({ queryResults }: { queryResults: HostQueryResult[]
   )
 }
 
+function ZoneSummarySection({ energyResultZone }: { energyResultZone: ZoneEnergyResponse }) {
+  return (
+    <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
+            Zone
+          </div>
+          <h3 className="mt-2 font-semibold text-slate-950">房间级环境与能耗概览</h3>
+        </div>
+        <div className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs text-indigo-700">
+          按房间聚合
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#eef2ff_0%,#e0e7ff_100%)] p-4 sm:col-span-2">
+          <div className="text-xs text-indigo-500">房间总耗电量</div>
+          <div className="mt-2 text-2xl font-semibold text-slate-950">
+            {energyResultZone.total_electricity_kwh != null
+              ? Number(energyResultZone.total_electricity_kwh).toFixed(1)
+              : '--'}
+            <span className="ml-1 text-sm text-slate-500">kWh</span>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs text-slate-400">室内温度</div>
+          <div className="mt-2 text-xl font-semibold text-slate-950">
+            {energyResultZone.indoor_temp != null ? energyResultZone.indoor_temp : '--'}
+            <span className="ml-1 text-sm text-slate-500">°C</span>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs text-slate-400">室内湿度</div>
+          <div className="mt-2 text-xl font-semibold text-slate-950">
+            {energyResultZone.indoor_humidity != null ? energyResultZone.indoor_humidity : '--'}
+            <span className="ml-1 text-sm text-slate-500">%</span>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+          <div className="text-xs text-slate-400">人员密度</div>
+          <div className="mt-2 text-xl font-semibold text-slate-950">
+            {energyResultZone.occupancy_density != null ? energyResultZone.occupancy_density : '--'}
+            <span className="ml-1 text-sm text-slate-500">人/m²</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ComponentSummarySection({ energyResult }: { energyResult: EnergyApiResponse }) {
+  const normalizedType = energyResult.item_type?.toLowerCase() ?? ''
+
+  return (
+    <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
+            Component
+          </div>
+          <h3 className="mt-2 font-semibold text-slate-950">构件级能耗详情</h3>
+        </div>
+        <div className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs text-cyan-700">
+          实时联动
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs text-slate-400">实时耗电量</div>
+          <div className="mt-2 text-2xl font-semibold text-slate-950">
+            {energyResult.electricity_kwh != null
+              ? Number(energyResult.electricity_kwh).toFixed(1)
+              : '--'}
+            <span className="ml-1 text-sm text-slate-500">kWh</span>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs text-slate-400">设备信息</div>
+          <div className="mt-2 truncate font-semibold text-slate-950" title={energyResult.item_name || ''}>
+            {energyResult.item_name || '未命名设备'}
+          </div>
+          <div className="mt-1 text-[11px] tracking-[0.16em] text-slate-400 uppercase">
+            类型 {energyResult.item_type || '通用构件'}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs text-slate-400">运行状态</div>
+          <div className="mt-2 flex items-center gap-2 text-xl font-semibold text-slate-950">
+            {(energyResult.operating_status === 'active' ||
+              energyResult.operating_status === '正常') && (
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.45)]" />
+            )}
+            <span className="truncate">{energyResult.operating_status || '未知'}</span>
+          </div>
+        </div>
+
+        {normalizedType === 'light' && energyResult.light_brightness_pct != null ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs text-amber-600">当前亮度</div>
+            <div className="mt-2 text-xl font-semibold text-slate-950">
+              {energyResult.light_brightness_pct}%
+            </div>
+          </div>
+        ) : null}
+
+        {normalizedType === 'fridge' && energyResult.fridge_temp_setting != null ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs text-amber-600">目标冷藏温度</div>
+            <div className="mt-2 text-xl font-semibold text-slate-950">
+              {energyResult.fridge_temp_setting}°C
+            </div>
+          </div>
+        ) : null}
+
+        {normalizedType === 'fan' && energyResult.motor_speed_level != null ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs text-amber-600">电机档位</div>
+            <div className="mt-2 text-xl font-semibold text-slate-950">
+              {energyResult.motor_speed_level}
+            </div>
+          </div>
+        ) : null}
+
+        {normalizedType === 'stove' && energyResult.stove_power_level != null ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs text-amber-600">加热功率档位</div>
+            <div className="mt-2 text-xl font-semibold text-slate-950">
+              {energyResult.stove_power_level}
+            </div>
+          </div>
+        ) : null}
+
+        {normalizedType === 'electricbox' &&
+        (energyResult.electric_voltage_v != null || energyResult.electric_current_a != null) ? (
+          <div className="grid grid-cols-2 gap-4 rounded-[24px] border border-amber-200 bg-amber-50 p-4 lg:col-span-2">
+            <div>
+              <div className="text-xs text-amber-600">实时电压</div>
+              <div className="mt-2 text-xl font-semibold text-slate-950">
+                {energyResult.electric_voltage_v != null ? energyResult.electric_voltage_v : '--'}V
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-amber-600">实时电流</div>
+              <div className="mt-2 text-xl font-semibold text-slate-950">
+                {energyResult.electric_current_a != null ? energyResult.electric_current_a : '--'}A
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {normalizedType === 'smarttoilet' && energyResult.seat_temp_setting != null ? (
+          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4">
+            <div className="text-xs text-amber-600">座圈设定温度</div>
+            <div className="mt-2 text-xl font-semibold text-slate-950">
+              {energyResult.seat_temp_setting}°C
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
 export default function EnergyQueryPanel({
   energyError,
   energyLoading,
   energyResult,
-  energyResultZone, // 👇 3. 别忘了在这里解构它
+  energyResultZone,
   filters,
   levelOptions,
   onFiltersChange,
@@ -115,6 +285,27 @@ export default function EnergyQueryPanel({
   selectedComponentName,
   zoneOptions,
 }: EnergyQueryPanelProps) {
+  const visualsRef = useRef<HTMLDivElement>(null)
+  const lastAutoJumpedSelectionIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!selectedComponentId) {
+      lastAutoJumpedSelectionIdRef.current = null
+      return
+    }
+
+    if (energyLoading) {
+      return
+    }
+
+    if (lastAutoJumpedSelectionIdRef.current === selectedComponentId) {
+      return
+    }
+
+    visualsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    lastAutoJumpedSelectionIdRef.current = selectedComponentId
+  }, [energyError, energyLoading, energyResult, energyResultZone, selectedComponentId])
+
   return (
     <div className="space-y-4">
       <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
@@ -156,7 +347,7 @@ export default function EnergyQueryPanel({
 
           <div className="flex flex-wrap gap-2">
             <div className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-700">
-              JSON 数据驱动图表
+              实时数据驱动图表
             </div>
             <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
               查询结果支持模型联动
@@ -166,7 +357,7 @@ export default function EnergyQueryPanel({
 
         {energyLoading ? (
           <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-700">
-            正在根据当前选中构件拉取能耗 JSON 数据并生成图表...
+            正在根据当前选中构件拉取能耗数据并生成图表...
           </div>
         ) : null}
 
@@ -177,160 +368,18 @@ export default function EnergyQueryPanel({
         ) : null}
       </section>
 
-      {/* ======================= 👇 4. 你的房间级 UI 插入在这里 ======================= */}
       {energyResultZone?.type === 'zone' ? (
-        <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <h3 className="mb-3 text-white font-semibold">房间级环境与能耗汇总</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 rounded-2xl border border-white/10 bg-indigo-950/30 p-4">
-              <div className="text-xs text-indigo-200">房间总耗电量</div>
-              <div className="mt-2 text-2xl font-semibold text-white">
-                {energyResultZone.total_electricity_kwh != null ? Number(energyResultZone.total_electricity_kwh).toFixed(1) : '--'}
-                <span className="ml-1 text-sm text-indigo-200/70">kWh</span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">室内温度</div>
-              <div className="mt-2 text-xl font-semibold text-white">
-                {energyResultZone.indoor_temp != null ? energyResultZone.indoor_temp : '--'}℃
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">室内湿度</div>
-              <div className="mt-2 text-xl font-semibold text-white">
-                {energyResultZone.indoor_humidity != null ? energyResultZone.indoor_humidity : '--'}%
-              </div>
-            </div>
-            <div className="col-span-2 rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">人员密度</div>
-              <div className="mt-2 text-xl font-semibold text-white">
-                {energyResultZone.occupancy_density != null ? energyResultZone.occupancy_density : '--'}
-                <span className="ml-1 text-sm text-slate-300/70">人/m²</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        <ZoneSummarySection energyResultZone={energyResultZone} />
       ) : null}
 
-      {/* ======================= 👇 5. 你的构件级 UI 插入在这里 ======================= */}
-      {energyResult ? (
-        <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <h3 className="mb-3 text-white font-semibold">构件级能耗详情</h3>
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">实时耗电量</div>
-              <div className="mt-2 text-2xl font-semibold text-white">
-                {energyResult.electricity_kwh != null ? Number(energyResult.electricity_kwh).toFixed(1) : '--'}
-                <span className="ml-1 text-sm text-slate-300">kWh</span>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">设备信息</div>
-              <div className="mt-2">
-                <div className="font-semibold text-white truncate" title={energyResult.item_name || ''}>
-                  {energyResult.item_name || '未命名设备'}
-                </div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">
-                  类型: {energyResult.item_type || '通用构件'}
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-              <div className="text-xs text-slate-300">运行状态</div>
-              <div className="mt-2 text-xl font-semibold text-white flex items-center gap-2">
-                {(energyResult.operating_status === 'active' || energyResult.operating_status === '正常') && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
-                )}
-                <span className="truncate">
-                  {energyResult.operating_status || '未知'}
-                </span>
-              </div>
-            </div>
+      {energyResult ? <ComponentSummarySection energyResult={energyResult} /> : null}
 
-            {energyResult.item_type?.toLowerCase() === 'light' && energyResult.light_brightness_pct != null && (
-              <div className="rounded-2xl border border-white/10 bg-amber-950/30 p-4">
-                <div className="text-xs text-amber-200">当前亮度</div>
-                <div className="mt-2 text-xl font-semibold text-white">
-                  {energyResult.light_brightness_pct}%
-                </div>
-              </div>
-            )}
-            {energyResult.item_type?.toLowerCase() === 'fridge' && energyResult.fridge_temp_setting != null && (
-              <div className="rounded-2xl border border-white/10 bg-amber-950/30 p-4">
-                <div className="text-xs text-amber-200">设定的目标冷藏/冷冻温度</div>
-                <div className="mt-2 text-xl font-semibold text-white">
-                  {energyResult.fridge_temp_setting}℃
-                </div>
-              </div>
-            )}
-            {energyResult.item_type?.toLowerCase() === 'fan' && energyResult.motor_speed_level != null && (
-              <div className="rounded-2xl border border-white/10 bg-amber-950/30 p-4">
-                <div className="text-xs text-amber-200">电机运转的档位</div>
-                <div className="mt-2 text-xl font-semibold text-white">
-                  {energyResult.motor_speed_level}
-                </div>
-              </div>
-            )}
-            {energyResult.item_type?.toLowerCase() === 'stove' && energyResult.stove_power_level != null && (
-              <div className="rounded-2xl border border-white/10 bg-amber-950/30 p-4">
-                <div className="text-xs text-amber-200">加热功率档位</div>
-                <div className="mt-2 text-xl font-semibold text-white">
-                  {energyResult.stove_power_level}
-                </div>
-              </div>
-            )}
-            {energyResult.item_type?.toLowerCase() === 'electricbox' && (energyResult.electric_voltage_v != null || energyResult.electric_current_a != null) && (
-              <div className="col-span-full rounded-2xl border border-white/10 bg-amber-950/30 p-4 xl:col-span-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs text-amber-200">实时电压</div>
-                    <div className="mt-2 text-xl font-semibold text-white">
-                      {energyResult.electric_voltage_v != null ? energyResult.electric_voltage_v : '--'}V
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-amber-200">实时电流</div>
-                    <div className="mt-2 text-xl font-semibold text-white">
-                      {energyResult.electric_current_a != null ? energyResult.electric_current_a : '--'}A
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {energyResult.item_type?.toLowerCase() === 'smarttoilet' && energyResult.seat_temp_setting != null && (
-              <div className="rounded-2xl border border-white/10 bg-amber-950/30 p-4">
-                <div className="text-xs text-amber-200">座圈的设定加热温度</div>
-                <div className="mt-2 text-xl font-semibold text-white">
-                  {energyResult.seat_temp_setting}℃
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {/* 团队成员原本的图表和 JSON 组件保持不变，放在最下方 */}
-      <EnergyVisuals energyResult={energyResult} selectedComponentName={selectedComponentName} />
-
-      {energyResult ? (
-        <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
-                JSON
-              </div>
-              <h3 className="mt-2 font-semibold text-slate-950">能耗数据样例</h3>
-            </div>
-            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">
-              {energyResult.binding?.bindingType ?? 'mock-meter'}
-            </div>
-          </div>
-
-          <pre className="mt-4 max-h-[260px] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
-            {JSON.stringify(energyResult, null, 2)}
-          </pre>
-        </section>
-      ) : null}
+      <div className="scroll-mt-4" ref={visualsRef}>
+        <EnergyVisuals
+          energyResult={energyResult}
+          selectedComponentName={selectedComponentName}
+        />
+      </div>
     </div>
   )
 }

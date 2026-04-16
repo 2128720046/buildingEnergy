@@ -8164,7 +8164,7 @@
       "children": [],
       "metadata": {},
       "parentId": "level_ndgi8zuyr8zfcbt6",
-      "frontSide": "interior"
+      "frontSide": "unknown"
     },
     "wall_bzcz9p0dh4983j3l": {
       "id": "wall_bzcz9p0dh4983j3l",
@@ -8974,7 +8974,7 @@
       ],
       "object": "node",
       "visible": true,
-      "backSide": "interior",
+      "backSide": "unknown",
       "children": [],
       "metadata": {},
       "parentId": "level_ndgi8zuyr8zfcbt6",
@@ -9922,7 +9922,8 @@
         "item_y8pdpgkjienj80gf",
         "item_iqww0y7hq54rvt7t",
         "item_l6gqjuoe5wrkg8pj",
-        "item_hdl99c1njt9sflmw"
+        "item_hdl99c1njt9sflmw",
+        "wall_igmkud2vg556h79c"
       ],
       "metadata": {},
       "parentId": "building_vh1z9chps72913h9"
@@ -10009,10 +10010,9 @@
       "sillDepth": 0.08,
       "frameDepth": 0.07,
       "columnRatios": [
-        0.25,
-        0.25,
-        0.25,
-        0.25
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333
       ],
       "sillThickness": 0.03,
       "frameThickness": 0.01,
@@ -11482,6 +11482,26 @@
           1
         ]
       }
+    },
+    "wall_igmkud2vg556h79c": {
+      "object": "node",
+      "id": "wall_igmkud2vg556h79c",
+      "type": "wall",
+      "name": "Wall 68",
+      "parentId": "level_ndgi8zuyr8zfcbt6",
+      "visible": true,
+      "metadata": {},
+      "children": [],
+      "start": [
+        5,
+        0.5
+      ],
+      "end": [
+        -1,
+        6.5
+      ],
+      "frontSide": "unknown",
+      "backSide": "unknown"
     }
   },
   "rootNodeIds": [
