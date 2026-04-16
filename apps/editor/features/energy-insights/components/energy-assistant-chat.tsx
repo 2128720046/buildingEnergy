@@ -5,6 +5,7 @@ import {
   buildEnergyAssistantReply,
   type EnergyAssistantContext,
 } from '@/features/energy-insights/lib/energy-assistant'
+import { cn } from '@/lib/utils'
 
 interface ChatMessage {
   content: string
@@ -20,9 +21,9 @@ interface AgentChatResponse {
 
 const QUICK_PROMPTS = [
   '总结当前能耗情况',
-  '峰值出现在什么时候？',
+  '峰值出现在什么时间段？',
   '给我三条优化建议',
-  '列出当前高耗能对象',
+  '列出当前高能耗对象',
 ]
 
 function SendIcon() {
@@ -36,9 +37,16 @@ function SendIcon() {
   )
 }
 
-export interface EnergyAssistantChatProps extends EnergyAssistantContext {}
+export interface EnergyAssistantChatProps extends EnergyAssistantContext {
+  tone?: 'dark' | 'light'
+  variant?: 'panel' | 'workspace'
+}
 
-export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
+export default function EnergyAssistantChat({
+  tone = 'dark',
+  variant = 'panel',
+  ...context
+}: EnergyAssistantChatProps) {
   const [draft, setDraft] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -47,7 +55,7 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
       id: 'assistant-welcome',
       role: 'assistant',
       content:
-        '我已经接入百炼智能体。你可以直接问我当前构件的能耗趋势、峰值原因、节能建议，或者让我结合筛选结果做分析。',
+        '我已经接入智能体。你可以直接问我当前构件的能耗趋势、峰值成因、节能建议，或者让我结合筛选结果做分析。',
     },
   ])
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
@@ -55,6 +63,9 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, isSubmitting])
+
+  const isWorkspace = variant === 'workspace'
+  const isLight = tone === 'light'
 
   const submitPrompt = async (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
@@ -86,17 +97,16 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
       const payload = (await response.json()) as AgentChatResponse
 
       if (!response.ok || !payload.reply) {
-        throw new Error(payload.error || '百炼智能体返回为空。')
+        throw new Error(payload.error || '智能体未返回有效内容。')
       }
 
-      const reply = payload.reply
       setSessionId(payload.sessionId ?? null)
       setMessages((current) => [
         ...current,
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: reply,
+          content: payload.reply ?? '',
         },
       ])
     } catch (error) {
@@ -108,7 +118,7 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: `百炼智能体暂时不可用，我先用本地分析兜底。\n错误原因：${errorText}\n\n${fallback}`,
+          content: `智能体暂时不可用，我先用本地分析兜底。\n错误原因：${errorText}\n\n${fallback}`,
         },
       ])
     } finally {
@@ -117,21 +127,50 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <section
+      className={cn(
+        'rounded-2xl border p-4 shadow-sm',
+        isWorkspace && 'rounded-[32px] p-5',
+        isLight
+          ? 'border-slate-200/80 bg-white'
+          : 'border-white/10 bg-white/6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+      )}
+    >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">Agent</div>
-          <h3 className="mt-2 font-semibold text-white">智能体问答</h3>
+          <div
+            className={cn(
+              'text-xs font-semibold tracking-[0.22em] uppercase',
+              isLight ? 'text-slate-400' : 'text-slate-400',
+            )}
+          >
+            Agent
+          </div>
+          <h3 className={cn('mt-2 font-semibold', isLight ? 'text-slate-950' : 'text-white')}>
+            智能体问答
+          </h3>
         </div>
-        <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-100">
-          已接入百炼智能体
+        <div
+          className={cn(
+            'rounded-full px-3 py-1 text-xs',
+            isLight
+              ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border border-emerald-400/20 bg-emerald-400/10 text-emerald-100',
+          )}
+        >
+          已接入智能体
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className={cn('mt-4 flex flex-wrap gap-2', isWorkspace && 'gap-2.5')}>
         {QUICK_PROMPTS.map((prompt) => (
           <button
-            className="rounded-full border border-white/10 bg-black/10 px-3 py-1.5 text-xs text-slate-200 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className={cn(
+              'rounded-full px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+              isLight
+                ? 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                : 'border border-white/10 bg-black/10 text-slate-200 hover:bg-white/10',
+            )}
             disabled={isSubmitting}
             key={prompt}
             onClick={() => void submitPrompt(prompt)}
@@ -142,18 +181,29 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
         ))}
       </div>
 
-      <div className="mt-4 max-h-[360px] space-y-3 overflow-auto rounded-2xl border border-white/8 bg-slate-950/45 p-3">
+      <div
+        className={cn(
+          'mt-4 space-y-3 overflow-auto rounded-2xl border p-3',
+          isWorkspace ? 'min-h-[420px] max-h-[520px]' : 'max-h-[360px]',
+          isLight
+            ? 'border-slate-200 bg-slate-50/90'
+            : 'border-white/8 bg-slate-950/45',
+        )}
+      >
         {messages.map((message) => (
           <div
             className={message.role === 'assistant' ? 'flex justify-start' : 'flex justify-end'}
             key={message.id}
           >
             <div
-              className={
+              className={cn(
+                'max-w-[90%] rounded-2xl px-3 py-2 text-sm whitespace-pre-line',
                 message.role === 'assistant'
-                  ? 'max-w-[90%] rounded-2xl rounded-bl-md border border-white/8 bg-white/8 px-3 py-2 text-sm text-slate-100 whitespace-pre-line'
-                  : 'max-w-[90%] rounded-2xl rounded-br-md bg-sky-500 px-3 py-2 text-sm text-white whitespace-pre-line'
-              }
+                  ? isLight
+                    ? 'rounded-bl-md border border-slate-200 bg-white text-slate-700'
+                    : 'rounded-bl-md border border-white/8 bg-white/8 text-slate-100'
+                  : 'rounded-br-md bg-sky-500 text-white',
+              )}
             >
               {message.content}
             </div>
@@ -162,8 +212,15 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
 
         {isSubmitting ? (
           <div className="flex justify-start">
-            <div className="max-w-[90%] rounded-2xl rounded-bl-md border border-white/8 bg-white/8 px-3 py-2 text-sm text-slate-100">
-              百炼智能体正在思考...
+            <div
+              className={cn(
+                'max-w-[90%] rounded-2xl rounded-bl-md border px-3 py-2 text-sm',
+                isLight
+                  ? 'border-slate-200 bg-white text-slate-700'
+                  : 'border-white/8 bg-white/8 text-slate-100',
+              )}
+            >
+              智能体正在思考...
             </div>
           </div>
         ) : null}
@@ -172,7 +229,7 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
       </div>
 
       <form
-        className="mt-4 flex items-end gap-3"
+        className={cn('mt-4 flex items-end gap-3', isWorkspace && 'gap-4')}
         onSubmit={(event) => {
           event.preventDefault()
           void submitPrompt(draft)
@@ -181,15 +238,26 @@ export default function EnergyAssistantChat(context: EnergyAssistantChatProps) {
         <label className="min-w-0 flex-1">
           <span className="sr-only">输入问题</span>
           <textarea
-            className="min-h-[92px] w-full resize-none rounded-2xl border border-white/10 bg-slate-950/45 px-3 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-white/20"
+            className={cn(
+              'w-full resize-none rounded-2xl border px-3 py-3 text-sm outline-none',
+              isWorkspace ? 'min-h-[124px]' : 'min-h-[92px]',
+              isLight
+                ? 'border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-slate-300'
+                : 'border-white/10 bg-slate-950/45 text-slate-100 placeholder:text-slate-500 focus:border-white/20',
+            )}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="例如：帮我解释这个构件为什么峰值高，或者给我三条节能建议。"
+            placeholder="例如：帮我解释这个构件为什么峰值偏高，或者给我三条节能建议。"
             value={draft}
           />
         </label>
 
         <button
-          className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-100 px-4 font-medium text-slate-950 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+          className={cn(
+            'inline-flex h-11 items-center gap-2 rounded-2xl px-4 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-70',
+            isLight
+              ? 'bg-slate-900 text-white hover:bg-slate-800'
+              : 'bg-slate-100 text-slate-950 hover:bg-white',
+          )}
           disabled={isSubmitting}
           type="submit"
         >

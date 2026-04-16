@@ -13,12 +13,20 @@ import {
 } from '@pascal-app/editor/chrome'
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
-import { loadComponentEnergy, loadZoneEnergy, type EnergyApiResponse, type ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
+import {
+  loadComponentEnergy,
+  loadZoneEnergy,
+  type EnergyApiResponse,
+  type ZoneEnergyResponse,
+} from '@/features/energy-insights/lib/energy-api'
 import { buildHostQueryModel, type HostQueryFilters } from '@/features/energy-insights/lib/host-query'
-// 👇 保留队友引入的模块类型
-import type { HostBusinessModule } from '@/features/host-shell/lib/host-modules' 
+import WorkspaceNavigation from '@/features/host-shell/components/workspace-navigation'
+import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
+import SmartOperationsWorkspace from '@/features/operations/components/smart-operations-workspace'
+import { cn } from '@/lib/utils'
 
 const DEFAULT_PROJECT_ID = 'local-editor'
 
@@ -28,13 +36,7 @@ export interface HostWorkbenchProps {
   apiBaseUrl?: string
 }
 
-/**
- * 宿主工作台只负责装配页面级能力：
- * 1. 挂载建模核心模块。
- * 2. 维护宿主业务查询状态。
- * 3. 把业务面板作为独立 feature 叠加到编辑器右侧。
- */
-export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: HostWorkbenchProps) {
+export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT_ID)
   const [projectOptions, setProjectOptions] = useState<ProjectSummary[]>([
     { projectId: DEFAULT_PROJECT_ID },
@@ -43,12 +45,12 @@ export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: 
   const [selection, setSelection] = useState<ModelingSelectionSnapshot | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [energyResult, setEnergyResult] = useState<EnergyApiResponse | null>(null)
-  const [energyResultZone, setEnergyResultZone] = useState<ZoneEnergyResponse | null>(null) // 👈 你的房间状态
+  const [energyResultZone, setEnergyResultZone] = useState<ZoneEnergyResponse | null>(null)
   const [energyLoading, setEnergyLoading] = useState(false)
   const [energyError, setEnergyError] = useState<string | null>(null)
   const [insightsCollapsed, setInsightsCollapsed] = useState(false)
   const [insightsWidth, setInsightsWidth] = useState(432)
-  const [activeModule, setActiveModule] = useState<HostBusinessModule>('query') // 👈 队友的模块切换状态
+  const [activeWorkspace, setActiveWorkspace] = useState<HostWorkspace>('energy-query')
   const [filters, setFilters] = useState<HostQueryFilters>({
     keyword: '',
     levelId: '',
@@ -77,6 +79,11 @@ export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: 
 
   const queryModel = useMemo(() => buildHostQueryModel(nodes, filters), [nodes, filters])
   const selectedComponentId = selection?.selectedIds[0] ?? null
+  const selectedNodeType = selection?.selectedNodes[0]?.type
+  const selectedComponentName =
+    (selection?.selectedNodes[0]?.name as string | undefined) ??
+    selectedComponentId ??
+    '未选中构件'
 
   const handleLoad = useCallback(async () => apiClient.loadScene(), [apiClient])
   const handleSave = useCallback(async (scene: SceneGraph) => apiClient.saveScene(scene), [apiClient])
@@ -146,40 +153,37 @@ export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: 
       setEnergyError(null)
 
       try {
-        let response;
-        const selectedNode = selection?.selectedNodes[0]; 
-    
-        if (selectedNode?.type === 'zone') {
-          // 情况 1：直接选中房间
-          response = await loadZoneEnergy(apiBaseUrl, projectId, selectedComponentId);
+        if (selectedNodeType === 'zone') {
+          const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, selectedComponentId)
           if (!cancelled) {
-            setEnergyResultZone(response);
-            setEnergyResult(null); 
-          }   
-        } else {
-          // 情况 2：选中的是具体设备、家具或地板
-          
-          // A. 先查设备本身的数据
-          const itemResponse = await loadComponentEnergy(apiBaseUrl, projectId, selectedComponentId);
-          if (!cancelled) {
-            setEnergyResult(itemResponse);
+            setEnergyResult(null)
+            setEnergyResultZone(zoneResponse)
           }
-
-          // B. 智能推断：去 queryModel 里查它属于哪个房间 (你的高级逻辑)
-          const componentInfo = queryModel.results.find(r => r.componentId === selectedComponentId);
-          
-          if (componentInfo && componentInfo.zoneId) {
-             const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, componentInfo.zoneId);
-             if (!cancelled) {
-               setEnergyResultZone(zoneResponse);
-             }
-          } else {
-             if (!cancelled) setEnergyResultZone(null);
-          }
+          return
         }
-       } catch (error) {
+
+        const itemResponse = await loadComponentEnergy(apiBaseUrl, projectId, selectedComponentId)
+        if (cancelled) {
+          return
+        }
+
+        setEnergyResult(itemResponse)
+
+        const componentInfo = queryModel.results.find((result) => result.componentId === selectedComponentId)
+
+        if (!componentInfo?.zoneId) {
+          setEnergyResultZone(null)
+          return
+        }
+
+        const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, componentInfo.zoneId)
+        if (!cancelled) {
+          setEnergyResultZone(zoneResponse)
+        }
+      } catch (error) {
         if (!cancelled) {
           setEnergyResult(null)
+          setEnergyResultZone(null)
           setEnergyError(error instanceof Error ? error.message : '未知错误')
         }
       } finally {
@@ -194,14 +198,74 @@ export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: 
     return () => {
       cancelled = true
     }
-  }, [apiBaseUrl, projectId, selectedComponentId, queryModel.results]) // 👈 补充依赖
+  }, [apiBaseUrl, projectId, queryModel.results, selectedComponentId, selectedNodeType])
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]">
-      <div className="relative h-full w-full overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.35),rgba(255,255,255,0))]" />
+    <main className="flex h-screen w-screen flex-col overflow-hidden bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)] text-slate-950">
+      <div className="relative border-b border-white/60 bg-white/70 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0))]" />
 
-        <div className="relative flex h-full w-full overflow-hidden">
+        <div className="relative flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+          <div className="min-w-0 flex-1">
+            <WorkspaceNavigation
+              activeWorkspace={activeWorkspace}
+              onChange={setActiveWorkspace}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <label className="flex min-w-[220px] flex-col gap-1">
+              <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                当前项目
+              </span>
+              <select
+                className="rounded-2xl border border-white/80 bg-white/92 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-400"
+                disabled={projectLoading || projectOptions.length === 0}
+                onChange={(event) => setProjectId(event.target.value)}
+                value={projectId}
+              >
+                {projectOptions.length === 0 ? (
+                  <option value={projectId}>
+                    {projectLoading ? '正在加载项目...' : projectId}
+                  </option>
+                ) : (
+                  projectOptions.map((option) => (
+                    <option key={option.projectId} value={option.projectId}>
+                      {option.projectId}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+
+            <div className="rounded-2xl border border-white/80 bg-white/92 px-4 py-2.5 text-sm text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+              <div className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
+                Save Status
+              </div>
+              <div className="mt-1.5 font-medium text-slate-950">{saveStatus}</div>
+            </div>
+
+            <div className="rounded-2xl border border-white/80 bg-white/92 px-4 py-2.5 text-sm text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+              <div className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
+                Current Selection
+              </div>
+              <div className="mt-1.5 max-w-[220px] truncate font-medium text-slate-950">
+                {selectedComponentName}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div
+          className={cn(
+            'absolute inset-0 transition-opacity',
+            activeWorkspace === 'energy-query'
+              ? 'z-20 flex opacity-100'
+              : 'pointer-events-none opacity-0',
+          )}
+        >
           <div className="relative min-w-0 flex-1 overflow-hidden">
             <ModelingEditorCoreModule
               className="h-full w-full"
@@ -223,27 +287,54 @@ export default function HostWorkbench({ apiBaseUrl = 'http://localhost:3010' }: 
           </div>
 
           <HostRightRail
-            activeModule={activeModule}               // 👈 队友加的参数
             energyError={energyError}
             energyLoading={energyLoading}
             energyResult={energyResult}
-            energyResultZone={energyResultZone}       // 👈 你加的参数
+            energyResultZone={energyResultZone}
             filters={filters}
             insightsCollapsed={insightsCollapsed}
             levelOptions={queryModel.levelOptions}
             onFiltersChange={setFilters}
             onInsightsCollapsedChange={setInsightsCollapsed}
-            onModuleChange={setActiveModule}          // 👈 队友加的参数
-            onProjectChange={setProjectId}
             onWidthChange={setInsightsWidth}
             projectId={projectId}
-            projectLoading={projectLoading}
-            projectOptions={projectOptions}
             queryResults={queryModel.results}
-            saveStatus={saveStatus}
             selection={selection}
             width={insightsWidth}
             zoneOptions={queryModel.zoneOptions}
+          />
+        </div>
+
+        <div
+          className={cn(
+            'absolute inset-0 transition-opacity',
+            activeWorkspace === 'data-analysis'
+              ? 'z-20 opacity-100'
+              : 'pointer-events-none opacity-0',
+          )}
+        >
+          <DataAnalysisWorkspace
+            projectId={projectId}
+            queryResults={queryModel.results}
+            selectedComponentName={selectedComponentName}
+          />
+        </div>
+
+        <div
+          className={cn(
+            'absolute inset-0 transition-opacity',
+            activeWorkspace === 'smart-operations'
+              ? 'z-20 opacity-100'
+              : 'pointer-events-none opacity-0',
+          )}
+        >
+          <SmartOperationsWorkspace
+            energyResult={energyResult}
+            projectId={projectId}
+            queryResults={queryModel.results}
+            saveStatus={saveStatus}
+            selectedComponentId={selectedComponentId}
+            selectedComponentName={selectedComponentName}
           />
         </div>
       </div>
