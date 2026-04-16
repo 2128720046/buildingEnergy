@@ -76,10 +76,10 @@ function buildAreaPath(points: Array<{ x: number; y: number }>, height: number, 
 }
 
 function MetricCard({
-  label,
-  value,
-  unit,
   helper,
+  label,
+  unit,
+  value,
 }: {
   helper: string
   label: string
@@ -87,13 +87,13 @@ function MetricCard({
   value: string
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/35 p-4">
-      <div className="text-xs text-slate-300">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-white">
+    <div className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+      <div className="text-xs text-slate-400">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-950">
         {value}
-        <span className="ml-1 text-sm text-slate-300">{unit}</span>
+        <span className="ml-1 text-sm text-slate-500">{unit}</span>
       </div>
-      <div className="mt-2 text-xs text-slate-400">{helper}</div>
+      <div className="mt-2 text-xs text-slate-500">{helper}</div>
     </div>
   )
 }
@@ -113,27 +113,27 @@ function DonutPlaceholder() {
   } satisfies CSSProperties
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
             Mock Chart
           </div>
-          <h3 className="mt-2 font-semibold text-white">圆形图 · 能耗构成占比</h3>
+          <h3 className="mt-2 font-semibold text-slate-950">圆环图 · 能耗构成占比</h3>
         </div>
-        <div className="rounded-full border border-white/10 bg-black/10 px-3 py-1 text-xs text-slate-200">
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">
           模拟数据占位
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="flex items-center justify-center rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-5">
+        <div className="flex items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-5">
           <div
-            className="relative flex h-44 w-44 items-center justify-center rounded-full shadow-[0_18px_40px_rgba(15,23,42,0.28)]"
+            className="relative flex h-44 w-44 items-center justify-center rounded-full shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
             style={donutStyle}
           >
-            <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-slate-950 text-center">
-              <div className="text-2xl font-semibold text-white">Demo</div>
+            <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white text-center shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+              <div className="text-2xl font-semibold text-slate-950">Demo</div>
               <div className="mt-1 text-[11px] text-slate-400">JSON 接入前占位</div>
             </div>
           </div>
@@ -142,17 +142,14 @@ function DonutPlaceholder() {
         <div className="space-y-3">
           {MOCK_DONUT_SEGMENTS.map((segment) => (
             <div
-              className="flex items-center justify-between rounded-2xl border border-white/8 bg-slate-950/35 px-4 py-3"
+              className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3"
               key={segment.label}
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: segment.color }}
-                />
-                <span className="text-sm text-slate-200">{segment.label}</span>
+                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: segment.color }} />
+                <span className="text-sm text-slate-700">{segment.label}</span>
               </div>
-              <div className="text-sm font-medium text-white">{segment.value}%</div>
+              <div className="text-sm font-medium text-slate-950">{segment.value}%</div>
             </div>
           ))}
         </div>
@@ -163,36 +160,36 @@ function DonutPlaceholder() {
 
 function TablePlaceholder() {
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
             Mock Table
           </div>
-          <h3 className="mt-2 font-semibold text-white">表格图 · 监测数据样例</h3>
+          <h3 className="mt-2 font-semibold text-slate-950">表格图 · 监测数据样例</h3>
         </div>
-        <div className="rounded-full border border-white/10 bg-black/10 px-3 py-1 text-xs text-slate-200">
-          后续替换为真实 JSON
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">
+          后续可替换成真实 JSON
         </div>
       </div>
 
-      <div className="mt-4 overflow-auto rounded-2xl border border-white/8 bg-slate-950/45">
-        <table className="min-w-full text-sm text-slate-200">
-          <thead className="bg-white/6 text-xs uppercase tracking-[0.16em] text-slate-400">
+      <div className="mt-4 overflow-auto rounded-[24px] border border-slate-200 bg-white">
+        <table className="min-w-full text-sm text-slate-700">
+          <thead className="bg-slate-100 text-xs uppercase tracking-[0.16em] text-slate-500">
             <tr>
-              <th className="px-4 py-3 text-left">building_id</th>
-              <th className="px-4 py-3 text-left">monitor_time</th>
-              <th className="px-4 py-3 text-right">electricity_kwh</th>
-              <th className="px-4 py-3 text-right">water_m3</th>
-              <th className="px-4 py-3 text-right">hvac_kwh</th>
-              <th className="px-4 py-3 text-left">device_status</th>
+              <th className="px-4 py-3 text-left">楼栋编号</th>
+              <th className="px-4 py-3 text-left">监测时间</th>
+              <th className="px-4 py-3 text-right">总电耗</th>
+              <th className="px-4 py-3 text-right">总水耗</th>
+              <th className="px-4 py-3 text-right">暖通电耗</th>
+              <th className="px-4 py-3 text-left">设备状态</th>
             </tr>
           </thead>
           <tbody>
             {MOCK_MONITOR_ROWS.map((row) => (
-              <tr className="border-t border-white/6" key={`${row.building_id}-${row.monitor_time}`}>
-                <td className="px-4 py-3 font-medium text-white">{row.building_id}</td>
-                <td className="px-4 py-3 text-slate-300">{row.monitor_time}</td>
+              <tr className="border-t border-slate-100" key={`${row.building_id}-${row.monitor_time}`}>
+                <td className="px-4 py-3 font-medium text-slate-950">{row.building_id}</td>
+                <td className="px-4 py-3 text-slate-600">{row.monitor_time}</td>
                 <td className="px-4 py-3 text-right">{row.electricity_kwh}</td>
                 <td className="px-4 py-3 text-right">{row.water_m3}</td>
                 <td className="px-4 py-3 text-right">{row.hvac_kwh}</td>
@@ -200,10 +197,10 @@ function TablePlaceholder() {
                   <span
                     className={
                       row.device_status === '预警'
-                        ? 'rounded-full bg-rose-500/20 px-2.5 py-1 text-xs text-rose-100'
+                        ? 'rounded-full bg-rose-50 px-2.5 py-1 text-xs text-rose-700'
                         : row.device_status === '偏高'
-                          ? 'rounded-full bg-amber-500/20 px-2.5 py-1 text-xs text-amber-100'
-                          : 'rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs text-emerald-100'
+                          ? 'rounded-full bg-amber-50 px-2.5 py-1 text-xs text-amber-700'
+                          : 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700'
                     }
                   >
                     {row.device_status}
@@ -215,8 +212,8 @@ function TablePlaceholder() {
         </table>
       </div>
 
-      <p className="mt-3 text-xs leading-5 text-slate-400">
-        当前这张表使用的是模拟监测字段和示例数值。后续拿到 JSON 后，可以直接把表头和行数据替换成解析结果。
+      <p className="mt-3 text-xs leading-5 text-slate-500">
+        当前这张表使用的是模拟监测字段和示例数值。后续拿到真实 JSON 后，可以直接把表头和行数据替换成解析结果。
       </p>
     </section>
   )
@@ -236,8 +233,8 @@ export default function EnergyVisuals({
   if (!hasRealSeries) {
     return (
       <section className="space-y-4">
-        <section className="rounded-2xl border border-dashed border-white/15 bg-slate-950/25 px-4 py-4 text-sm text-slate-300">
-          目前先放两张假的图表占位。等后续接入真实 JSON 后，这里会切换成真实圆形图和真实表格数据。
+        <section className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+          当前先放两张占位图。等后续接入真实 JSON 后，这里会切换成真实圆环图、趋势图和明细表。
         </section>
         <div className="grid grid-cols-1 gap-4">
           <DonutPlaceholder />
@@ -248,7 +245,6 @@ export default function EnergyVisuals({
   }
 
   const realEnergyResult = energyResult!
-
   const chartWidth = 332
   const chartHeight = 180
   const padding = 18
@@ -264,24 +260,19 @@ export default function EnergyVisuals({
 
   return (
     <section className="space-y-4">
-      <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
               Visualization
             </div>
-            <h3 className="mt-2 font-semibold text-white">图表区域</h3>
+            <h3 className="mt-2 font-semibold text-slate-950">图表区域</h3>
           </div>
-          <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100">
-            当前已接入实时序列，假图仍保留作占位参考
+          <div className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs text-cyan-700">
+            当前已接入实时序列
           </div>
         </div>
       </section>
-
-      <div className="grid grid-cols-1 gap-4">
-        <DonutPlaceholder />
-        <TablePlaceholder />
-      </div>
 
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
         <MetricCard
@@ -305,25 +296,25 @@ export default function EnergyVisuals({
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-        <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
                 Trend
               </div>
-              <h3 className="mt-2 font-semibold text-white">{selectedComponentName} 负荷趋势图</h3>
+              <h3 className="mt-2 font-semibold text-slate-950">{selectedComponentName} 负荷趋势图</h3>
             </div>
-            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100">
+            <div className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs text-cyan-700">
               平均 {averageValue.toFixed(2)} kWh
             </div>
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-2xl border border-white/8 bg-slate-950/45 p-3">
+          <div className="mt-4 overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7ff_100%)] p-3">
             <svg className="h-auto w-full" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
               <defs>
                 <linearGradient id="energyTrendFill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
                 </linearGradient>
               </defs>
 
@@ -332,7 +323,7 @@ export default function EnergyVisuals({
                 return (
                   <line
                     key={y}
-                    stroke="rgba(255,255,255,0.08)"
+                    stroke="rgba(148,163,184,0.28)"
                     strokeDasharray="4 6"
                     x1={padding}
                     x2={chartWidth - padding}
@@ -356,53 +347,53 @@ export default function EnergyVisuals({
                 <circle
                   cx={point.x}
                   cy={point.y}
-                  fill="#0f172a"
+                  fill="#ffffff"
                   key={`${point.x}-${point.y}`}
                   r="4.5"
-                  stroke="#7dd3fc"
+                  stroke="#38bdf8"
                   strokeWidth="2"
                 />
               ))}
             </svg>
 
-            <div className="mt-3 grid grid-cols-4 gap-2 text-[11px] text-slate-400">
+            <div className="mt-3 grid grid-cols-4 gap-2 text-[11px] text-slate-500">
               {realEnergyResult.series.map((point) => (
                 <div key={point.time}>
                   <div>{point.time}</div>
-                  <div className="mt-1 text-slate-200">{point.value.toFixed(1)}</div>
+                  <div className="mt-1 text-slate-700">{point.value.toFixed(1)}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <section className="rounded-[28px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
                 Compare
               </div>
-              <h3 className="mt-2 font-semibold text-white">分时用量柱状图</h3>
+              <h3 className="mt-2 font-semibold text-slate-950">分时用量柱状图</h3>
             </div>
-            <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-xs text-slate-200">
+            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-500">
               峰值 {maxPoint.value.toFixed(2)} kWh
             </div>
           </div>
 
-          <div className="mt-4 flex min-h-[180px] items-end gap-3 rounded-2xl border border-white/8 bg-slate-950/45 px-3 pb-4 pt-6">
+          <div className="mt-4 flex min-h-[180px] items-end gap-3 rounded-[24px] border border-slate-200 bg-slate-50 px-3 pb-4 pt-6">
             {realEnergyResult.series.map((point) => {
               const height = `${Math.max((point.value / Math.max(maxPoint.value, 1)) * 100, 16)}%`
 
               return (
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-2" key={point.time}>
-                  <div className="text-[11px] text-slate-300">{point.value.toFixed(1)}</div>
-                  <div className="flex h-28 w-full items-end justify-center rounded-full bg-slate-900/80 px-1">
+                  <div className="text-[11px] text-slate-500">{point.value.toFixed(1)}</div>
+                  <div className="flex h-28 w-full items-end justify-center rounded-full bg-white px-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                     <div
                       className="w-full rounded-full bg-[linear-gradient(180deg,#22d3ee_0%,#2563eb_100%)] shadow-[0_12px_30px_rgba(56,189,248,0.18)]"
                       style={{ height }}
                     />
                   </div>
-                  <div className="text-[11px] text-slate-400">{point.time}</div>
+                  <div className="text-[11px] text-slate-500">{point.time}</div>
                 </div>
               )
             })}

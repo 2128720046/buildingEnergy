@@ -58,8 +58,16 @@ export function buildEnergyAssistantReply(
   }
 
   const series = energyResult.series ?? []
-  const peakPoint = series.reduce((best, point) => (point.value > best.value ? point : best), series[0]!)
-  const valleyPoint = series.reduce((best, point) => (point.value < best.value ? point : best), series[0]!)
+  const analysisSeries =
+    series.length > 0
+      ? series
+      : [{ time: '当前', value: energyResult.todayUsage }]
+  const peakPoint = analysisSeries.reduce((best, point) =>
+    point.value > best.value ? point : best,
+  )
+  const valleyPoint = analysisSeries.reduce((best, point) =>
+    point.value < best.value ? point : best,
+  )
   const averageValue =
     series.length > 0
       ? series.reduce((sum, point) => sum + point.value, 0) / series.length
