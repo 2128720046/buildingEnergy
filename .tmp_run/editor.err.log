@@ -1,0 +1,2 @@
+$ bun run sync-assets && next start
+$ node ../../packages/editor-assets/bin/pascal-editor-assets.mjs sync --target ./public --clean
