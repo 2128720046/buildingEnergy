@@ -73,8 +73,8 @@ export const ZoneSystem = () => {
         obj.userData.__raycastDisabled = true
       }
 
-      // Labels: always visible on the current level (regardless of mode)
-      const showLabel = !!selectedLevelId && isOnSelectedLevel
+      // Labels are only shown for the currently selected zone.
+      const showLabel = zoneId === selectedZoneId && !!selectedLevelId && isOnSelectedLevel
       const labelOpacity = showLabel ? '1' : '0'
       const labelEl = document.getElementById(`${zoneId}-label`)
       if (labelEl && labelEl.style.opacity !== labelOpacity) {

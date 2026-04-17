@@ -7,7 +7,7 @@ import {
   spatialGridManager,
   useScene,
 } from '@pascal-app/core'
-import { InteractiveSystem, useViewer, Viewer } from '@pascal-app/viewer'
+import { useViewer, Viewer } from '@pascal-app/viewer'
 import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
@@ -126,6 +126,7 @@ export interface EditorProps {
   viewerOverlayOptions?: {
     showFloatingLevelSelector?: boolean
     showActionMenu?: boolean
+    showFloatingActionMenu?: boolean
     showPanelManager?: boolean
     showHelperManager?: boolean
   }
@@ -541,6 +542,7 @@ export default function Editor({
   const {
     showFloatingLevelSelector = true,
     showActionMenu = true,
+    showFloatingActionMenu = true,
     showPanelManager = true,
     showHelperManager = true,
   } = viewerOverlayOptions ?? {}
@@ -647,7 +649,7 @@ export default function Editor({
     <>
       <SelectionManager />
       <BoxSelectTool />
-      <FloatingActionMenu />
+      {showFloatingActionMenu ? <FloatingActionMenu /> : null}
       <WallMeasurementLabel />
       <ExportManager />
       <ZoneSystem />
@@ -658,7 +660,6 @@ export default function Editor({
       {!isLoading && <ToolManager />}
       <CustomCameraControls />
       <SiteEdgeLabels />
-      <InteractiveSystem />
     </>
   )
 
