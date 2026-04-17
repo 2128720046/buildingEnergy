@@ -233,9 +233,6 @@ export default function EnergyVisuals({
   if (!hasRealSeries) {
     return (
       <section className="space-y-4">
-        <section className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-          当前先放两张占位图。等后续接入真实数据后，这里会切换成真实圆环图、趋势图和明细表。
-        </section>
         <div className="grid grid-cols-1 gap-4">
           <DonutPlaceholder />
           <TablePlaceholder />
