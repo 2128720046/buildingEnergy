@@ -61,9 +61,6 @@ export default function SmartOperationsWorkspace({
                 Smart Operations Workspace
               </div>
               <h1 className="mt-3 text-3xl font-semibold text-slate-950">智慧运维协同大界面</h1>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                运维告警、任务协同和智能体问答集中在同一个一级页面，更适合做告警闭环、任务推进和运维决策。
-              </p>
             </div>
 
             <div className="flex flex-wrap gap-2 text-sm text-slate-600">
