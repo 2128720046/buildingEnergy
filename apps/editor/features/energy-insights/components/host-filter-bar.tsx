@@ -42,6 +42,8 @@ export interface HostFilterBarProps {
   zoneOptions: HostFilterOption[]
   resultCount: number
   onFiltersChange: (nextFilters: HostQueryFilters) => void
+  onQuery: () => void
+  hasQueried?: boolean
   variant?: 'floating' | 'sidebar'
 }
 
@@ -51,6 +53,8 @@ export default function HostFilterBar({
   zoneOptions,
   resultCount,
   onFiltersChange,
+  onQuery,
+  hasQueried = false,
   variant = 'floating',
 }: HostFilterBarProps) {
   const isSidebar = variant === 'sidebar'
@@ -130,7 +134,14 @@ export default function HostFilterBar({
                 ? 'border border-slate-200 bg-white text-slate-700 focus:border-slate-400'
                 : 'border border-slate-200/80 bg-white text-slate-700 focus:border-slate-400',
             )}
-            onChange={(event) => updateField('levelId', event.target.value)}
+            onChange={(event) =>
+              onFiltersChange({
+                ...filters,
+                levelId: event.target.value,
+                // Switching floor invalidates current room filter; clear it eagerly.
+                zoneId: '',
+              })
+            }
             value={filters.levelId}
           >
             <option value="">全部楼层</option>
@@ -221,28 +232,43 @@ export default function HostFilterBar({
           </select>
         </label>
 
-        <button
-          className={cn(
-            'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 font-medium text-sm transition-transform hover:-translate-y-0.5',
-            isSidebar && 'sm:col-span-2',
-            isSidebar
-              ? 'border border-slate-200 bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.12)] hover:bg-slate-800'
-              : 'bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]',
-          )}
-          onClick={() =>
-            onFiltersChange({
-              keyword: '',
-              levelId: '',
-              zoneId: '',
-              timeRange: '24h',
-              energyLevel: '',
-            })
-          }
-          type="button"
-        >
-          <ResetIcon />
-          重置筛选
-        </button>
+        <div className={cn('grid gap-3', isSidebar ? 'sm:col-span-2 grid-cols-2' : 'grid-cols-2')}>
+          <button
+            className={cn(
+              'inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 font-medium text-sm transition-transform hover:-translate-y-0.5',
+              isSidebar
+                ? 'border border-slate-200 bg-slate-900 text-white shadow-[0_12px_24px_rgba(15,23,42,0.12)] hover:bg-slate-800'
+                : 'bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]',
+            )}
+            onClick={onQuery}
+            type="button"
+          >
+            <FilterIcon />
+            {hasQueried ? '重新查询' : '开始查询'}
+          </button>
+
+          <button
+            className={cn(
+              'inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 font-medium text-sm transition-transform hover:-translate-y-0.5',
+              isSidebar
+                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50',
+            )}
+            onClick={() =>
+              onFiltersChange({
+                keyword: '',
+                levelId: '',
+                zoneId: '',
+                timeRange: '24h',
+                energyLevel: '',
+              })
+            }
+            type="button"
+          >
+            <ResetIcon />
+            重置筛选
+          </button>
+        </div>
       </div>
     </section>
   )

@@ -34,8 +34,8 @@ export const ViewerZoneSystem = () => {
         }
       })
 
-      // Labels: always visible on the current level (regardless of mode or zone selection)
-      const showLabel = !!levelId && isOnSelectedLevel
+      // Labels are hidden by default and only shown for the active queried/selected zone.
+      const showLabel = zoneId === id && !!levelId && isOnSelectedLevel
       const targetOpacity = showLabel ? '1' : '0'
       const labelEl = document.getElementById(`${id}-label`)
       if (labelEl && labelEl.style.opacity !== targetOpacity) {
