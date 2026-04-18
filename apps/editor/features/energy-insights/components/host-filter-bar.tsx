@@ -42,7 +42,13 @@ export interface HostFilterBarProps {
   zoneOptions: HostFilterOption[]
   resultCount: number
   onFiltersChange: (nextFilters: HostQueryFilters) => void
+<<<<<<< Updated upstream
   variant?: 'floating' | 'sidebar'
+=======
+  onQuery: () => void
+  hasQueried?: boolean
+  variant?: 'cockpit' | 'floating' | 'sidebar'
+>>>>>>> Stashed changes
 }
 
 export default function HostFilterBar({
@@ -54,12 +60,105 @@ export default function HostFilterBar({
   variant = 'floating',
 }: HostFilterBarProps) {
   const isSidebar = variant === 'sidebar'
+  const isCockpit = variant === 'cockpit'
 
   const updateField = <K extends keyof HostQueryFilters>(field: K, value: HostQueryFilters[K]) => {
     onFiltersChange({
       ...filters,
       [field]: value,
     })
+  }
+
+  if (isCockpit) {
+    return (
+      <section className="w-full">
+        <div className="no-scrollbar flex flex-nowrap items-center justify-start gap-2 overflow-x-auto px-1 py-1.5 whitespace-nowrap">
+          <input
+            className="h-10 min-w-[220px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none placeholder:text-slate-400 focus:border-cyan-300/45"
+            onChange={(event) => updateField('keyword', event.target.value)}
+            placeholder="搜索楼层/房间/构件"
+            value={filters.keyword}
+          />
+
+          <select
+            className="h-10 min-w-[130px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            onChange={(event) =>
+              onFiltersChange({
+                ...filters,
+                levelId: event.target.value,
+                zoneId: '',
+              })
+            }
+            value={filters.levelId}
+          >
+            <option value="">全部楼层</option>
+            {levelOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="h-10 min-w-[130px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            onChange={(event) => updateField('zoneId', event.target.value)}
+            value={filters.zoneId}
+          >
+            <option value="">全部房间</option>
+            {zoneOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="h-10 min-w-[120px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            onChange={(event) => updateField('timeRange', event.target.value)}
+            value={filters.timeRange}
+          >
+            <option value="24h">近 24 小时</option>
+            <option value="7d">近 7 天</option>
+            <option value="30d">近 30 天</option>
+          </select>
+
+          <select
+            className="h-10 min-w-[120px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            onChange={(event) => updateField('energyLevel', event.target.value)}
+            value={filters.energyLevel}
+          >
+            <option value="">全部等级</option>
+            <option value="高">高</option>
+            <option value="中">中</option>
+            <option value="低">低</option>
+          </select>
+
+          <button
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-cyan-300/40 bg-cyan-500/20 px-4 font-medium text-cyan-100 text-sm whitespace-nowrap transition-colors hover:bg-cyan-500/30"
+            onClick={onQuery}
+            type="button"
+          >
+            {hasQueried ? '重新查询' : '开始查询'}
+          </button>
+
+          <button
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-500/60 bg-slate-800/70 px-4 font-medium text-slate-200 text-sm whitespace-nowrap transition-colors hover:bg-slate-700/80"
+            onClick={() =>
+              onFiltersChange({
+                keyword: '',
+                levelId: '',
+                zoneId: '',
+                timeRange: '24h',
+                energyLevel: '',
+              })
+            }
+            type="button"
+          >
+            重置
+          </button>
+        </div>
+      </section>
+    )
   }
 
   return (

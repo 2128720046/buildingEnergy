@@ -1,4 +1,4 @@
-import { createServer } from 'node:http'
+﻿import { createServer } from 'node:http'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -244,7 +244,28 @@ const server = createServer(async (request, response) => {
   }
 })
 
+let keepAliveTimer = null
+
+server.on('error', (error) => {
+  if (error && typeof error === 'object' && error.code === 'EADDRINUSE') {
+    console.warn(`[editor-api] port ${port} already in use, reusing existing process`)
+    if (!keepAliveTimer) {
+      keepAliveTimer = setInterval(() => {}, 60_000)
+    }
+    return
+  }
+
+  console.error('[editor-api] server failed to start', error)
+  process.exit(1)
+})
 server.listen(port, host, () => {
   console.log(`[editor-api] listening on http://${host}:${port}`)
   console.log(`[editor-api] storing scene files in ${dataRoot}`)
+<<<<<<< Updated upstream
 })
+=======
+  console.log(`[editor-api] energy data mode: ${pool ? 'mysql' : 'mock fallback'}`)
+})
+
+
+>>>>>>> Stashed changes
