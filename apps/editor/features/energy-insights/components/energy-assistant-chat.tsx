@@ -130,10 +130,12 @@ export default function EnergyAssistantChat({
     <section
       className={cn(
         'rounded-2xl border p-4 shadow-sm',
-        isWorkspace && 'rounded-[32px] p-5',
+        isWorkspace && 'flex h-full min-h-0 max-h-[calc(100dvh-220px)] flex-col overflow-hidden rounded-sm p-4',
         isLight
           ? 'border-slate-200/80 bg-white'
-          : 'border-white/10 bg-white/6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+          : isWorkspace
+            ? 'border-cyan-300/16 bg-[#050505] shadow-[inset_0_1px_0_rgba(148,163,184,0.05)]'
+            : 'border-cyan-300/20 bg-[#0f172a] shadow-[inset_0_1px_0_rgba(148,163,184,0.08)]',
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -169,7 +171,9 @@ export default function EnergyAssistantChat({
               'rounded-full px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-60',
               isLight
                 ? 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                : 'border border-white/10 bg-black/10 text-slate-200 hover:bg-white/10',
+                : isWorkspace
+                  ? 'border border-cyan-300/18 bg-[#111111] text-slate-100 hover:bg-[#181818]'
+                  : 'border border-cyan-300/20 bg-[#111c31] text-slate-100 hover:bg-[#16253f]',
             )}
             disabled={isSubmitting}
             key={prompt}
@@ -184,10 +188,12 @@ export default function EnergyAssistantChat({
       <div
         className={cn(
           'mt-4 space-y-3 overflow-auto rounded-2xl border p-3',
-          isWorkspace ? 'min-h-[420px] max-h-[520px]' : 'max-h-[360px]',
+          isWorkspace ? 'min-h-0 flex-1' : 'max-h-[360px]',
           isLight
             ? 'border-slate-200 bg-slate-50/90'
-            : 'border-white/8 bg-slate-950/45',
+            : isWorkspace
+              ? 'border-cyan-300/14 bg-[#090909]'
+              : 'border-cyan-300/18 bg-[#0b1426]',
         )}
       >
         {messages.map((message) => (
@@ -201,8 +207,10 @@ export default function EnergyAssistantChat({
                 message.role === 'assistant'
                   ? isLight
                     ? 'rounded-bl-md border border-slate-200 bg-white text-slate-700'
-                    : 'rounded-bl-md border border-white/8 bg-white/8 text-slate-100'
-                  : 'rounded-br-md bg-sky-500 text-white',
+                    : isWorkspace
+                      ? 'rounded-bl-md border border-cyan-300/16 bg-[#111111] text-slate-100'
+                      : 'rounded-bl-md border border-cyan-300/18 bg-[#111d34] text-slate-100'
+                  : 'rounded-br-md bg-cyan-600 text-white',
               )}
             >
               {message.content}
@@ -217,7 +225,9 @@ export default function EnergyAssistantChat({
                 'max-w-[90%] rounded-2xl rounded-bl-md border px-3 py-2 text-sm',
                 isLight
                   ? 'border-slate-200 bg-white text-slate-700'
-                  : 'border-white/8 bg-white/8 text-slate-100',
+                  : isWorkspace
+                    ? 'border-cyan-300/16 bg-[#111111] text-slate-100'
+                    : 'border-cyan-300/18 bg-[#111d34] text-slate-100',
               )}
             >
               智能体正在思考...
@@ -229,7 +239,7 @@ export default function EnergyAssistantChat({
       </div>
 
       <form
-        className={cn('mt-4 flex items-end gap-3', isWorkspace && 'gap-4')}
+        className={cn('mt-4 flex shrink-0 items-end gap-3', isWorkspace && 'gap-4')}
         onSubmit={(event) => {
           event.preventDefault()
           void submitPrompt(draft)
@@ -240,10 +250,12 @@ export default function EnergyAssistantChat({
           <textarea
             className={cn(
               'w-full resize-none rounded-2xl border px-3 py-3 text-sm outline-none',
-              isWorkspace ? 'min-h-[124px]' : 'min-h-[92px]',
+              isWorkspace ? 'min-h-[88px]' : 'min-h-[92px]',
               isLight
                 ? 'border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-slate-300'
-                : 'border-white/10 bg-slate-950/45 text-slate-100 placeholder:text-slate-500 focus:border-white/20',
+                : isWorkspace
+                  ? 'border-cyan-300/16 bg-[#0f0f0f] text-slate-100 placeholder:text-slate-500 focus:border-cyan-300/30'
+                  : 'border-cyan-300/20 bg-[#0d182c] text-slate-100 placeholder:text-slate-500 focus:border-cyan-300/35',
             )}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="例如：帮我解释这个构件为什么峰值偏高，或者给我三条节能建议。"
@@ -256,7 +268,7 @@ export default function EnergyAssistantChat({
             'inline-flex h-11 items-center gap-2 rounded-2xl px-4 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-70',
             isLight
               ? 'bg-slate-900 text-white hover:bg-slate-800'
-              : 'bg-slate-100 text-slate-950 hover:bg-white',
+              : 'bg-cyan-600 text-white hover:bg-cyan-500',
           )}
           disabled={isSubmitting}
           type="submit"

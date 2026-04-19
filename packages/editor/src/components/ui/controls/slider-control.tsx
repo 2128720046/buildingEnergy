@@ -211,8 +211,6 @@ export function SliderControl({
         <span className="font-medium">{label}</span>
       </div>
 
-      <div className="flex-1" />
-
       {/* Value — click to edit */}
       <div className="flex items-center text-xs">
         {isEditing ? (

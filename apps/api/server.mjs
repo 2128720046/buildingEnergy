@@ -2,26 +2,12 @@ import { createServer } from 'node:http'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import 'dotenv/config'
-import mysql from 'mysql2/promise'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const port = Number(process.env.PORT ?? 3010)
 const host = process.env.HOST ?? '0.0.0.0'
 const dataRoot = resolve(__dirname, process.env.EDITOR_API_DATA_DIR ?? './data/projects')
 const allowOrigin = process.env.EDITOR_API_ALLOW_ORIGIN ?? '*'
-const dbPassword = process.env.DB_PASSWORD?.trim()
-
-const pool = dbPassword
-  ? mysql.createPool({
-      host: '62.234.36.130',
-      port: 3306,
-      user: 'root',
-      password: dbPassword,
-      database: 'campus_energy_db',
-      charset: 'utf8mb4',
-    })
-  : null
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
@@ -44,87 +30,6 @@ function isValidComponentId(componentId) {
 
 function getProjectFilePath(projectId) {
   return join(dataRoot, `${projectId}.json`)
-}
-
-function hashString(input) {
-  let hash = 0
-
-  for (const character of input) {
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0
-  }
-
-  return hash
-}
-
-function pickFromList(input, values) {
-  return values[hashString(input) % values.length]
-}
-
-function roundToSingle(value) {
-  return Number(value.toFixed(1))
-}
-
-function buildMockSeries(seed) {
-  const base = 2.8 + (seed % 8) * 0.45
-
-  return ['00:00', '06:00', '12:00', '18:00'].map((time, index) => ({
-    time,
-    value: roundToSingle(base + ((seed >> (index * 3)) % 5) * 0.6 + index * 0.35),
-  }))
-}
-
-function buildMockComponentEnergy(projectId, componentId) {
-  const seed = hashString(componentId)
-  const itemType = pickFromList(componentId, [
-    'light',
-    'fan',
-    'fridge',
-    'stove',
-    'electricbox',
-    'smarttoilet',
-  ])
-  const series = buildMockSeries(seed)
-  const todayUsage = roundToSingle(series.reduce((sum, point) => sum + point.value, 0))
-  const monthUsage = roundToSingle(todayUsage * (12 + (seed % 6)))
-  const electricity = roundToSingle(3.5 + (seed % 11) * 1.4)
-
-  return {
-    binding: {
-      bindingTargetId: componentId,
-      bindingType: 'mock-meter',
-    },
-    componentId,
-    currentPower: series.at(-1)?.value ?? electricity,
-    electric_current_a: itemType === 'electricbox' ? roundToSingle(8 + (seed % 6) * 1.2) : null,
-    electric_voltage_v: itemType === 'electricbox' ? roundToSingle(218 + (seed % 8)) : null,
-    electricity_kwh: electricity,
-    fridge_temp_setting: itemType === 'fridge' ? 4 : null,
-    item_name: `Mock ${componentId}`,
-    item_type: itemType,
-    light_brightness_pct: itemType === 'light' ? 45 + (seed % 40) : null,
-    monthUsage,
-    motor_speed_level: itemType === 'fan' ? 1 + (seed % 4) : null,
-    operating_status: pickFromList(componentId, ['正常', '高负载', '待机']),
-    projectId,
-    seat_temp_setting: itemType === 'smarttoilet' ? 36 : null,
-    series,
-    source: 'mock',
-    stove_power_level: itemType === 'stove' ? 1 + (seed % 5) : null,
-    todayUsage,
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-function buildMockZoneEnergy(zoneId) {
-  const seed = hashString(zoneId)
-
-  return {
-    indoor_humidity: roundToSingle(40 + (seed % 18)),
-    indoor_temp: roundToSingle(21 + (seed % 7) * 0.6),
-    occupancy_density: roundToSingle(0.4 + (seed % 9) * 0.18),
-    total_electricity_kwh: roundToSingle(65 + (seed % 30) * 4.8),
-    type: 'zone',
-  }
 }
 
 async function listProjectSummaries() {
@@ -162,6 +67,41 @@ function isSceneGraph(scene) {
   if (!scene.nodes || typeof scene.nodes !== 'object') return false
   if (!Array.isArray(scene.rootNodeIds)) return false
   return true
+}
+
+function seededNumber(input, offset) {
+  let value = 0
+
+  for (let index = 0; index < input.length; index += 1) {
+    value += input.charCodeAt(index) * (index + 1 + offset)
+  }
+
+  return value
+}
+
+function buildEnergyPayload(projectId, componentId) {
+  const seed = seededNumber(`${projectId}:${componentId}`, 7)
+  const series = Array.from({ length: 8 }, (_, index) => {
+    const base = ((seed % 80) + index * 11) % 42
+    return {
+      time: `${String(index * 3).padStart(2, '0')}:00`,
+      value: Number((base / 3.5 + 1.2).toFixed(2)),
+    }
+  })
+
+  return {
+    projectId,
+    componentId,
+    binding: {
+      bindingType: 'mock-meter',
+      bindingTargetId: `meter-${componentId}`,
+    },
+    currentPower: Number((((seed % 90) / 10) + 1.4).toFixed(1)),
+    todayUsage: Number((((seed % 320) / 4) + 9).toFixed(1)),
+    monthUsage: Number((((seed % 2800) / 2.2) + 180).toFixed(1)),
+    series,
+    updatedAt: new Date().toISOString(),
+  }
 }
 
 async function loadProjectScene(projectId) {
@@ -204,38 +144,6 @@ async function saveProjectScene(projectId, scene) {
   }
 }
 
-async function loadComponentEnergyRecord(componentId) {
-  if (!pool) {
-    return null
-  }
-
-  const [rows] = await pool.execute(
-    `SELECT item_type, item_name, electricity_kwh, operating_status, light_brightness_pct,
-            fridge_temp_setting, motor_speed_level, stove_power_level,
-            electric_voltage_v, electric_current_a, seat_temp_setting
-       FROM appliances
-      WHERE item_id = ?`,
-    [componentId],
-  )
-
-  return rows[0] ?? null
-}
-
-async function loadZoneEnergyRecord(zoneId) {
-  if (!pool) {
-    return null
-  }
-
-  const [rows] = await pool.execute(
-    `SELECT total_electricity_kwh, indoor_temp, indoor_humidity, occupancy_density
-       FROM rooms
-      WHERE room_id = ?`,
-    [zoneId],
-  )
-
-  return rows[0] ?? null
-}
-
 const server = createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
@@ -252,8 +160,6 @@ const server = createServer(async (request, response) => {
 
     if (request.method === 'GET' && requestUrl.pathname === '/health') {
       sendJson(response, 200, {
-        dataRoot,
-        dbMode: pool ? 'mysql' : 'mock',
         status: 'ok',
         app: 'editor-api',
         timestamp: new Date().toISOString(),
@@ -285,42 +191,7 @@ const server = createServer(async (request, response) => {
         return
       }
 
-      try {
-        const record = await loadComponentEnergyRecord(componentId)
-
-        if (!record) {
-          sendJson(response, 200, buildMockComponentEnergy(projectId, componentId))
-          return
-        }
-
-        sendJson(response, 200, record)
-      } catch (dbError) {
-        console.error('[editor-api] component energy query failed, falling back to mock', dbError)
-        sendJson(response, 200, buildMockComponentEnergy(projectId, componentId))
-      }
-      return
-    }
-
-    const zoneMatch = requestUrl.pathname.match(
-      /^\/projects\/([a-zA-Z0-9_-]+)\/energy\/zones\/([a-zA-Z0-9_:-]+)$/,
-    )
-
-    if (request.method === 'GET' && zoneMatch?.[1] && zoneMatch?.[2]) {
-      const zoneId = zoneMatch[2]
-
-      try {
-        const record = await loadZoneEnergyRecord(zoneId)
-
-        if (!record) {
-          sendJson(response, 200, buildMockZoneEnergy(zoneId))
-          return
-        }
-
-        sendJson(response, 200, { type: 'zone', ...record })
-      } catch (error) {
-        console.error('[editor-api] zone energy query failed, falling back to mock', error)
-        sendJson(response, 200, buildMockZoneEnergy(zoneId))
-      }
+      sendJson(response, 200, buildEnergyPayload(projectId, componentId))
       return
     }
 
@@ -376,5 +247,4 @@ const server = createServer(async (request, response) => {
 server.listen(port, host, () => {
   console.log(`[editor-api] listening on http://${host}:${port}`)
   console.log(`[editor-api] storing scene files in ${dataRoot}`)
-  console.log(`[editor-api] energy data mode: ${pool ? 'mysql' : 'mock fallback'}`)
 })

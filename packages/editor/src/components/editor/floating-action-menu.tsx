@@ -16,7 +16,7 @@ import {
 import { useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { sfxEmitter } from '../../lib/sfx-bus'
 import useEditor from '../../store/use-editor'
@@ -39,6 +39,7 @@ export function FloatingActionMenu() {
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const nodes = useScene((s) => s.nodes)
   const mode = useEditor((s) => s.mode)
+  const viewMode = useEditor((s) => s.viewMode)
   const setMode = useEditor((s) => s.setMode)
   const isFloorplanHovered = useEditor((s) => s.isFloorplanHovered)
   const setMovingNode = useEditor((s) => s.setMovingNode)
@@ -50,6 +51,48 @@ export function FloatingActionMenu() {
   const selectedId = selectedIds.length === 1 ? selectedIds[0] : null
   const node = selectedId ? nodes[selectedId as AnyNodeId] : null
   const isValidType = node ? ALLOWED_TYPES.includes(node.type) : false
+  const isBlockedByFloorplan = isFloorplanHovered && viewMode !== '3d'
+  const shouldRender = Boolean(selectedId && node && isValidType && !isBlockedByFloorplan && mode !== 'delete')
+
+  const isSelectionDebugEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    typeof window !== 'undefined' &&
+    (window.localStorage.getItem('editor:debug:selection') === '1' ||
+      window.location.search.includes('debugSelection=1'))
+
+  useEffect(() => {
+    if (!isSelectionDebugEnabled) return
+
+    console.info('[floating-action-menu] visibility check', {
+      selectedIds,
+      selectedId,
+      nodeType: node?.type ?? null,
+      isValidType,
+      mode,
+      viewMode,
+      isFloorplanHovered,
+      isBlockedByFloorplan,
+      shouldRender,
+      blockReasons: {
+        missingSingleSelection: selectedIds.length !== 1,
+        missingNode: !node,
+        unsupportedType: Boolean(node && !isValidType),
+        deleteMode: mode === 'delete',
+        floorplanHoverBlocked: isBlockedByFloorplan,
+      },
+    })
+  }, [
+    isBlockedByFloorplan,
+    isFloorplanHovered,
+    isSelectionDebugEnabled,
+    isValidType,
+    mode,
+    node,
+    selectedId,
+    selectedIds,
+    shouldRender,
+    viewMode,
+  ])
 
   useFrame(() => {
     if (!(selectedId && isValidType && groupRef.current)) return
@@ -72,6 +115,12 @@ export function FloatingActionMenu() {
     (e: React.MouseEvent) => {
       e.stopPropagation()
       if (!node) return
+      if (isSelectionDebugEnabled) {
+        console.info('[floating-action-menu] action move', {
+          nodeId: node.id,
+          nodeType: node.type,
+        })
+      }
       sfxEmitter.emit('sfx:item-pick')
       if (
         node.type === 'item' ||
@@ -86,13 +135,20 @@ export function FloatingActionMenu() {
       }
       setSelection({ selectedIds: [] })
     },
-    [node, setMovingNode, setSelection],
+    [isSelectionDebugEnabled, node, setMovingNode, setSelection],
   )
 
   const handleDuplicate = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
       if (!node?.parentId) return
+      if (isSelectionDebugEnabled) {
+        console.info('[floating-action-menu] action duplicate', {
+          nodeId: node.id,
+          nodeType: node.type,
+          parentId: node.parentId,
+        })
+      }
       sfxEmitter.emit('sfx:item-pick')
       useScene.temporal.getState().pause()
 
@@ -193,20 +249,26 @@ export function FloatingActionMenu() {
         setSelection({ selectedIds: [] })
       }
     },
-    [node, setMovingNode, setSelection],
+    [isSelectionDebugEnabled, node, setMovingNode, setSelection],
   )
 
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
       // Activate delete mode (sledgehammer tool) instead of deleting directly
+      if (isSelectionDebugEnabled) {
+        console.info('[floating-action-menu] action delete-mode', {
+          nodeId: node?.id ?? null,
+          nodeType: node?.type ?? null,
+        })
+      }
       setSelection({ selectedIds: [] })
       setMode('delete')
     },
-    [setSelection, setMode],
+    [isSelectionDebugEnabled, node, setSelection, setMode],
   )
 
-  if (!(selectedId && node && isValidType && !isFloorplanHovered && mode !== 'delete')) return null
+  if (!shouldRender) return null
 
   return (
     <group ref={groupRef}>

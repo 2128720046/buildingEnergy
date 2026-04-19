@@ -6098,7 +6098,7 @@
     },
     "zone_0vdn7yb3ngcldwpo": {
       "id": "zone_0vdn7yb3ngcldwpo",
-      "name": "阳台1",
+      "name": "未命名区域-dwpo",
       "type": "zone",
       "color": "#84cc16",
       "object": "node",
@@ -6126,7 +6126,7 @@
     },
     "zone_39gqsci0tfog8ln6": {
       "id": "zone_39gqsci0tfog8ln6",
-      "name": "主卧",
+      "name": "未命名区域-8ln6",
       "type": "zone",
       "color": "#22c55e",
       "object": "node",
@@ -6158,7 +6158,7 @@
     },
     "zone_9846xenzq83rnn4x": {
       "id": "zone_9846xenzq83rnn4x",
-      "name": "客厅",
+      "name": "卧室",
       "type": "zone",
       "color": "#ef4444",
       "object": "node",
@@ -6210,7 +6210,7 @@
     },
     "zone_iggq3u89pe53liyi": {
       "id": "zone_iggq3u89pe53liyi",
-      "name": "客卧",
+      "name": "未命名区域-liyi",
       "type": "zone",
       "color": "#6366f1",
       "object": "node",
@@ -6274,7 +6274,7 @@
     },
     "zone_pbwd1mom3uq0zbl9": {
       "id": "zone_pbwd1mom3uq0zbl9",
-      "name": "阳台2",
+      "name": "未命名区域-zbl9",
       "type": "zone",
       "color": "#22c55e",
       "object": "node",
@@ -6302,7 +6302,7 @@
     },
     "zone_pgy0dftj4k5ot543": {
       "id": "zone_pgy0dftj4k5ot543",
-      "name": "公共卫生间",
+      "name": "未命名区域-t543",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -6330,7 +6330,7 @@
     },
     "zone_y8bawjjy99q8d3j6": {
       "id": "zone_y8bawjjy99q8d3j6",
-      "name": "主卫",
+      "name": "未命名区域-d3j6",
       "type": "zone",
       "color": "#06b6d4",
       "object": "node",
@@ -6358,7 +6358,7 @@
     },
     "zone_zjc1427xe784hr40": {
       "id": "zone_zjc1427xe784hr40",
-      "name": "次卧",
+      "name": "未命名区域-hr40",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
