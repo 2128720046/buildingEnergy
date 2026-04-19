@@ -45,3 +45,5 @@ yarn-error.log*
 /.playwright-mcp
 og-test
 .env*.local
+
+.tmp_run/
