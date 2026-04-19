@@ -15,6 +15,7 @@ import { applySceneGraphToEditor, buildSceneGraphFromReferenceFile, useEditor } 
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
+import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import {
   loadComponentEnergy,
@@ -69,7 +70,7 @@ function HostViewerToolbarRight({
   }, [])
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
       <DefaultModelingViewerToolbarRight />
       <button
         className="inline-flex h-8 items-center rounded-xl border border-slate-300/60 bg-slate-900/95 px-3 font-medium text-white text-xs transition-colors hover:bg-slate-800"
@@ -143,13 +144,24 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [appliedFilters, setAppliedFilters] = useState<HostQueryFilters>(DEFAULT_FILTERS)
   const [hasQueried, setHasQueried] = useState(false)
   const [editEnabled, setEditEnabled] = useState(true)
+  const useTwinCockpit = true
   const mode = useEditor((state) => state.mode)
   const setMode = useEditor((state) => state.setMode)
-  const viewerSelection = useViewer((state) => state.selection)
   const hoveredId = useViewer((state) => state.hoveredId)
   const lastFocusedZoneRef = useRef<ZoneNode['id'] | null>(null)
 
   const nodes = useScene((state) => state.nodes) as Record<string, AnyNode>
+
+  const isSelectionDebugEnabled = useCallback(() => {
+    if (process.env.NODE_ENV === 'production' || typeof window === 'undefined') {
+      return false
+    }
+
+    return (
+      window.localStorage.getItem('editor:debug:selection') === '1' ||
+      window.location.search.includes('debugSelection=1')
+    )
+  }, [])
 
   const apiClient = useMemo(
     () => createEditorApiClient({ baseUrl: apiBaseUrl ?? undefined, projectId }),
@@ -183,6 +195,13 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     }
     setEditEnabled((current) => !current)
   }, [editEnabled, mode, setMode])
+
+  const cockpitToolbar = (
+    <HostViewerToolbarRight
+      editEnabled={editEnabled}
+      onToggle={handleToggleEdit}
+    />
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -265,6 +284,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
   useEffect(() => {
     const viewer = useViewer.getState()
+    const selection = viewer.selection
     const zoneId = (draftFilters.zoneId || null) as ZoneNode['id'] | null
 
     if (zoneId) {
@@ -274,11 +294,20 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           ? (zoneNode.parentId as LevelNode['id'])
           : ((draftFilters.levelId || null) as LevelNode['id'] | null)
 
-      if (viewerSelection.zoneId !== zoneId || viewerSelection.levelId !== (levelId || null)) {
+      if (selection.zoneId !== zoneId || selection.levelId !== (levelId || null)) {
         viewer.setSelection({
           levelId: levelId || null,
           zoneId,
+          selectedIds: [],
         })
+        if (isSelectionDebugEnabled()) {
+          console.debug('[host-selection-sync] apply zone filter', {
+            draftLevelId: draftFilters.levelId || null,
+            draftZoneId: zoneId,
+            nextLevelId: levelId || null,
+            previousSelection: selection,
+          })
+        }
       }
       if (hoveredId !== null) {
         viewer.setHoveredId(null)
@@ -299,24 +328,38 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
     if (draftFilters.levelId) {
       const levelId = draftFilters.levelId as LevelNode['id']
-      if (viewerSelection.zoneId !== null || viewerSelection.levelId !== levelId) {
-        viewer.setSelection({ levelId, zoneId: null })
+      if (selection.zoneId !== null || selection.levelId !== levelId) {
+        viewer.setSelection({ levelId, zoneId: null, selectedIds: selection.selectedIds })
+        if (isSelectionDebugEnabled()) {
+          console.debug('[host-selection-sync] apply level filter', {
+            draftLevelId: levelId,
+            previousSelection: selection,
+          })
+        }
       }
       viewer.setLevelMode('solo')
       return
     }
 
-    if (viewerSelection.zoneId !== null || viewerSelection.levelId !== null) {
-      viewer.setSelection({ levelId: null, zoneId: null })
+    if (selection.zoneId !== null || selection.levelId !== null) {
+      viewer.setSelection({
+        levelId: null,
+        zoneId: null,
+        selectedIds: selection.selectedIds,
+      })
+      if (isSelectionDebugEnabled()) {
+        console.debug('[host-selection-sync] clear level and zone filters', {
+          previousSelection: selection,
+        })
+      }
     }
     viewer.setLevelMode('stacked')
   }, [
     draftFilters.levelId,
     draftFilters.zoneId,
     hoveredId,
+    isSelectionDebugEnabled,
     nodes,
-    viewerSelection.levelId,
-    viewerSelection.zoneId,
   ])
 
   useEffect(() => {
@@ -392,72 +435,35 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   ])
 
   return (
-    <main className="flex h-screen w-screen flex-col overflow-hidden bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)] text-slate-950">
-      <div className="relative border-b border-white/60 bg-white/70 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0))]" />
-
-        <div className="relative flex flex-wrap items-center justify-between gap-3 px-5 py-3">
-          <div className="min-w-0 flex-1">
-            <WorkspaceNavigation
-              activeWorkspace={activeWorkspace}
-              onChange={setActiveWorkspace}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <label className="flex min-w-[220px] flex-col gap-1">
-              <span className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
-                当前项目
-              </span>
-              <select
-                className="rounded-2xl border border-white/80 bg-white/92 px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-400"
-                disabled={projectLoading || projectOptions.length === 0}
-                onChange={(event) => setProjectId(event.target.value)}
-                value={projectId}
-              >
-                {projectOptions.length === 0 ? (
-                  <option value={projectId}>
-                    {projectLoading ? '正在加载项目...' : projectId}
-                  </option>
-                ) : (
-                  projectOptions.map((option) => (
-                    <option key={option.projectId} value={option.projectId}>
-                      {option.projectId}
-                    </option>
-                  ))
-                )}
-              </select>
-            </label>
-
-            <div className="rounded-2xl border border-white/80 bg-white/92 px-4 py-2.5 text-sm text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-              <div className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
-                Save Status
-              </div>
-              <div className="mt-1.5 font-medium text-slate-950">{saveStatus}</div>
-            </div>
-
-            <div className="rounded-2xl border border-white/80 bg-white/92 px-4 py-2.5 text-sm text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-              <div className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
-                Current Selection
-              </div>
-              <div className="mt-1.5 max-w-[220px] truncate font-medium text-slate-950">
-                {selectedComponentName}
-              </div>
-            </div>
-          </div>
+    <main
+      className={cn(
+        'flex h-screen w-screen flex-col overflow-hidden text-slate-950',
+        activeWorkspace === 'energy-query'
+          ? 'bg-[#050505] text-slate-100'
+          : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
+      )}
+    >
+      <header className="relative z-40 px-4 pt-3 pb-2">
+        <div className="mx-auto w-fit">
+          <WorkspaceNavigation
+            activeWorkspace={activeWorkspace}
+            onChange={setActiveWorkspace}
+            tone={activeWorkspace === 'energy-query' ? 'dark' : 'light'}
+          />
         </div>
-      </div>
+      </header>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden px-4 pb-3">
+
         <div
           className={cn(
             'absolute inset-0 transition-opacity',
             activeWorkspace === 'energy-query'
-              ? 'z-20 flex opacity-100'
+              ? 'z-20 opacity-100'
               : 'pointer-events-none opacity-0',
           )}
         >
-          <div className="relative min-w-0 flex-1 overflow-hidden">
+          <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
             <ModelingEditorCoreModule
               className="h-full w-full"
               onLoad={apiClient.isConfigured ? handleLoad : undefined}
@@ -471,40 +477,55 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 showFloatingActionMenu: editEnabled,
                 showFloatingLevelSelector: false,
                 showHelperManager: true,
-                showPanelManager: false,
+                showPanelManager: editEnabled,
               }}
-              viewerToolbarLeft={<DefaultModelingViewerToolbarLeft />}
-              viewerToolbarRight={
-                <HostViewerToolbarRight
-                  editEnabled={editEnabled}
-                  onToggle={handleToggleEdit}
-                />
-              }
+              viewerToolbarLeft={activeWorkspace === 'energy-query' ? null : <DefaultModelingViewerToolbarLeft />}
+              viewerToolbarRight={activeWorkspace === 'energy-query' ? null : cockpitToolbar}
             />
-          </div>
 
-          <HostRightRail
-            activeModule={activeRightRailModule}
-            energyError={energyError}
-            energyLoading={energyLoading}
-            energyResult={energyResult}
-            energyResultZone={energyResultZone}
-            filters={draftFilters}
-            hasQueried={hasQueried}
-            insightsCollapsed={insightsCollapsed}
-            levelOptions={draftQueryModel.levelOptions}
-            onFiltersChange={setDraftFilters}
-            onInsightsCollapsedChange={setInsightsCollapsed}
-            onModuleChange={setActiveRightRailModule}
-            onQuery={handleSubmitQuery}
-            onWidthChange={setInsightsWidth}
-            projectId={projectId}
-            queryResults={queryResults}
-            saveStatus={saveStatus}
-            selection={selection}
-            width={insightsWidth}
-            zoneOptions={draftQueryModel.zoneOptions}
-          />
+            {useTwinCockpit ? (
+              <EnergyTwinDashboard
+                energyError={energyError}
+                energyLoading={energyLoading}
+                energyResult={energyResult}
+                energyResultZone={energyResultZone}
+                filters={draftFilters}
+                hasQueried={hasQueried}
+                levelOptions={draftQueryModel.levelOptions}
+                onFiltersChange={setDraftFilters}
+                onQuery={handleSubmitQuery}
+                projectId={projectId}
+                queryResults={queryResults}
+                selectedComponentId={selectedComponentId}
+                selectedComponentName={selectedComponentName}
+                topToolbar={cockpitToolbar}
+                zoneOptions={draftQueryModel.zoneOptions}
+              />
+            ) : (
+              <HostRightRail
+                activeModule={activeRightRailModule}
+                energyError={energyError}
+                energyLoading={energyLoading}
+                energyResult={energyResult}
+                energyResultZone={energyResultZone}
+                filters={draftFilters}
+                hasQueried={hasQueried}
+                insightsCollapsed={insightsCollapsed}
+                levelOptions={draftQueryModel.levelOptions}
+                onFiltersChange={setDraftFilters}
+                onInsightsCollapsedChange={setInsightsCollapsed}
+                onModuleChange={setActiveRightRailModule}
+                onQuery={handleSubmitQuery}
+                onWidthChange={setInsightsWidth}
+                projectId={projectId}
+                queryResults={queryResults}
+                saveStatus={saveStatus}
+                selection={selection}
+                width={insightsWidth}
+                zoneOptions={draftQueryModel.zoneOptions}
+              />
+            )}
+          </div>
         </div>
 
         <div

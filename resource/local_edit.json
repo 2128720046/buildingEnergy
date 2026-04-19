@@ -9280,7 +9280,7 @@
     },
     "zone_0hvwuqj341mqdkw6": {
       "id": "zone_0hvwuqj341mqdkw6",
-      "name": "Living room",
+      "name": "未命名区域-dkw6",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9316,7 +9316,7 @@
     },
     "zone_0mflfucaeqme4ndg": {
       "id": "zone_0mflfucaeqme4ndg",
-      "name": "Kid bedroom 1",
+      "name": "未命名区域-4ndg",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9356,7 +9356,7 @@
     },
     "zone_2d77gq12yp4uaz32": {
       "id": "zone_2d77gq12yp4uaz32",
-      "name": "Dining room",
+      "name": "未命名区域-az32",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9396,7 +9396,7 @@
     },
     "zone_5j3yms8is2bz1ukw": {
       "id": "zone_5j3yms8is2bz1ukw",
-      "name": "Laundry room",
+      "name": "未命名区域-1ukw",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9428,7 +9428,7 @@
     },
     "zone_73gb68ks4h8x1a61": {
       "id": "zone_73gb68ks4h8x1a61",
-      "name": "Office",
+      "name": "未命名区域-1a61",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9460,7 +9460,7 @@
     },
     "zone_9o40yzmvf32v2bew": {
       "id": "zone_9o40yzmvf32v2bew",
-      "name": "Kid bathroom",
+      "name": "未命名区域-2bew",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9500,7 +9500,7 @@
     },
     "zone_a9s6m7j1vi1t7msv": {
       "id": "zone_a9s6m7j1vi1t7msv",
-      "name": "Guest bathroom",
+      "name": "未命名区域-7msv",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9532,7 +9532,7 @@
     },
     "zone_b7jg5hdg1dnggfe4": {
       "id": "zone_b7jg5hdg1dnggfe4",
-      "name": "Kid bedroom 2",
+      "name": "未命名区域-gfe4",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9564,7 +9564,7 @@
     },
     "zone_g3n9cravedqogu8i": {
       "id": "zone_g3n9cravedqogu8i",
-      "name": "Garage 1",
+      "name": "未命名区域-gu8i",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9608,7 +9608,7 @@
     },
     "zone_gfx8fyun3ojk3cn5": {
       "id": "zone_gfx8fyun3ojk3cn5",
-      "name": "Kicthen",
+      "name": "未命名区域-3cn5",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9660,7 +9660,7 @@
     },
     "zone_ig7y13t6j1jhh6bt": {
       "id": "zone_ig7y13t6j1jhh6bt",
-      "name": "Entrance",
+      "name": "入口区",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9692,7 +9692,7 @@
     },
     "zone_ijeu8ymtxhxc6xy8": {
       "id": "zone_ijeu8ymtxhxc6xy8",
-      "name": "Guest bedroom",
+      "name": "未命名区域-6xy8",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9724,7 +9724,7 @@
     },
     "zone_ls102j2iounuxprb": {
       "id": "zone_ls102j2iounuxprb",
-      "name": "Master bathroom",
+      "name": "未命名区域-xprb",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9764,7 +9764,7 @@
     },
     "zone_lua1xd2tvqtwm04k": {
       "id": "zone_lua1xd2tvqtwm04k",
-      "name": "Master closet",
+      "name": "未命名区域-m04k",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9796,7 +9796,7 @@
     },
     "zone_u9hr1o4kuqn8c7wt": {
       "id": "zone_u9hr1o4kuqn8c7wt",
-      "name": "Lanai",
+      "name": "未命名区域-c7wt",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9848,7 +9848,7 @@
     },
     "zone_vhsu5276u0u9o9a8": {
       "id": "zone_vhsu5276u0u9o9a8",
-      "name": "Pool",
+      "name": "未命名区域-o9a8",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9888,7 +9888,7 @@
     },
     "zone_w9cq41mupk00bq2x": {
       "id": "zone_w9cq41mupk00bq2x",
-      "name": "Garage 2",
+      "name": "未命名区域-bq2x",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -9920,7 +9920,7 @@
     },
     "zone_xwvi4lsckpyb2nt9": {
       "id": "zone_xwvi4lsckpyb2nt9",
-      "name": "Master bedroom",
+      "name": "未命名区域-2nt9",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",

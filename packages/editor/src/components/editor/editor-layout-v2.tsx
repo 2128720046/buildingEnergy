@@ -159,10 +159,7 @@ function RightColumn({
       <div className="relative flex-1 overflow-hidden">{children}</div>
       {/* Overlays scoped to the viewer column */}
       {overlays && (
-        <div
-          className="pointer-events-none absolute inset-0 z-30"
-          style={{ transform: 'translateZ(0)' }}
-        >
+        <div className="pointer-events-none absolute inset-0 z-[160]">
           {overlays}
         </div>
       )}

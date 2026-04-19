@@ -25,13 +25,21 @@ export function PanelWrapper({
   className,
   width = 320, // default width
 }: PanelWrapperProps) {
+  const panelTop = 'var(--host-editor-panel-top, 124px)'
+
   return (
     <div
       className={cn(
-        'pointer-events-auto fixed top-20 right-4 z-50 flex max-h-[calc(100dvh-100px)] flex-col overflow-hidden rounded-xl border border-border/50 bg-sidebar/95 shadow-2xl backdrop-blur-xl dark:text-foreground',
+        'pointer-events-auto fixed right-4 z-[240] flex flex-col overflow-hidden rounded-xl border border-border/50 bg-sidebar/95 shadow-2xl backdrop-blur-xl transition-[right] duration-200 dark:text-foreground',
         className,
       )}
-      style={{ width }}
+      style={{
+        width,
+        ['--host-editor-panel-width' as string]: typeof width === 'number' ? `${width}px` : String(width),
+        top: panelTop,
+        height: `calc(100dvh - ${panelTop})`,
+        right: 'calc(1rem + var(--host-editor-panel-avoid-right, 0px))',
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between border-border/50 border-b px-3 py-3">
@@ -74,7 +82,7 @@ export function PanelWrapper({
       </div>
 
       {/* Content */}
-      <div className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
     </div>
   )
 }

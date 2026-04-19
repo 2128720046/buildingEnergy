@@ -21220,9 +21220,9 @@
       "metadata": {},
       "parentId": "level_npsf1484f4gehmp4",
       "position": [
-        -1.75,
+        -1.25,
         0,
-        -2.75
+        -3.75
       ],
       "rotation": [
         0,
@@ -59829,7 +59829,7 @@
       "id": "zone_7dmsp6iphot481fn",
       "name": "Living room",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#ef4444",
       "object": "node",
       "polygon": [
         [
@@ -63815,7 +63815,8 @@
         "ceiling_xurgwga44668rxpp",
         "item_3fz7stvwhb4hokf2",
         "stair_xwz5vf5fnrdxue6u",
-        "item_a57w8dxmx8y3yinv"
+        "item_a57w8dxmx8y3yinv",
+        "item_gkc6vpijyo5e27kb"
       ],
       "metadata": {},
       "parentId": "building_vh1z9chps72913h9"
@@ -71852,6 +71853,62 @@
       ],
       "holes": [],
       "elevation": 0.15
+    },
+    "item_gkc6vpijyo5e27kb": {
+      "object": "node",
+      "id": "item_gkc6vpijyo5e27kb",
+      "type": "item",
+      "name": "Piano",
+      "parentId": "level_npsf1484f4gehmp4",
+      "visible": true,
+      "metadata": {},
+      "position": [
+        -2,
+        0,
+        -1
+      ],
+      "rotation": [
+        0,
+        -3.141592653589793,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "asset": {
+        "id": "piano",
+        "category": "furniture",
+        "name": "Piano",
+        "thumbnail": "/items/piano/thumbnail.webp",
+        "src": "/items/piano/model.glb",
+        "dimensions": [
+          2,
+          1.5,
+          1
+        ],
+        "tags": [
+          "floor",
+          "decor"
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
     }
   },
   "rootNodeIds": [
