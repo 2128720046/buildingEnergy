@@ -2,6 +2,7 @@
 
 import { type AnyNodeId, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import { useEffect } from 'react'
 import useEditor from '../../../store/use-editor'
 import { CeilingPanel } from './ceiling-panel'
 import { DoorPanel } from './door-panel'
@@ -19,6 +20,33 @@ export function PanelManager() {
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const selectedReferenceId = useEditor((s) => s.selectedReferenceId)
   const nodes = useScene((s) => s.nodes)
+
+  const selectedNodeId = selectedIds.length === 1 ? selectedIds[0] : null
+  const selectedNode = selectedNodeId ? nodes[selectedNodeId as AnyNodeId] : null
+  const debugPanel =
+    process.env.NODE_ENV !== 'production' &&
+    typeof window !== 'undefined' &&
+    (window.localStorage.getItem('editor:debug:selection') === '1' ||
+      window.location.search.includes('debugSelection=1'))
+
+  useEffect(() => {
+    if (!debugPanel) return
+
+    const resolvedPanel = selectedReferenceId
+      ? 'reference'
+      : selectedNode
+        ? selectedNode.type
+        : selectedIds.length === 0
+          ? 'none'
+          : 'multi-selection'
+
+    console.info('[panel-manager] panel resolution', {
+      selectedReferenceId,
+      selectedIds,
+      selectedNodeType: selectedNode?.type ?? null,
+      resolvedPanel,
+    })
+  }, [debugPanel, selectedIds, selectedNode, selectedReferenceId])
 
   // Show reference panel if a reference is selected
   if (selectedReferenceId) {
