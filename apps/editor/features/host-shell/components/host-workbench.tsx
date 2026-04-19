@@ -448,7 +448,6 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           <WorkspaceNavigation
             activeWorkspace={activeWorkspace}
             onChange={setActiveWorkspace}
-            tone={activeWorkspace === 'energy-query' ? 'dark' : 'light'}
           />
         </div>
       </header>
