@@ -55,9 +55,6 @@ export default function OperationsOverviewPanel({
             </div>
             <h3 className="mt-2 font-semibold text-slate-950">智慧运维模块</h3>
           </div>
-          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-            第一版概览
-          </div>
         </div>
 
         <div className="mt-4 rounded-[28px] border border-sky-100 bg-sky-50 px-4 py-4 text-sm text-slate-700">
@@ -85,9 +82,6 @@ export default function OperationsOverviewPanel({
               Alerts
             </div>
             <h3 className="mt-2 font-semibold text-slate-950">告警中心</h3>
-          </div>
-          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-            基于当前筛选结果生成
           </div>
         </div>
 

@@ -38,11 +38,13 @@ function SendIcon() {
 }
 
 export interface EnergyAssistantChatProps extends EnergyAssistantContext {
+  onJumpToLevel3HighlightZones?: () => void
   tone?: 'dark' | 'light'
   variant?: 'panel' | 'workspace'
 }
 
 export default function EnergyAssistantChat({
+  onJumpToLevel3HighlightZones,
   tone = 'dark',
   variant = 'panel',
   ...context
@@ -59,17 +61,48 @@ export default function EnergyAssistantChat({
     },
   ])
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
+  const pendingJumpTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, isSubmitting])
 
+  useEffect(() => {
+    return () => {
+      if (pendingJumpTimerRef.current !== null) {
+        window.clearTimeout(pendingJumpTimerRef.current)
+      }
+    }
+  }, [])
+
   const isWorkspace = variant === 'workspace'
   const isLight = tone === 'light'
+  const workspaceContainerClass = isWorkspace
+    ? isLight
+      ? 'flex min-h-0 max-h-[calc(100dvh-180px)] flex-col overflow-hidden rounded-sm p-4'
+      : 'flex h-full min-h-0 max-h-[calc(100dvh-220px)] flex-col overflow-hidden rounded-sm p-4'
+    : ''
+  const messageAreaClass = isWorkspace
+    ? isLight
+      ? 'h-[600px]'
+      : 'min-h-0 flex-1'
+    : 'h-[300px]'
 
   const submitPrompt = async (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
     if (!prompt || isSubmitting) return
+
+    const compactPrompt = prompt.replace(/\s+/g, '')
+    const shouldJumpToLevel3 = compactPrompt.includes('那层楼有问题')
+
+    if (shouldJumpToLevel3 && onJumpToLevel3HighlightZones) {
+      if (pendingJumpTimerRef.current !== null) {
+        window.clearTimeout(pendingJumpTimerRef.current)
+      }
+      pendingJumpTimerRef.current = window.setTimeout(() => {
+        onJumpToLevel3HighlightZones()
+      }, 5000)
+    }
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -130,7 +163,7 @@ export default function EnergyAssistantChat({
     <section
       className={cn(
         'rounded-2xl border p-4 shadow-sm',
-        isWorkspace && 'flex h-full min-h-0 max-h-[calc(100dvh-220px)] flex-col overflow-hidden rounded-sm p-4',
+        workspaceContainerClass,
         isLight
           ? 'border-slate-200/80 bg-white'
           : isWorkspace
@@ -187,14 +220,15 @@ export default function EnergyAssistantChat({
 
       <div
         className={cn(
-          'mt-4 space-y-3 overflow-auto rounded-2xl border p-3',
-          isWorkspace ? 'min-h-0 flex-1' : 'max-h-[360px]',
+          'mt-4 min-h-0 space-y-3 overflow-y-auto rounded-2xl border p-3',
+          messageAreaClass,
           isLight
             ? 'border-slate-200 bg-slate-50/90'
             : isWorkspace
               ? 'border-cyan-300/14 bg-[#090909]'
               : 'border-cyan-300/18 bg-[#0b1426]',
         )}
+        style={isWorkspace && isLight ? { height: 600, maxHeight: 600 } : undefined}
       >
         {messages.map((message) => (
           <div

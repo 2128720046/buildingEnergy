@@ -45,6 +45,7 @@ interface EnergyTwinDashboardProps {
   filters: HostQueryFilters
   hasQueried: boolean
   levelOptions: HostFilterOption[]
+  onJumpToLevel3HighlightZones?: () => void
   onFiltersChange: (nextFilters: HostQueryFilters) => void
   onQuery: () => void
   projectId: string
@@ -264,32 +265,69 @@ function buildScatterOption(points: Array<{ x: number; y: number; label: string 
   }
 }
 
-function buildSankeyOption(values: Array<{ name: string; value: number }>): EChartsOption {
-  const total = values.reduce((sum, item) => sum + item.value, 0)
+function buildLoadTariffOption(
+  labels: string[],
+  loadValues: number[],
+  tariffValues: number[],
+): EChartsOption {
   return {
     backgroundColor: 'transparent',
-    tooltip: { trigger: 'item' },
-    series: [
+    tooltip: { trigger: 'axis' },
+    legend: {
+      right: 0,
+      top: 0,
+      textStyle: { color: 'rgba(203, 213, 225, 0.85)', fontSize: 10 },
+    },
+    grid: { top: 24, right: 28, bottom: 24, left: 34 },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
+      axisLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.45)' } },
+    },
+    yAxis: [
       {
-        type: 'sankey',
-        data: [
-          { name: '总负荷' },
-          { name: 'HVAC' },
-          { name: '照明' },
-          { name: '动力' },
-          { name: '其他' },
-        ],
-        links: values.map((item) => ({
-          source: '总负荷',
-          target: item.name,
-          value: Number(((item.value / Math.max(1, total)) * 100).toFixed(1)),
-        })),
-        emphasis: { focus: 'adjacency' },
-        lineStyle: { color: 'gradient', curveness: 0.42 },
-        label: { color: 'rgba(226, 232, 240, 0.9)', fontSize: 10 },
+        type: 'value',
+        name: '负荷 kWh',
+        nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
+        axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
+        splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
+      },
+      {
+        type: 'value',
+        name: '电价',
+        nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
+        axisLabel: {
+          color: 'rgba(148, 163, 184, 0.8)',
+          fontSize: 10,
+          formatter: (value: number) => `${value.toFixed(2)}`,
+        },
+        splitLine: { show: false },
       },
     ],
-    color: [CYAN, GREEN, ORANGE, RED],
+    series: [
+      {
+        name: '负荷',
+        type: 'bar',
+        data: loadValues,
+        barWidth: 12,
+        itemStyle: {
+          borderRadius: 6,
+          color: 'rgba(0,229,255,0.72)',
+        },
+      },
+      {
+        name: '电价',
+        type: 'line',
+        yAxisIndex: 1,
+        data: tariffValues,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        lineStyle: { color: 'rgba(255,159,26,0.95)', width: 2 },
+        itemStyle: { color: 'rgba(255,159,26,0.95)' },
+      },
+    ],
   }
 }
 
@@ -332,13 +370,13 @@ function buildCompareOption(before: number[], after: number[]): EChartsOption {
   }
 }
 
-function buildSlaOption(values: number[]): EChartsOption {
+function buildResponseTimeOption(values: number[]): EChartsOption {
   return {
     backgroundColor: 'transparent',
     grid: { top: 20, right: 12, bottom: 20, left: 28 },
     xAxis: {
       type: 'category',
-      data: ['待派单', '处理中', '已闭环'],
+      data: ['<15m', '15-30m', '30-60m', '>60m'],
       axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
     },
     yAxis: {
@@ -346,7 +384,14 @@ function buildSlaOption(values: number[]): EChartsOption {
       axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
       splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
     },
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params: any) => {
+        const point = Array.isArray(params) ? params[0] : null
+        const value = Number(point?.value ?? 0)
+        return `${point?.axisValue ?? '时效区间'}<br/>工单 ${value} 单`
+      },
+    },
     series: [
       {
         type: 'bar',
@@ -493,6 +538,7 @@ export default function EnergyTwinDashboard({
   filters,
   hasQueried,
   levelOptions,
+  onJumpToLevel3HighlightZones,
   onFiltersChange,
   onQuery,
   projectId,
@@ -628,7 +674,25 @@ export default function EnergyTwinDashboard({
     { name: '已闭环', value: Math.max(1, Math.round(normalRatio / 28)) },
   ]
 
-  const slaData = [Math.max(2, warningCount + 2), Math.max(3, warningCount + 1), Math.max(4, Math.round(normalRatio / 15))]
+  const responseTimeData = [
+    Math.max(3, Math.round(normalRatio / 24)),
+    Math.max(2, warningCount + 1),
+    Math.max(1, warningCount),
+    Math.max(1, Math.round(warningCount / 2)),
+  ]
+
+  const loadTariffLabels = trendLabels
+  const loadTariffValues = trendValues.map((value) => Number(value.toFixed(1)))
+  const tariffValues = trendLabels.map((label, index) => {
+    const hour = Number(label)
+    if (!Number.isNaN(hour)) {
+      if ((hour >= 0 && hour < 7) || hour >= 22) return 0.46
+      if ((hour >= 10 && hour < 12) || (hour >= 14 && hour < 18)) return 0.98
+      return 0.72
+    }
+    const wave = 0.72 + Math.sin((index / Math.max(1, trendLabels.length - 1)) * Math.PI) * 0.22
+    return Number(wave.toFixed(2))
+  })
 
   const compareBefore: [number, number] = [Number((peakLoad * 1.08).toFixed(1)), Number((slaScore - 5).toFixed(1))]
   const compareAfter: [number, number] = [Number((peakLoad * 0.88).toFixed(1)), Number(slaScore.toFixed(1))]
@@ -841,15 +905,15 @@ export default function EnergyTwinDashboard({
                   className="rounded-md border border-cyan-300/35 bg-cyan-500/18 px-2 py-1 text-[10px] text-cyan-100"
                   type="button"
                 >
-                  重排
+                  按时效
                 </button>
               }
               icon={<Clock3 className="h-4 w-4" strokeWidth={1.8} />}
-              title="SLA 工单看板"
+              title="响应时效分布"
             />
             <div className="h-40">
               <ChartFrame>
-              <ReactECharts option={buildSlaOption(slaData)} style={{ height: '160px', width: '100%' }} />
+              <ReactECharts option={buildResponseTimeOption(responseTimeData)} style={{ height: '160px', width: '100%' }} />
               </ChartFrame>
             </div>
               </GlassCard>
@@ -867,11 +931,11 @@ export default function EnergyTwinDashboard({
               </GlassCard>
 
               <GlassCard>
-                <CardHeader icon={<Wrench className="h-4 w-4" strokeWidth={1.8} />} title="能耗流向 Sankey" />
+                <CardHeader icon={<Wrench className="h-4 w-4" strokeWidth={1.8} />} title="分时负荷与电价" />
                 <div className="h-40">
                   <ChartFrame>
                   <ReactECharts
-                    option={buildSankeyOption(compositionValues)}
+                    option={buildLoadTariffOption(loadTariffLabels, loadTariffValues, tariffValues)}
                     style={{ height: '160px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -930,6 +994,7 @@ export default function EnergyTwinDashboard({
         >
           <EnergyAssistantChat
             energyResult={energyResult}
+            onJumpToLevel3HighlightZones={onJumpToLevel3HighlightZones}
             projectId={projectId}
             queryResults={queryResults}
             selectedComponentId={selectedComponentId}
