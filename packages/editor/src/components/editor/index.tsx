@@ -51,6 +51,7 @@ import { SitePanel, type SitePanelProps } from '../ui/sidebar/panels/site-panel'
 import type { SidebarTab } from '../ui/sidebar/tab-bar'
 import { CustomCameraControls } from './custom-camera-controls'
 import { EditorLayoutV2 } from './editor-layout-v2'
+import { EnergyFloatingOverlay } from './energy-floating-overlay'
 import { ExportManager } from './export-manager'
 import { FloatingActionMenu } from './floating-action-menu'
 import { FloorplanPanel } from './floorplan-panel'
@@ -650,6 +651,7 @@ export default function Editor({
       <SelectionManager />
       <BoxSelectTool />
       {showFloatingActionMenu ? <FloatingActionMenu /> : null}
+      <EnergyFloatingOverlay />
       <WallMeasurementLabel />
       <ExportManager />
       <ZoneSystem />

@@ -3380,7 +3380,7 @@
     },
     "zone_0oohde45ya5x0e0m": {
       "id": "zone_0oohde45ya5x0e0m",
-      "name": "Bedroom 1",
+      "name": "未命名区域-0e0m",
       "type": "zone",
       "color": "#06b6d4",
       "object": "node",
@@ -3408,7 +3408,7 @@
     },
     "zone_2mxgsthpqop1612w": {
       "id": "zone_2mxgsthpqop1612w",
-      "name": "\"Dining Room\"",
+      "name": "未命名区域-612w",
       "type": "zone",
       "color": "#84cc16",
       "object": "node",
@@ -3444,7 +3444,7 @@
     },
     "zone_9tcaghh476fjbs1a": {
       "id": "zone_9tcaghh476fjbs1a",
-      "name": "Bedroom 2",
+      "name": "未命名区域-bs1a",
       "type": "zone",
       "color": "#3b82f6",
       "object": "node",
@@ -3472,7 +3472,7 @@
     },
     "zone_a1h2dl5lridizpsy": {
       "id": "zone_a1h2dl5lridizpsy",
-      "name": "Master Bed",
+      "name": "未命名区域-zpsy",
       "type": "zone",
       "color": "#64748b",
       "object": "node",
@@ -3500,7 +3500,7 @@
     },
     "zone_ia16jec47q8e049b": {
       "id": "zone_ia16jec47q8e049b",
-      "name": "Kitchen",
+      "name": "厨房",
       "type": "zone",
       "color": "#f59e0b",
       "object": "node",
@@ -3548,7 +3548,7 @@
     },
     "zone_k65tgx1hnulw19jf": {
       "id": "zone_k65tgx1hnulw19jf",
-      "name": "Half Bath",
+      "name": "未命名区域-19jf",
       "type": "zone",
       "color": "#a855f7",
       "object": "node",
@@ -3576,7 +3576,7 @@
     },
     "zone_n4a4dx9bcnqnr4w4": {
       "id": "zone_n4a4dx9bcnqnr4w4",
-      "name": "Office",
+      "name": "未命名区域-r4w4",
       "type": "zone",
       "color": "#10b981",
       "object": "node",
@@ -3604,7 +3604,7 @@
     },
     "zone_osixbzdcqi7zfiv1": {
       "id": "zone_osixbzdcqi7zfiv1",
-      "name": "Master Bath",
+      "name": "未命名区域-fiv1",
       "type": "zone",
       "color": "#cccccc",
       "object": "node",
@@ -3632,7 +3632,7 @@
     },
     "zone_r2y4dkzyvozwwooz": {
       "id": "zone_r2y4dkzyvozwwooz",
-      "name": "Pantry",
+      "name": "未命名区域-wooz",
       "type": "zone",
       "color": "#22c55e",
       "object": "node",
@@ -3660,7 +3660,7 @@
     },
     "zone_u1hllo90tck9abz4": {
       "id": "zone_u1hllo90tck9abz4",
-      "name": "Master Closet",
+      "name": "未命名区域-abz4",
       "type": "zone",
       "color": "#ef4444",
       "object": "node",
@@ -3696,7 +3696,7 @@
     },
     "zone_u46zfslkbzw2m9ng": {
       "id": "zone_u46zfslkbzw2m9ng",
-      "name": "Garage",
+      "name": "未命名区域-m9ng",
       "type": "zone",
       "color": "#ef4444",
       "object": "node",
@@ -3724,7 +3724,7 @@
     },
     "zone_wafqmroik36h96ci": {
       "id": "zone_wafqmroik36h96ci",
-      "name": "Spare Bath",
+      "name": "未命名区域-96ci",
       "type": "zone",
       "color": "#6366f1",
       "object": "node",
@@ -3760,7 +3760,7 @@
     },
     "zone_xtls60z3h04yc6qx": {
       "id": "zone_xtls60z3h04yc6qx",
-      "name": "Mud/Laundry",
+      "name": "未命名区域-c6qx",
       "type": "zone",
       "color": "#f97316",
       "object": "node",
@@ -3788,7 +3788,7 @@
     },
     "zone_y845y7ac2oaly3f6": {
       "id": "zone_y845y7ac2oaly3f6",
-      "name": "Living Room",
+      "name": "未命名区域-y3f6",
       "type": "zone",
       "color": "#f97316",
       "object": "node",
@@ -4795,7 +4795,7 @@
       "object": "node",
       "id": "zone_8w320b8gn7wyudk2",
       "type": "zone",
-      "name": "Bedroom 3",
+      "name": "未命名区域-udk2",
       "parentId": "level_6205yc0v8id5e16h",
       "visible": true,
       "metadata": {},
@@ -5059,7 +5059,7 @@
       "object": "node",
       "id": "zone_ym2c1qdp2fuojt43",
       "type": "zone",
-      "name": "Bedroom 4",
+      "name": "未命名区域-jt43",
       "parentId": "level_6205yc0v8id5e16h",
       "visible": true,
       "metadata": {},
@@ -5323,7 +5323,7 @@
       "object": "node",
       "id": "zone_m1caphms57n5j6yp",
       "type": "zone",
-      "name": "Bedroom 5",
+      "name": "未命名区域-j6yp",
       "parentId": "level_6205yc0v8id5e16h",
       "visible": true,
       "metadata": {},

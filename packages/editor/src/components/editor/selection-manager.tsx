@@ -333,6 +333,11 @@ export const SelectionManager = () => {
   const phase = useEditor((s) => s.phase)
   const mode = useEditor((s) => s.mode)
   const setHoverHighlightMode = useViewer((s) => s.setHoverHighlightMode)
+  const isSelectionDebugEnabled =
+    process.env.NODE_ENV !== 'production' &&
+    typeof window !== 'undefined' &&
+    (window.localStorage.getItem('editor:debug:selection') === '1' ||
+      window.location.search.includes('debugSelection=1'))
   const modifierKeysRef = useRef<ModifierKeys>({
     meta: false,
     ctrl: false,
@@ -412,7 +417,21 @@ export const SelectionManager = () => {
       }
 
       const activeStrategy = SELECTION_STRATEGIES[currentPhase]
-      if (activeStrategy?.isValid(node)) {
+      const isValid = Boolean(activeStrategy?.isValid(node))
+
+      if (isSelectionDebugEnabled) {
+        console.info('[selection-manager] node click', {
+          nodeId: node.id,
+          nodeType: node.type,
+          phase: currentPhase,
+          structureLayer: currentStructureLayer,
+          mode,
+          isValid,
+          levelId: useViewer.getState().selection.levelId,
+        })
+      }
+
+      if (activeStrategy && isValid) {
         event.stopPropagation()
         clickHandledRef.current = true
 
@@ -460,6 +479,12 @@ export const SelectionManager = () => {
     const onGridClick = () => {
       if (clickHandledRef.current) return
       if (boxSelectHandled) return
+      if (isSelectionDebugEnabled) {
+        console.info('[selection-manager] grid click deselect', {
+          phase: useEditor.getState().phase,
+          structureLayer: useEditor.getState().structureLayer,
+        })
+      }
       const { phase, structureLayer } = useEditor.getState()
       const activeStrategy = SELECTION_STRATEGIES[phase]
       if (activeStrategy) activeStrategy.handleDeselect()
@@ -478,7 +503,7 @@ export const SelectionManager = () => {
       })
       emitter.off('grid:click', onGridClick)
     }
-  }, [mode, movingNode])
+  }, [isSelectionDebugEnabled, mode, movingNode])
 
   // Global double-click handler for auto-switching phases and cross-phase hover
   useEffect(() => {
