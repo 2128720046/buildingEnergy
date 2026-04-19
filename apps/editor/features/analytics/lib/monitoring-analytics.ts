@@ -341,7 +341,6 @@ function createMonitoringRecords(projectId: string): MonitoringRecord[] {
           env_humidity: Number(envHumidity.toFixed(1)),
           env_temperature: Number(envTemperature.toFixed(1)),
           hvac_kwh: Number(hvac.toFixed(1)),
-          id,
           monitor_time: formatTimestamp(date, hour),
           occupancy_density: Number(occupancyPercent.toFixed(1)),
           water_m3: Number(water.toFixed(1)),
