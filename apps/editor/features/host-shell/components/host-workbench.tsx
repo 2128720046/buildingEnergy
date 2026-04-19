@@ -149,6 +149,10 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const setMode = useEditor((state) => state.setMode)
   const hoveredId = useViewer((state) => state.hoveredId)
   const lastFocusedZoneRef = useRef<ZoneNode['id'] | null>(null)
+  const pendingLevelZoneHighlightRef = useRef<{
+    levelId: LevelNode['id']
+    zoneIds: ZoneNode['id'][]
+  } | null>(null)
 
   const nodes = useScene((state) => state.nodes) as Record<string, AnyNode>
 
@@ -195,6 +199,54 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     }
     setEditEnabled((current) => !current)
   }, [editEnabled, mode, setMode])
+
+  const handleJumpToLevel3HighlightZones = useCallback(() => {
+    const levelNodes = Object.values(nodes)
+      .filter((node): node is LevelNode => node.type === 'level')
+      .sort((left, right) => left.level - right.level)
+    const targetLevel =
+      levelNodes[2] ??
+      levelNodes.find((node) => {
+        const levelName = (node.name || '').replace(/\s+/g, '').toLowerCase()
+        return levelName.includes('3') || levelName.includes('三')
+      })
+
+    if (!targetLevel) {
+      return
+    }
+
+    const targetLevelId = targetLevel.id as LevelNode['id']
+    const zoneIds = Object.values(nodes)
+      .filter((node): node is ZoneNode => node.type === 'zone' && node.parentId === targetLevelId)
+      .map((node) => node.id as ZoneNode['id'])
+    pendingLevelZoneHighlightRef.current = {
+      levelId: targetLevelId,
+      zoneIds,
+    }
+
+    setActiveWorkspace('energy-query')
+    setDraftFilters((prev) => ({
+      ...prev,
+      levelId: targetLevelId as string,
+      zoneId: '',
+    }))
+    setAppliedFilters((prev) => ({
+      ...prev,
+      levelId: targetLevelId as string,
+      zoneId: '',
+    }))
+    setHasQueried(true)
+
+    const viewer = useViewer.getState()
+    viewer.setSelection({
+      levelId: targetLevelId as LevelNode['id'],
+      zoneId: null,
+      selectedIds: zoneIds,
+    })
+    viewer.setHoveredId(null)
+    viewer.setLevelMode('solo')
+
+  }, [nodes])
 
   const cockpitToolbar = (
     <HostViewerToolbarRight
@@ -328,8 +380,14 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
     if (draftFilters.levelId) {
       const levelId = draftFilters.levelId as LevelNode['id']
-      if (selection.zoneId !== null || selection.levelId !== levelId) {
-        viewer.setSelection({ levelId, zoneId: null, selectedIds: selection.selectedIds })
+      const pendingHighlight = pendingLevelZoneHighlightRef.current
+      const pendingSelectedIds =
+        pendingHighlight && pendingHighlight.levelId === levelId
+          ? pendingHighlight.zoneIds
+          : selection.selectedIds
+
+      if (selection.zoneId !== null || selection.levelId !== levelId || pendingSelectedIds !== selection.selectedIds) {
+        viewer.setSelection({ levelId, zoneId: null, selectedIds: pendingSelectedIds })
         if (isSelectionDebugEnabled()) {
           console.debug('[host-selection-sync] apply level filter', {
             draftLevelId: levelId,
@@ -337,6 +395,14 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           })
         }
       }
+
+      if (pendingHighlight && pendingHighlight.levelId === levelId) {
+        emitter.emit('camera-controls:focus', {
+          nodeId: (pendingHighlight.zoneIds[0] ?? levelId) as AnyNode['id'],
+        })
+        pendingLevelZoneHighlightRef.current = null
+      }
+
       viewer.setLevelMode('solo')
       return
     }
@@ -443,8 +509,8 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
       )}
     >
-      <header className="relative z-40 px-4 pt-3 pb-2">
-        <div className="mx-auto w-fit">
+      <header className="relative z-40 border-b border-white/60 bg-white/70 px-4 py-3 backdrop-blur-xl">
+        <div className="flex w-full justify-start">
           <WorkspaceNavigation
             activeWorkspace={activeWorkspace}
             onChange={setActiveWorkspace}
@@ -492,6 +558,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 hasQueried={hasQueried}
                 levelOptions={draftQueryModel.levelOptions}
                 onFiltersChange={setDraftFilters}
+                onJumpToLevel3HighlightZones={handleJumpToLevel3HighlightZones}
                 onQuery={handleSubmitQuery}
                 projectId={projectId}
                 queryResults={queryResults}

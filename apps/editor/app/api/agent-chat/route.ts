@@ -89,18 +89,12 @@ function extractReplyText(payload: any) {
 
 export const runtime = 'nodejs'
 
-export async function POST(request: NextRequest) {
-  const apiKey = process.env.DASHSCOPE_API_KEY
-  const appId = process.env.BAILIAN_APP_ID
+const DASHSCOPE_API_KEY = 'sk-6fc15a911c38434eb98142fd9f813bcc'
+const BAILIAN_APP_ID = '72ad916a886f4e4080789c1b0f0e76db'
 
-  if (!apiKey || !appId) {
-    return NextResponse.json(
-      {
-        error: 'Missing DASHSCOPE_API_KEY or BAILIAN_APP_ID on the server.',
-      },
-      { status: 500 },
-    )
-  }
+export async function POST(request: NextRequest) {
+  const apiKey = DASHSCOPE_API_KEY
+  const appId = BAILIAN_APP_ID
 
   let body: AgentChatRequestBody
 
