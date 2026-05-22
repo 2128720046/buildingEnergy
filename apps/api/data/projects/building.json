@@ -58669,7 +58669,7 @@
       "id": "zone_0mflfucaeqme4ndg",
       "name": "Kid bedroom 1",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -59449,7 +59449,7 @@
       "id": "zone_5aed4aohqw3eb8p6",
       "name": "Living room",
       "type": "zone",
-      "color": "#ef4444",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -59829,7 +59829,7 @@
       "id": "zone_7dmsp6iphot481fn",
       "name": "Living room",
       "type": "zone",
-      "color": "#ef4444",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -60705,7 +60705,7 @@
       "id": "zone_g3n9cravedqogu8i",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -60801,7 +60801,7 @@
       "id": "zone_gfx8fyun3ojk3cn5",
       "name": "Kicthen",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -61489,7 +61489,7 @@
       "id": "zone_ls102j2iounuxprb",
       "name": "Master bathroom",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#ef4444",
       "object": "node",
       "polygon": [
         [
@@ -62417,7 +62417,7 @@
       "id": "zone_w9cq41mupk00bq2x",
       "name": "Garage 2",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -62585,7 +62585,7 @@
       "id": "zone_xwvi4lsckpyb2nt9",
       "name": "Master bedroom",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -62689,7 +62689,7 @@
       "id": "zone_yo2ws06rg40mv1x1",
       "name": "Living room",
       "type": "zone",
-      "color": "#ef4444",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -63653,7 +63653,9 @@
         "ceiling_fy2ng97kddnkugiu",
         "item_7gz8uq8dk96767h7",
         "stair_azzxbgcvx3u6l8q8",
-        "item_y8pdpgkjienj80gf"
+        "item_y8pdpgkjienj80gf",
+        "item_z1kj6rl9yk9k235v",
+        "item_qible6zj8206w93v"
       ],
       "metadata": {},
       "parentId": "building_vh1z9chps72913h9"
@@ -71852,6 +71854,122 @@
       ],
       "holes": [],
       "elevation": 0.15
+    },
+    "item_z1kj6rl9yk9k235v": {
+      "object": "node",
+      "id": "item_z1kj6rl9yk9k235v",
+      "type": "item",
+      "name": "Threadmill",
+      "parentId": "level_ndgi8zuyr8zfcbt6",
+      "visible": true,
+      "metadata": {
+        "isTransient": true
+      },
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "asset": {
+        "id": "threadmill",
+        "category": "furniture",
+        "name": "Threadmill",
+        "thumbnail": "/items/threadmill/thumbnail.webp",
+        "src": "/items/threadmill/model.glb",
+        "dimensions": [
+          2.5,
+          1.5,
+          1
+        ],
+        "tags": [
+          "floor",
+          "fitness"
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "item_qible6zj8206w93v": {
+      "object": "node",
+      "id": "item_qible6zj8206w93v",
+      "type": "item",
+      "name": "Threadmill",
+      "parentId": "level_ndgi8zuyr8zfcbt6",
+      "visible": true,
+      "metadata": {
+        "isTransient": true
+      },
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "children": [],
+      "asset": {
+        "id": "threadmill",
+        "category": "furniture",
+        "name": "Threadmill",
+        "thumbnail": "/items/threadmill/thumbnail.webp",
+        "src": "/items/threadmill/model.glb",
+        "dimensions": [
+          2.5,
+          1.5,
+          1
+        ],
+        "tags": [
+          "floor",
+          "fitness"
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
     }
   },
   "rootNodeIds": [

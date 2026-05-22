@@ -1,3 +1,12 @@
+import {
+  buildComponentEnergyFromDaily,
+  buildDailySummary,
+  type DailyEnergySummary,
+  type HourlyEnergyRecord,
+} from './energy-mock-data'
+
+// ---- 公开类型（向后兼容 + 新增字段） ----
+
 export interface EnergySeriesPoint {
   time: string
   value: number
@@ -10,13 +19,19 @@ export interface EnergyApiResponse {
   todayUsage: number
   monthUsage: number
   series: EnergySeriesPoint[]
-  hvacUsage?: number
-  waterUsage?: number
+  /** 暖通分项电耗 (kWh) */
+  hvacUsage: number
+  /** 水耗 (m³) */
+  waterUsage: number
+  /** 照明分项电耗 (kWh) — 新增 */
+  lightingUsage: number
+  /** 插座/设备电耗 (kWh) — 新增 */
+  socketUsage: number
   binding?: {
     bindingType: string
     bindingTargetId: string
   }
-  updatedAt?: string
+  updatedAt: string
 }
 
 export interface ZoneEnergyResponse {
@@ -24,136 +39,97 @@ export interface ZoneEnergyResponse {
   projectId: string
   zoneId: string
   total_electricity_kwh: number
+  total_hvac_kwh: number
+  total_lighting_kwh: number
+  total_socket_kwh: number
+  total_water_m3: number
+  peak_power_kw: number
   indoor_temp: number
   indoor_humidity: number
+  outdoor_temp: number
+  outdoor_humidity: number
+  precipitation_mm: number
   occupancy_density: number
-  updatedAt?: string
+  co2_ppm: number
+  pm25_ugm3: number
+  series: EnergySeriesPoint[]
+  updatedAt: string
 }
 
-function normalizeBaseUrl(baseUrl?: string): string | null {
-  const trimmed = baseUrl?.trim()
-  if (!trimmed) return null
-  return trimmed.replace(/\/+$/, '')
+// ---- 重新导出 — 供上层业务直接使用 ----
+export type { DailyEnergySummary, HourlyEnergyRecord }
+
+// ---- 内部工具 ----
+
+/** 用于估算任意 zone / component 面积的退化逻辑 */
+function fallbackAreaM2(zoneId: string): number {
+  let h = 0
+  for (let i = 0; i < zoneId.length; i++) h = (h * 31 + zoneId.charCodeAt(i)) % 200
+  return Math.max(8, (h % 120) + 15)
 }
 
-function seededNumber(input: string, offset = 0): number {
-  let value = 0
-
-  for (let index = 0; index < input.length; index += 1) {
-    value += input.charCodeAt(index) * (index + 1 + offset)
-  }
-
-  return value
+function todayDateStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function buildMockZoneEnergy(projectId: string, zoneId: string): ZoneEnergyResponse {
-  const seed = seededNumber(`${projectId}:${zoneId}`, 11)
+// ---- 对外查询 API（统一使用模拟引擎） ----
+
+export async function loadComponentEnergy(
+  _baseUrl: string | undefined,
+  projectId: string,
+  componentId: string,
+): Promise<EnergyApiResponse | null> {
+  const daily = buildDailySummary(componentId, 'mixed', fallbackAreaM2(componentId), todayDateStr())
+  return buildComponentEnergyFromDaily(projectId, componentId, daily)
+}
+
+export async function loadZoneEnergy(
+  _baseUrl: string | undefined,
+  projectId: string,
+  zoneId: string,
+): Promise<ZoneEnergyResponse | null> {
+  const daily = buildDailySummary(zoneId, 'mixed', fallbackAreaM2(zoneId), todayDateStr())
+
+  const series = daily.hourly.map((r) => ({
+    time: `${String(r.hour).padStart(2, '0')}:00`,
+    value: r.electricity_kwh,
+  }))
+
+  const afternoonHours = daily.hourly.filter((r) => r.hour >= 12 && r.hour <= 18)
+  const afternoonTemp =
+    afternoonHours.length > 0
+      ? Number(
+          (afternoonHours.reduce((s, r) => s + r.outdoor_temp_c, 0) / afternoonHours.length).toFixed(1),
+        )
+      : 30
+  const afternoonHumidity =
+    afternoonHours.length > 0
+      ? Math.round(afternoonHours.reduce((s, r) => s + r.outdoor_humidity_pct, 0) / afternoonHours.length)
+      : 55
+  const totalPrecip = Number(daily.hourly.reduce((s, r) => s + r.precipitation_mm, 0).toFixed(1))
+  const avgCo2 = Math.round(daily.hourly.reduce((s, r) => s + r.co2_ppm, 0) / 24)
+  const avgPm25 = Math.round(daily.hourly.reduce((s, r) => s + r.pm25_ugm3, 0) / 24)
 
   return {
     type: 'zone',
     projectId,
     zoneId,
-    total_electricity_kwh: Number((((seed % 420) / 3.4) + 28).toFixed(1)),
-    indoor_temp: Number((((seed % 60) / 10) + 20).toFixed(1)),
-    indoor_humidity: Number((((seed % 450) / 10) + 35).toFixed(1)),
-    occupancy_density: Number((((seed % 28) / 10) + 0.6).toFixed(2)),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-function buildMockComponentEnergy(projectId: string, componentId: string): EnergyApiResponse {
-  const seed = seededNumber(`${projectId}:${componentId}`, 17)
-  const currentPower = Number((((seed % 180) / 6.4) + 4.8).toFixed(1))
-  const todayUsage = Number((((seed % 420) / 4.2) + 22).toFixed(1))
-  const monthUsage = Number((todayUsage * 24 + ((seed % 950) / 5)).toFixed(1))
-  const hvacUsage = Number((todayUsage * (0.24 + (seed % 16) / 100)).toFixed(1))
-  const waterUsage = Number((((seed % 120) / 18) + 0.8).toFixed(2))
-
-  const series = Array.from({ length: 7 }, (_, index) => {
-    const drift = ((seed >> (index % 6)) % 14) - 6
-    const wave = Math.sin((index / 6) * Math.PI * 1.8) * 8
-    return {
-      time: `${String(index * 4).padStart(2, '0')}:00`,
-      value: Number((todayUsage * 0.56 + wave + drift).toFixed(1)),
-    }
-  })
-
-  return {
-    projectId,
-    componentId,
-    currentPower,
-    todayUsage,
-    monthUsage,
-    hvacUsage,
-    waterUsage,
+    total_electricity_kwh: daily.total_electricity_kwh,
+    total_hvac_kwh: daily.total_hvac_kwh,
+    total_lighting_kwh: daily.total_lighting_kwh,
+    total_socket_kwh: daily.total_socket_kwh,
+    total_water_m3: daily.total_water_m3,
+    peak_power_kw: daily.peak_power_kw,
+    indoor_temp: daily.avg_indoor_temp_c,
+    indoor_humidity: daily.avg_indoor_humidity_pct,
+    outdoor_temp: afternoonTemp,
+    outdoor_humidity: afternoonHumidity,
+    precipitation_mm: totalPrecip,
+    occupancy_density: Number(daily.avg_occupancy.toFixed(1)),
+    co2_ppm: avgCo2,
+    pm25_ugm3: avgPm25,
     series,
     updatedAt: new Date().toISOString(),
   }
-}
-
-export async function loadComponentEnergy(
-  baseUrl: string | undefined,
-  projectId: string,
-  componentId: string,
-): Promise<EnergyApiResponse | null> {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
-  if (!normalizedBaseUrl) {
-    return buildMockComponentEnergy(projectId, componentId)
-  }
-
-  const response = await fetch(
-    `${normalizedBaseUrl}/projects/${encodeURIComponent(projectId)}/energy/components/${encodeURIComponent(componentId)}`,
-    {
-      cache: 'no-store',
-    },
-  )
-
-  if (response.status === 404) {
-    return buildMockComponentEnergy(projectId, componentId)
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load energy data: ${response.status}`)
-  }
-
-  const payload = (await response.json()) as EnergyApiResponse
-
-  if (payload.hvacUsage === undefined || payload.waterUsage === undefined) {
-    const mock = buildMockComponentEnergy(projectId, componentId)
-    return {
-      ...payload,
-      hvacUsage: payload.hvacUsage ?? mock.hvacUsage,
-      waterUsage: payload.waterUsage ?? mock.waterUsage,
-    }
-  }
-
-  return payload
-}
-
-export async function loadZoneEnergy(
-  baseUrl: string | undefined,
-  projectId: string,
-  zoneId: string,
-): Promise<ZoneEnergyResponse | null> {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
-  if (!normalizedBaseUrl) {
-    return buildMockZoneEnergy(projectId, zoneId)
-  }
-
-  const response = await fetch(
-    `${normalizedBaseUrl}/projects/${encodeURIComponent(projectId)}/energy/zones/${encodeURIComponent(zoneId)}`,
-    {
-      cache: 'no-store',
-    },
-  )
-
-  if (response.status === 404) {
-    return buildMockZoneEnergy(projectId, zoneId)
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to load zone energy data: ${response.status}`)
-  }
-
-  return (await response.json()) as ZoneEnergyResponse
 }

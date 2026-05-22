@@ -36,7 +36,7 @@ export function ActionMenu({ className, layout = 'floating' }: ActionMenuProps) 
       <motion.div
         className={cn(
           layout === 'floating'
-            ? 'fixed bottom-6 left-1/2 z-50 -translate-x-1/2'
+            ? 'fixed bottom-24 left-1/2 z-50 -translate-x-1/2'
             : 'relative z-0 w-full',
           'rounded-2xl border border-border bg-background/90 shadow-2xl backdrop-blur-md',
           'transition-colors duration-200 ease-out',

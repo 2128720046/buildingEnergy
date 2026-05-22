@@ -15,19 +15,25 @@ import { applySceneGraphToEditor, buildSceneGraphFromReferenceFile, useEditor } 
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
+import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import {
   loadComponentEnergy,
-  loadZoneEnergy,
   type EnergyApiResponse,
   type ZoneEnergyResponse,
 } from '@/features/energy-insights/lib/energy-api'
+import {
+  buildDailySummary,
+  estimateZoneArea,
+  classifyRoomType,
+} from '@/features/energy-insights/lib/energy-mock-data'
 import { buildHostQueryModel, type HostQueryFilters } from '@/features/energy-insights/lib/host-query'
 import WorkspaceNavigation from '@/features/host-shell/components/workspace-navigation'
 import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
 import SmartOperationsWorkspace from '@/features/operations/components/smart-operations-workspace'
+import type { OperationsTask } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_PROJECT_ID = 'local-editor'
@@ -144,6 +150,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [appliedFilters, setAppliedFilters] = useState<HostQueryFilters>(DEFAULT_FILTERS)
   const [hasQueried, setHasQueried] = useState(false)
   const [editEnabled, setEditEnabled] = useState(true)
+  const [generatedWorkOrders, setGeneratedWorkOrders] = useState<OperationsTask[]>([])
   const useTwinCockpit = true
   const mode = useEditor((state) => state.mode)
   const setMode = useEditor((state) => state.setMode)
@@ -248,6 +255,17 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
   }, [nodes])
 
+  const handleCreateWorkOrder = useCallback((draft: AssistantWorkOrderDraft) => {
+    const nextTask: OperationsTask = {
+      assignee: draft.assignee,
+      due: draft.due,
+      id: `assistant-order-${Date.now()}`,
+      title: draft.title,
+    }
+
+    setGeneratedWorkOrders((current) => [nextTask, ...current].slice(0, 6))
+  }, [])
+
   const cockpitToolbar = (
     <HostViewerToolbarRight
       editEnabled={editEnabled}
@@ -305,6 +323,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     setHasQueried(false)
     setDraftFilters(DEFAULT_FILTERS)
     setAppliedFilters(DEFAULT_FILTERS)
+    setGeneratedWorkOrders([])
   }, [projectId])
 
   useEffect(() => {
@@ -445,33 +464,83 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
       try {
         if (selectedNodeType === 'zone') {
-          const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, selectedComponentId)
-          if (!cancelled) {
-            setEnergyResult(null)
-            setEnergyResultZone(zoneResponse)
+          const zoneNode = nodes[selectedComponentId as ZoneNode['id']] as ZoneNode | undefined
+          if (zoneNode && Array.isArray(zoneNode.polygon) && zoneNode.polygon.length >= 3) {
+            const area = estimateZoneArea(zoneNode.polygon)
+            const roomType = classifyRoomType(zoneNode.name || zoneNode.id)
+            const d = new Date()
+            const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+            const summary = buildDailySummary(zoneNode.id, roomType, area, date)
+            const zoneResponse: ZoneEnergyResponse = {
+              type: 'zone',
+              projectId,
+              zoneId: zoneNode.id,
+              total_electricity_kwh: summary.total_electricity_kwh,
+              total_hvac_kwh: summary.total_hvac_kwh,
+              total_lighting_kwh: summary.total_lighting_kwh,
+              total_socket_kwh: summary.total_socket_kwh,
+              total_water_m3: summary.total_water_m3,
+              peak_power_kw: summary.peak_power_kw,
+              indoor_temp: summary.avg_indoor_temp_c,
+              indoor_humidity: summary.avg_indoor_humidity_pct,
+              outdoor_temp: 30,
+              outdoor_humidity: 55,
+              precipitation_mm: 0,
+              occupancy_density: summary.avg_occupancy,
+              co2_ppm: Math.round(summary.hourly.reduce((s, r) => s + r.co2_ppm, 0) / 24),
+              pm25_ugm3: Math.round(summary.hourly.reduce((s, r) => s + r.pm25_ugm3, 0) / 24),
+              series: summary.hourly.map((r) => ({ time: `${String(r.hour).padStart(2, '0')}:00`, value: r.electricity_kwh })),
+              updatedAt: new Date().toISOString(),
+            }
+            if (!cancelled) {
+              setEnergyResult(null)
+              setEnergyResultZone(zoneResponse)
+            }
           }
           return
         }
 
         const itemResponse = await loadComponentEnergy(apiBaseUrl, projectId, selectedComponentId)
-        if (cancelled) {
-          return
-        }
-
+        if (cancelled) return
         setEnergyResult(itemResponse)
 
         const componentInfo = appliedQueryModel.results.find(
           (result) => result.componentId === selectedComponentId,
         )
-
         if (!componentInfo?.zoneId) {
           setEnergyResultZone(null)
           return
         }
 
-        const zoneResponse = await loadZoneEnergy(apiBaseUrl, projectId, componentInfo.zoneId)
-        if (!cancelled) {
-          setEnergyResultZone(zoneResponse)
+        const zoneNode = nodes[componentInfo.zoneId as ZoneNode['id']] as ZoneNode | undefined
+        if (zoneNode && Array.isArray(zoneNode.polygon) && zoneNode.polygon.length >= 3) {
+          const area = estimateZoneArea(zoneNode.polygon)
+          const roomType = classifyRoomType(zoneNode.name || zoneNode.id)
+          const d = new Date()
+          const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+          const summary = buildDailySummary(zoneNode.id, roomType, area, date)
+          const zoneResponse: ZoneEnergyResponse = {
+            type: 'zone',
+            projectId,
+            zoneId: zoneNode.id,
+            total_electricity_kwh: summary.total_electricity_kwh,
+            total_hvac_kwh: summary.total_hvac_kwh,
+            total_lighting_kwh: summary.total_lighting_kwh,
+            total_socket_kwh: summary.total_socket_kwh,
+            total_water_m3: summary.total_water_m3,
+            peak_power_kw: summary.peak_power_kw,
+            indoor_temp: summary.avg_indoor_temp_c,
+            indoor_humidity: summary.avg_indoor_humidity_pct,
+            outdoor_temp: 30,
+            outdoor_humidity: 55,
+            precipitation_mm: 0,
+            occupancy_density: summary.avg_occupancy,
+            co2_ppm: Math.round(summary.hourly.reduce((s, r) => s + r.co2_ppm, 0) / 24),
+            pm25_ugm3: Math.round(summary.hourly.reduce((s, r) => s + r.pm25_ugm3, 0) / 24),
+            series: summary.hourly.map((r) => ({ time: `${String(r.hour).padStart(2, '0')}:00`, value: r.electricity_kwh })),
+            updatedAt: new Date().toISOString(),
+          }
+          if (!cancelled) setEnergyResultZone(zoneResponse)
         }
       } catch (error) {
         if (!cancelled) {
@@ -505,11 +574,11 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
       className={cn(
         'flex h-screen w-screen flex-col overflow-hidden text-slate-950',
         activeWorkspace === 'energy-query'
-          ? 'bg-[#050505] text-slate-100'
+          ? 'bg-[#030712] text-slate-100'
           : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
       )}
     >
-      <header className="relative z-40 border-b border-white/60 bg-white/70 px-4 py-3 backdrop-blur-xl">
+      <header className="relative z-40 border-b border-white/6 bg-transparent px-4 py-3 backdrop-blur-md">
         <div className="flex w-full justify-start">
           <WorkspaceNavigation
             activeWorkspace={activeWorkspace}
@@ -619,6 +688,8 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
         >
           <SmartOperationsWorkspace
             energyResult={energyResult}
+            generatedTasks={generatedWorkOrders}
+            onCreateWorkOrder={handleCreateWorkOrder}
             projectId={projectId}
             queryResults={queryResults}
             saveStatus={saveStatus}

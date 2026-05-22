@@ -6,6 +6,10 @@ import { useNodeEvents } from '../../../hooks/use-node-events'
 import useViewer from '../../../store/use-viewer'
 import { NodeRenderer } from '../node-renderer'
 
+function useReadOnly(): boolean {
+  return useScene((s) => s.readOnly)
+}
+
 const Y_OFFSET = 0.01
 
 /**
@@ -35,11 +39,12 @@ type S = ReturnType<typeof useScene.getState>
 
 export const SiteRenderer = ({ node }: { node: SiteNode }) => {
   const ref = useRef<Group>(null!)
+  const readOnly = useReadOnly()
 
   useRegistry(node.id, 'site', ref)
 
   const theme = useViewer((state) => state.theme)
-  const bgColor = theme === 'dark' ? '#1f2433' : '#fafafa'
+  const bgColor = theme === 'dark' ? '#0C0E14' : '#fafafa'
 
   // Cache slab polygon references to keep the selector stable across unrelated store updates
   const slabPolygonsCache = useRef<[number, number][][]>([])
@@ -138,11 +143,15 @@ export const SiteRenderer = ({ node }: { node: SiteNode }) => {
         </mesh>
       )}
 
-      {/* Simple boundary line */}
-      {/* @ts-ignore */}
-      <line frustumCulled={false} geometry={lineGeometry} renderOrder={9}>
-        <lineBasicMaterial color="#f59e0b" linewidth={2} opacity={0.6} transparent />
-      </line>
+      {/* Simple boundary line — 仅编辑模式显示 */}
+      {!readOnly ? (
+        <>
+          {/* @ts-ignore */}
+          <line frustumCulled={false} geometry={lineGeometry} renderOrder={9}>
+            <lineBasicMaterial color="#f59e0b" linewidth={2} opacity={0.6} transparent />
+          </line>
+        </>
+      ) : null}
     </group>
   )
 }
