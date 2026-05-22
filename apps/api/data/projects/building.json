@@ -58669,7 +58669,7 @@
       "id": "zone_0mflfucaeqme4ndg",
       "name": "Kid bedroom 1",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -62417,7 +62417,7 @@
       "id": "zone_w9cq41mupk00bq2x",
       "name": "Garage 2",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -62585,7 +62585,7 @@
       "id": "zone_xwvi4lsckpyb2nt9",
       "name": "Master bedroom",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
