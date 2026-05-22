@@ -4,6 +4,63 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---- Dashboard fonts (data-analysis page) ---- */
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/images/fonts/Alibaba-PuHuiTi-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/images/fonts/Alibaba_PuHuiTi_R.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/images/fonts/Alibaba-PuHuiTi-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/images/fonts/Alibaba-PuHuiTi-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "AlibabaPuHuiTi";
+  src: url("/images/fonts/Alibaba-PuHuiTi-Heavy.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Rajdhani";
+  src: url("/images/fonts/rajdhani.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DINPro";
+  src: url("/images/fonts/DINPro-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-puhuiti: "AlibabaPuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-rajdhani: "Rajdhani", "DINPro", "AlibabaPuHuiTi", sans-serif;
+  --font-dinpro: "DINPro", "Rajdhani", "AlibabaPuHuiTi", sans-serif;
+}
+
 @theme {
   --font-sans:
     var(--font-barlow), var(--font-geist-sans), ui-sans-serif, system-ui,
