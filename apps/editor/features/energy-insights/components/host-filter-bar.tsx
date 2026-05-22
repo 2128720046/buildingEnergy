@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { cn } from '@/lib/utils'
 import type { HostFilterOption, HostQueryFilters } from '@/features/energy-insights/lib/host-query'
@@ -72,7 +72,7 @@ export default function HostFilterBar({
       <section className="w-full">
         <div className="no-scrollbar flex flex-nowrap items-center justify-start gap-2 overflow-x-auto px-1 py-1.5 whitespace-nowrap">
           <input
-            className="h-10 min-w-[220px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none placeholder:text-slate-400 focus:border-cyan-300/45"
+            className="cyber-input h-10 min-w-[220px] shrink-0"
             onChange={(event) => updateField('keyword', event.target.value)}
             placeholder="搜索楼层/房间/构件"
             value={filters.keyword}
@@ -366,3 +366,4 @@ export default function HostFilterBar({
     </section>
   )
 }
+

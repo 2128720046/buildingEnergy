@@ -1,7 +1,8 @@
-'use client'
+﻿'use client'
 
-import { emitter, type AnyNode } from '@pascal-app/core'
+import { type AnyNode, useScene } from '@pascal-app/core'
 import { useEditor, type ViewMode } from '@pascal-app/editor'
+import NumberFlow from '@number-flow/react'
 import {
   AlertTriangle,
   Building2,
@@ -11,16 +12,27 @@ import {
   MessageCircle,
   Siren,
   Thermometer,
-  Wrench,
   X,
   Zap,
 } from 'lucide-react'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
+import type { CompositionData, RankingItem, WeeklyTrendData } from '@/features/energy-insights/lib/energy-dashboard-data'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
+import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
+import FloorHeatmapOverlay from '@/features/energy-insights/components/floor-heatmap-overlay'
 import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
+import {
+  buildFloorHeatmapData,
+  buildFloorHourlyAggregate,
+} from '@/features/energy-insights/lib/floor-heatmap'
+import {
+  applyEnergyHighlights,
+  resetAllEnergyHighlights,
+} from '@/features/energy-insights/lib/energy-zone-highlight'
 import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
+import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
 import type {
   HostFilterOption,
   HostQueryFilters,
@@ -28,10 +40,6 @@ import type {
 } from '@/features/energy-insights/lib/host-query'
 import { cn } from '@/lib/utils'
 
-const CYAN = '#00E5FF'
-const GREEN = '#39FF14'
-const ORANGE = '#FF9F1A'
-const RED = '#FF4D4F'
 const RIGHT_CHART_RAIL_WIDTH = 360
 const ASSISTANT_PANEL_WIDTH = 400
 const EDITOR_PANEL_AVOID_GAP = 20
@@ -56,411 +64,95 @@ interface EnergyTwinDashboardProps {
   zoneOptions: HostFilterOption[]
 }
 
-function hashNumber(input: string): number {
-  let value = 0
-  for (let index = 0; index < input.length; index += 1) {
-    value = (value * 33 + input.charCodeAt(index)) % 100003
-  }
-  return value
-}
+// ---- Cybernetic Chart Palette ----
+const CYAN = '#00F5FF'
+const AMBER = '#FFB300'
+const RED = '#FF3333'
+const LABEL = 'rgba(255,255,255,0.55)'
+const GRID = 'rgba(0,245,255,0.08)'
 
-function buildTrendValues(base: number, count: number, seedKey: string) {
-  const seed = hashNumber(seedKey)
-  return Array.from({ length: count }, (_, index) => {
-    const wave = Math.sin((index / Math.max(1, count - 1)) * Math.PI * 2)
-    const drift = (seed % 17) * 0.8
-    const jitter = ((seed >> (index % 7)) % 11) - 5
-    return Number((base + drift + wave * 14 + jitter * 1.2).toFixed(1))
-  })
-}
-
-function buildTrendOption(labels: string[], values: number[]): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    grid: { top: 18, right: 8, bottom: 24, left: 36 },
-    tooltip: { trigger: 'axis' },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.45)' } },
-      axisLabel: { color: 'rgba(148, 163, 184, 0.85)', fontSize: 10 },
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-      axisLabel: { color: 'rgba(148, 163, 184, 0.85)', fontSize: 10 },
-    },
-    series: [
-      {
-        data: values,
-        type: 'line',
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { color: CYAN, width: 2 },
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(0, 229, 255, 0.35)' },
-              { offset: 1, color: 'rgba(0, 229, 255, 0.02)' },
-            ],
-          },
-        },
-      },
-    ],
-  }
-}
-
-function buildDonutOption(values: Array<{ name: string; value: number }>): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'item',
-      confine: true,
-      textStyle: {
-        fontSize: 11,
-        lineHeight: 16,
-      },
-      extraCssText: 'max-width:180px;white-space:normal;word-break:break-word;',
-      formatter: (params: any) => {
-        const name = typeof params?.name === 'string' ? params.name : '未知'
-        const percent = typeof params?.percent === 'number' ? params.percent : 0
-        return `${name}<br/>占比 ${percent.toFixed(1)}% · 优先级改造建议已就绪`
-      },
-    },
-    legend: {
-      bottom: 0,
-      itemHeight: 6,
-      itemWidth: 8,
-      textStyle: { color: 'rgba(203, 213, 225, 0.85)', fontSize: 10 },
-    },
-    series: [
-      {
-        type: 'pie',
-        radius: ['50%', '74%'],
-        center: ['50%', '45%'],
-        avoidLabelOverlap: false,
-        label: { show: false },
-        labelLine: { show: false },
-        data: values,
-      },
-    ],
-    color: [CYAN, GREEN, ORANGE, RED],
-  }
-}
-
-function buildBarOption(labels: string[], values: number[]): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    grid: { top: 12, right: 8, bottom: 12, left: 64 },
-    xAxis: {
-      type: 'value',
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-    },
-    yAxis: {
-      type: 'category',
-      data: labels,
-      axisLabel: { color: 'rgba(203, 213, 225, 0.9)', fontSize: 10 },
-      axisTick: { show: false },
-      axisLine: { show: false },
-    },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    series: [
-      {
-        type: 'bar',
-        data: values,
-        barWidth: 12,
-        itemStyle: {
-          borderRadius: 6,
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 1,
-            y2: 0,
-            colorStops: [
-              { offset: 0, color: 'rgba(0, 229, 255, 0.55)' },
-              { offset: 1, color: 'rgba(57, 255, 20, 0.78)' },
-            ],
-          },
-        },
-      },
-    ],
-  }
-}
-
-function buildFunnelOption(values: Array<{ name: string; value: number }>): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    tooltip: { trigger: 'item' },
-    series: [
-      {
-        type: 'funnel',
-        left: '4%',
-        top: '8%',
-        bottom: '8%',
-        width: '92%',
-        min: 0,
-        max: Math.max(1, ...values.map((item) => item.value)),
-        sort: 'descending',
-        gap: 2,
-        label: {
-          color: 'rgba(226, 232, 240, 0.95)',
-          fontSize: 10,
-        },
-        itemStyle: {
-          borderColor: 'rgba(2, 6, 23, 0.9)',
-          borderWidth: 1,
-        },
-        data: values,
-      },
-    ],
-    color: ['rgba(255,77,79,0.95)', 'rgba(255,159,26,0.9)', 'rgba(0,229,255,0.85)', 'rgba(57,255,20,0.85)'],
-  }
-}
-
-function buildScatterOption(points: Array<{ x: number; y: number; label: string }>): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    grid: { top: 18, right: 10, bottom: 24, left: 34 },
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: any) => {
-        const data = Array.isArray(params?.data) ? params.data : [0, 0, '未知']
-        return `${data[2]}<br/>温度 ${data[0]}℃ · 负荷 ${data[1]} kWh`
-      },
-    },
-    xAxis: {
-      type: 'value',
-      name: '温度',
-      nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-    },
-    yAxis: {
-      type: 'value',
-      name: '负荷',
-      nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-    },
-    series: [
-      {
-        type: 'scatter',
-        symbolSize: (value: unknown) => {
-          if (!Array.isArray(value)) return 10
-          const y = Number(value[1] ?? 0)
-          return Math.max(8, Math.min(16, y / 22))
-        },
-        itemStyle: { color: 'rgba(0,229,255,0.86)' },
-        data: points.map((point) => [point.x, point.y, point.label]),
-      },
-    ],
-  }
-}
-
-function buildLoadTariffOption(
-  labels: string[],
-  loadValues: number[],
-  tariffValues: number[],
+function buildDualLineOption(
+  today: number[], yesterday: number[],
+  peak: { hour: number; value: number },
+  _valley: { hour: number; value: number },
 ): EChartsOption {
+  const labels = today.map((_, i) => `${String(i).padStart(2, '0')}:00`)
   return {
     backgroundColor: 'transparent',
+    grid: { top: 16, right: 8, bottom: 20, left: 40 },
     tooltip: { trigger: 'axis' },
-    legend: {
-      right: 0,
-      top: 0,
-      textStyle: { color: 'rgba(203, 213, 225, 0.85)', fontSize: 10 },
-    },
-    grid: { top: 24, right: 28, bottom: 24, left: 34 },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      axisLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.45)' } },
-    },
-    yAxis: [
-      {
-        type: 'value',
-        name: '负荷 kWh',
-        nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-        axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-        splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-      },
-      {
-        type: 'value',
-        name: '电价',
-        nameTextStyle: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-        axisLabel: {
-          color: 'rgba(148, 163, 184, 0.8)',
-          fontSize: 10,
-          formatter: (value: number) => `${value.toFixed(2)}`,
-        },
-        splitLine: { show: false },
-      },
-    ],
+    xAxis: { type: 'category', data: labels, axisLabel: { color: LABEL, fontSize: 9, interval: 3 }, axisTick: { show: false }, axisLine: { lineStyle: { color: GRID } } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
     series: [
       {
-        name: '负荷',
-        type: 'bar',
-        data: loadValues,
-        barWidth: 12,
-        itemStyle: {
-          borderRadius: 6,
-          color: 'rgba(0,229,255,0.72)',
-        },
+        name: '今日', type: 'line', data: today, smooth: true, symbol: 'none',
+        lineStyle: { color: CYAN, width: 1.5 },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.08)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
+        markPoint: { data: [{ coord: [peak.hour, peak.value], value: peak.value.toFixed(1), symbol: 'pin', symbolSize: 18, itemStyle: { color: RED as any }, label: { show: true, fontSize: 9, color: '#fff' } }] },
       },
-      {
-        name: '电价',
-        type: 'line',
-        yAxisIndex: 1,
-        data: tariffValues,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 5,
-        lineStyle: { color: 'rgba(255,159,26,0.95)', width: 2 },
-        itemStyle: { color: 'rgba(255,159,26,0.95)' },
-      },
+      { name: '昨日', type: 'line', data: yesterday, smooth: true, symbol: 'none', lineStyle: { color: 'rgba(255,255,255,0.12)', width: 1, type: 'dashed' } },
     ],
+    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
+  } as unknown as EChartsOption
+}
+
+function buildCompositionDonut(c: CompositionData): EChartsOption {
+  const data = [
+    { name: 'HVAC', value: c.hvac }, { name: '照明', value: c.lighting },
+    { name: '插座', value: c.socket }, { name: '其他', value: c.other },
+  ].filter((d) => d.value > 0)
+  return {
+    backgroundColor: 'transparent', tooltip: { trigger: 'item' },
+    legend: { bottom: 0, itemWidth: 8, itemHeight: 6, textStyle: { color: LABEL, fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['65%', '82%'], center: ['50%', '44%'], label: { show: false }, labelLine: { show: false },
+      itemStyle: { borderColor: 'rgba(3,7,18,0.8)', borderWidth: 2 },
+      data,
+    }],
+    color: [CYAN, 'rgba(0,245,255,0.55)', 'rgba(255,179,0,0.5)', 'rgba(255,255,255,0.12)'],
   }
 }
 
-function buildCompareOption(before: number[], after: number[]): EChartsOption {
-  const labels = ['异常前', '异常后']
+function buildRankingBar(items: RankingItem[]): EChartsOption {
+  if (items.length === 0) return {}
   return {
     backgroundColor: 'transparent',
-    grid: { top: 20, right: 8, bottom: 18, left: 28 },
-    xAxis: {
-      type: 'category',
-      data: labels,
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-    },
-    legend: {
-      right: 0,
-      top: 0,
-      textStyle: { color: 'rgba(203, 213, 225, 0.85)', fontSize: 10 },
-    },
-    series: [
-      {
-        name: '负荷',
-        type: 'bar',
-        barWidth: 12,
-        data: [before[0], after[0]],
-        itemStyle: { borderRadius: 4, color: 'rgba(0,229,255,0.78)' },
-      },
-      {
-        name: 'SLA',
-        type: 'bar',
-        barWidth: 12,
-        data: [before[1], after[1]],
-        itemStyle: { borderRadius: 4, color: 'rgba(57,255,20,0.72)' },
-      },
-    ],
+    grid: { top: 4, right: 12, bottom: 4, left: 72 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 8 } },
+    yAxis: { type: 'category', data: items.map((r) => r.name), axisLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 9 }, axisTick: { show: false }, axisLine: { show: false } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    series: [{ type: 'bar', data: items.map((r) => r.value), barWidth: 10, itemStyle: { borderRadius: 2, color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: CYAN }, { offset: 1, color: 'rgba(0,245,255,0.35)' }] } } }],
   }
 }
 
-function buildResponseTimeOption(values: number[]): EChartsOption {
+function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
   return {
     backgroundColor: 'transparent',
-    grid: { top: 20, right: 12, bottom: 20, left: 28 },
-    xAxis: {
-      type: 'category',
-      data: ['<15m', '15-30m', '30-60m', '>60m'],
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: { color: 'rgba(148, 163, 184, 0.8)', fontSize: 10 },
-      splitLine: { lineStyle: { color: 'rgba(71, 85, 105, 0.25)' } },
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: (params: any) => {
-        const point = Array.isArray(params) ? params[0] : null
-        const value = Number(point?.value ?? 0)
-        return `${point?.axisValue ?? '时效区间'}<br/>工单 ${value} 单`
-      },
-    },
+    grid: { top: 14, right: 12, bottom: 18, left: 40 },
+    tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: w.labels, axisLabel: { color: LABEL, fontSize: 9 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
     series: [
-      {
-        type: 'bar',
-        data: values,
-        barWidth: 14,
-        itemStyle: {
-          borderRadius: 6,
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(0,229,255,0.9)' },
-              { offset: 1, color: 'rgba(2,132,199,0.35)' },
-            ],
-          },
-        },
-      },
+      { name: '本周', type: 'bar', data: w.values, barWidth: 10, itemStyle: { borderRadius: 2, color: 'rgba(0,245,255,0.6)' } },
+      { name: '上周', type: 'bar', data: w.prevWeekValues, barWidth: 10, itemStyle: { borderRadius: 2, color: 'rgba(255,255,255,0.08)' } },
     ],
+    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
   }
 }
 
-function buildHealthHeatmapOption(matrix: number[][]): EChartsOption {
-  return {
-    backgroundColor: 'transparent',
-    tooltip: {
-      position: 'top',
-      formatter: (params: any) => {
-        const data = Array.isArray(params?.data) ? params.data : [0, 0, 0]
-        return `健康指数 ${data[2]}`
-      },
-    },
-    grid: { top: 14, right: 14, bottom: 18, left: 48 },
-    xAxis: {
-      type: 'category',
-      data: ['供电', '暖通', '照明', '给排水'],
-      axisLabel: { color: 'rgba(148, 163, 184, 0.85)', fontSize: 10 },
-      splitArea: { show: false },
-    },
-    yAxis: {
-      type: 'category',
-      data: ['L4', 'L3', 'L2', 'L1'],
-      axisLabel: { color: 'rgba(148, 163, 184, 0.85)', fontSize: 10 },
-      splitArea: { show: false },
-    },
-    visualMap: {
-      min: 60,
-      max: 100,
-      show: false,
-      inRange: {
-        color: ['rgba(255,77,79,0.75)', 'rgba(255,159,26,0.75)', 'rgba(57,255,20,0.75)'],
-      },
-    },
-    series: [
-      {
-        type: 'heatmap',
-        data: matrix.flatMap((row, rowIndex) => row.map((value, colIndex) => [colIndex, rowIndex, value])),
-        label: { show: false },
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 8,
-            shadowColor: 'rgba(0,0,0,0.35)',
-          },
-        },
-      },
-    ],
-  }
+/** 数字过渡动画包装 */
+function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
+  return (
+    <span className={cn('inline-flex items-baseline gap-0.5', className)}>
+      <NumberFlow
+        value={value}
+        format={{ notation: 'compact', maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2 }}
+        locales="zh-CN"
+        willChange
+      />
+      {suffix ? <span className="text-[0.55em] opacity-60">{suffix}</span> : null}
+    </span>
+  )
 }
 
 function CardHeader({
@@ -475,7 +167,7 @@ function CardHeader({
   return (
     <div className="mb-2 flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-cyan-100 drop-shadow-[0_0_8px_rgba(34,211,238,0.45)]">{icon}</span>
+        <span className="text-white/50">{icon}</span>
         <h3 className="font-semibold text-[13px] tracking-[0.16em] text-cyan-50 uppercase">{title}</h3>
       </div>
       {action}
@@ -507,7 +199,7 @@ function DockedViewModeSwitch() {
   ]
 
   return (
-    <div className="pointer-events-auto inline-flex h-9 items-center overflow-hidden rounded-xl border border-cyan-300/35 bg-[#0a1324cc] shadow-[0_8px_24px_rgba(2,6,23,0.45)] backdrop-blur-md">
+    <div className="pointer-events-auto inline-flex h-9 items-center overflow-hidden rounded border border-white/8 bg-[#0C0E14]/60 backdrop-blur-md">
       {modes.map((mode) => {
         const isActive = viewMode === mode.id
         return (
@@ -515,8 +207,8 @@ function DockedViewModeSwitch() {
             className={cn(
               'h-full px-3 font-medium text-xs transition-colors',
               isActive
-                ? 'bg-cyan-400/20 text-cyan-100'
-                : 'text-slate-300 hover:bg-cyan-500/10 hover:text-slate-100',
+                ? 'bg-[#00F5FF]/20 text-white/95 kpi-glow'
+                : 'text-white/40 hover:bg-white/5 hover:text-white/70',
             )}
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
@@ -549,6 +241,50 @@ export default function EnergyTwinDashboard({
   zoneOptions,
 }: EnergyTwinDashboardProps) {
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const sceneNodes = useScene((state) => state.nodes) as Record<string, AnyNode>
+
+  const todayStr = useMemo(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }, [])
+
+  const [timelineDate, setTimelineDate] = useState(todayStr)
+  const [timelineHour, setTimelineHour] = useState(() => new Date().getHours())
+
+  const handleTimelineChange = useCallback(
+    (state: TimelineState) => {
+      if (state.date !== timelineDate) setTimelineDate(state.date)
+      if (state.hour !== timelineHour) setTimelineHour(state.hour)
+    },
+    [timelineDate, timelineHour],
+  )
+
+  const floorHeatmapData = useMemo(() => {
+    if (!filters.levelId) return null
+    return buildFloorHeatmapData(sceneNodes, filters.levelId, queryResults, {
+      targetDate: timelineDate,
+      targetHour: timelineHour,
+    })
+  }, [sceneNodes, filters.levelId, queryResults, timelineDate, timelineHour])
+
+  // 联动 3D 场景 zone 颜色：高能耗区变红
+  useEffect(() => {
+    if (!floorHeatmapData) {
+      resetAllEnergyHighlights()
+      return
+    }
+    applyEnergyHighlights(
+      floorHeatmapData.zones.map((z) => ({
+        zoneId: z.zoneId,
+        normalizedEnergy: z.normalizedEnergy,
+      })),
+    )
+  }, [floorHeatmapData])
+
+  const hourlySamples = useMemo(() => {
+    if (!filters.levelId) return null
+    return buildFloorHourlyAggregate(sceneNodes, filters.levelId, timelineDate)
+  }, [sceneNodes, filters.levelId, timelineDate])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -563,149 +299,18 @@ export default function EnergyTwinDashboard({
     }
   }, [assistantOpen])
 
-  const trendLabels = useMemo(
+  const dashboardData = useMemo(
     () =>
-      filters.timeRange === '7d'
-        ? ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-        : filters.timeRange === '30d'
-          ? ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周', '第7周']
-          : ['00', '04', '08', '12', '16', '20', '24'],
-    [filters.timeRange],
+      buildDashboardData({
+        nodes: sceneNodes,
+        levelId: filters.levelId,
+        zoneId: filters.zoneId,
+        date: timelineDate,
+        hour: timelineHour,
+        queryResults,
+      }),
+    [sceneNodes, filters.levelId, filters.zoneId, timelineDate, timelineHour, queryResults],
   )
-
-  const trendValues = useMemo(() => {
-    if (energyResult?.series && energyResult.series.length > 0) {
-      const normalized = energyResult.series.slice(-trendLabels.length).map((point) => point.value)
-      if (normalized.length === trendLabels.length) {
-        return normalized
-      }
-    }
-    return buildTrendValues(95, trendLabels.length, `${projectId}-${filters.levelId}-${filters.timeRange}`)
-  }, [energyResult?.series, filters.levelId, filters.timeRange, projectId, trendLabels.length])
-
-  const totalLoad = trendValues.reduce((sum, value) => sum + value, 0)
-  const peakLoad = Math.max(...trendValues)
-  const hvacElectricity = Number(
-    (
-      energyResult?.hvacUsage ??
-      (energyResultZone ? energyResultZone.total_electricity_kwh * 0.36 : totalLoad * 0.34)
-    ).toFixed(1),
-  )
-  const totalWaterUsage = Number(
-    (
-      energyResult?.waterUsage ??
-      (energyResultZone
-        ? Math.max(0.6, energyResultZone.occupancy_density * 1.8)
-        : (hashNumber(`${projectId}:${filters.levelId}:${filters.zoneId}:${filters.timeRange}`) % 90) / 10 + 1.2)
-    ).toFixed(2),
-  )
-
-  const highCount = queryResults.filter((item) => item.energyLevel === '高').length
-  const warningCount = Math.max(1, highCount)
-  const normalRatio = queryResults.length === 0 ? 100 : ((queryResults.length - highCount) / queryResults.length) * 100
-  const slaScore = Math.max(72, Math.round(95 - warningCount * 1.8))
-
-  const compositionValues = [
-    { name: 'HVAC', value: Math.max(18, Math.round(totalLoad * 0.34)) },
-    { name: '照明', value: Math.max(12, Math.round(totalLoad * 0.26)) },
-    { name: '动力', value: Math.max(8, Math.round(totalLoad * 0.22)) },
-    { name: '其他', value: Math.max(5, Math.round(totalLoad * 0.18)) },
-  ]
-
-  const floorMap = new Map<string, number>()
-  for (const item of queryResults) {
-    floorMap.set(item.levelName, (floorMap.get(item.levelName) ?? 0) + item.predictedUsage)
-  }
-
-  const floorRows = [...floorMap.entries()]
-    .sort((left, right) => right[1] - left[1])
-    .slice(0, 6)
-    .map(([label, value]) => ({ label, value: Number(value.toFixed(1)) }))
-
-  const fallbackFloorRows = levelOptions.slice(0, 6).map((option, index) => ({
-    label: option.label,
-    value: Number((88 - index * 6).toFixed(1)),
-  }))
-
-  const resolvedFloorRows = floorRows.length > 0 ? floorRows : fallbackFloorRows
-
-  const alertEvents = queryResults.slice(0, 4).map((item, index) => ({
-    id: item.componentId,
-    title:
-      item.energyLevel === '高'
-        ? `${item.componentName} 出现异常尖峰`
-        : item.energyLevel === '中'
-          ? `${item.componentName} 建议巡检`
-          : `${item.componentName} 进入例行巡检`,
-    zone: `${item.levelName} / ${item.zoneName}`,
-    eta: `${6 + index * 4} 分钟`,
-  }))
-
-  const scatterPoints = queryResults.slice(0, 18).map((item) => {
-    const seed = hashNumber(item.componentId)
-    return {
-      x: Number((21 + (seed % 90) / 10).toFixed(1)),
-      y: Number((item.predictedUsage + (seed % 24) - 12).toFixed(1)),
-      label: item.componentName,
-    }
-  })
-
-  const resolvedScatterPoints =
-    scatterPoints.length > 0
-      ? scatterPoints
-      : [
-          { x: 23.2, y: 84.6, label: '默认样本 A' },
-          { x: 24.9, y: 90.2, label: '默认样本 B' },
-          { x: 26.4, y: 96.5, label: '默认样本 C' },
-          { x: 27.1, y: 101.8, label: '默认样本 D' },
-        ]
-
-  const healthMatrix = [
-    [96, 88, 90, 84],
-    [92, 86, 85, 80],
-    [89, 82, 83, 78],
-    [87, 80, 79, 76],
-  ]
-
-  const funnelData = [
-    { name: '新告警', value: Math.max(4, warningCount + 4) },
-    { name: '待派单', value: Math.max(3, warningCount + 2) },
-    { name: '处理中', value: Math.max(2, warningCount + 1) },
-    { name: '已闭环', value: Math.max(1, Math.round(normalRatio / 28)) },
-  ]
-
-  const responseTimeData = [
-    Math.max(3, Math.round(normalRatio / 24)),
-    Math.max(2, warningCount + 1),
-    Math.max(1, warningCount),
-    Math.max(1, Math.round(warningCount / 2)),
-  ]
-
-  const loadTariffLabels = trendLabels
-  const loadTariffValues = trendValues.map((value) => Number(value.toFixed(1)))
-  const tariffValues = trendLabels.map((label, index) => {
-    const hour = Number(label)
-    if (!Number.isNaN(hour)) {
-      if ((hour >= 0 && hour < 7) || hour >= 22) return 0.46
-      if ((hour >= 10 && hour < 12) || (hour >= 14 && hour < 18)) return 0.98
-      return 0.72
-    }
-    const wave = 0.72 + Math.sin((index / Math.max(1, trendLabels.length - 1)) * Math.PI) * 0.22
-    return Number(wave.toFixed(2))
-  })
-
-  const compareBefore: [number, number] = [Number((peakLoad * 1.08).toFixed(1)), Number((slaScore - 5).toFixed(1))]
-  const compareAfter: [number, number] = [Number((peakLoad * 0.88).toFixed(1)), Number(slaScore.toFixed(1))]
-
-  const floorFocusTargets = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const item of queryResults) {
-      if (item.zoneId && !map.has(item.levelName)) {
-        map.set(item.levelName, item.zoneId)
-      }
-    }
-    return map
-  }, [queryResults])
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-slate-100">
@@ -727,8 +332,8 @@ export default function EnergyTwinDashboard({
           <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
             {topToolbar ? <div className="glass-panel rounded-xl px-2 py-0.5 whitespace-nowrap">{topToolbar}</div> : null}
             <div className="text-right whitespace-nowrap">
-              <div className="text-[10px] tracking-[0.22em] text-slate-400 uppercase">项目</div>
-              <div className="text-cyan-100 text-sm">{projectId}</div>
+              <div className="text-[10px] tracking-[0.22em] text-white/40 uppercase">项目</div>
+              <div className="text-white/70 text-sm">{projectId}</div>
             </div>
           </div>
         </div>
@@ -753,210 +358,327 @@ export default function EnergyTwinDashboard({
         <div className="pointer-events-auto min-h-0 w-full max-w-[360px]">
           <div className="h-full">
             <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1">
-              <GlassCard>
-            <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="全局 KPI" />
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">总耗电</div>
-                <div className="mt-1 font-semibold text-cyan-100 text-lg">{totalLoad.toFixed(0)}</div>
-                <div className="text-[10px] text-slate-400">kWh</div>
-              </div>
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">峰值负荷</div>
-                <div className="mt-1 font-semibold text-orange-300 text-lg">{peakLoad.toFixed(1)}</div>
-                <div className="text-[10px] text-slate-400">kWh</div>
-              </div>
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">设备健康</div>
-                <div className="mt-1 font-semibold text-green-300 text-lg">{normalRatio.toFixed(1)}%</div>
-                <div className="text-[10px] text-slate-400">正常率</div>
-              </div>
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">SLA</div>
-                <div className="mt-1 font-semibold text-cyan-200 text-lg">{slaScore}</div>
-                <div className="text-[10px] text-slate-400">评分</div>
-              </div>
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">总水耗</div>
-                <div className="mt-1 font-semibold text-cyan-100 text-lg">{totalWaterUsage.toFixed(2)}</div>
-                <div className="text-[10px] text-slate-400">m³</div>
-              </div>
-              <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                <div className="text-[10px] text-slate-400">暖通电耗</div>
-                <div className="mt-1 font-semibold text-orange-300 text-lg">{hvacElectricity.toFixed(1)}</div>
-                <div className="text-[10px] text-slate-400">kWh</div>
-              </div>
-            </div>
-              </GlassCard>
 
-              <GlassCard>
-            <CardHeader icon={<Zap className="h-4 w-4" strokeWidth={1.8} />} title="负荷结构" />
-            <div className="h-44">
-              <ChartFrame>
-              <ReactECharts option={buildDonutOption(compositionValues)} style={{ height: '176px', width: '100%' }} />
-              </ChartFrame>
-            </div>
-              </GlassCard>
-
-              <GlassCard>
-            <CardHeader icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />} title="楼层热力排行" />
-            <div className="h-44">
-              <ChartFrame>
-              <ReactECharts
-                onEvents={{
-                  click: (params: { name?: string }) => {
-                    if (!params.name) return
-                    const targetId = floorFocusTargets.get(params.name)
-                    if (targetId) {
-                      emitter.emit('camera-controls:focus', { nodeId: targetId as AnyNode['id'] })
-                    }
-                  },
-                }}
-                option={buildBarOption(
-                  resolvedFloorRows.map((item) => item.label),
-                  resolvedFloorRows.map((item) => item.value),
-                )}
-                style={{ height: '176px', width: '100%' }}
-              />
-              </ChartFrame>
-            </div>
-              </GlassCard>
-
-              <GlassCard>
-            <CardHeader icon={<AlertTriangle className="h-4 w-4" strokeWidth={1.8} />} title="异常事件" />
-            <div className="space-y-2">
-              {alertEvents.map((event) => (
-                <div className="rounded-lg border border-red-400/25 bg-red-500/10 px-2.5 py-2" key={event.id}>
-                  <div className="text-xs text-slate-100">{event.title}</div>
-                  <div className="mt-1 text-[11px] text-slate-400">{event.zone}</div>
-                  <div className="text-[11px] text-orange-300">预计处理 {event.eta}</div>
-                </div>
-              ))}
-            </div>
-              </GlassCard>
-
+              {/* 1. 告警状态 — 脉冲动画 + 占比条 */}
               <GlassCard>
                 <CardHeader
-                  action={
-                    <button
-                      className="rounded-md border border-cyan-300/35 bg-cyan-500/16 px-2 py-1 text-[10px] text-cyan-100"
-                      type="button"
-                    >
-                      调峰建议
-                    </button>
-                  }
-                  icon={<Zap className="h-4 w-4" strokeWidth={1.8} />}
-                  title="时序趋势"
+                  icon={<AlertTriangle className="h-4 w-4" strokeWidth={1.8} />}
+                  title="告警状态"
                 />
-                <div className="h-40">
+                {dashboardData.left.alert.total > 0 ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className={cn(
+                        'rounded-lg p-2 text-center border',
+                        dashboardData.left.alert.high > 0
+                          ? 'animate-pulse border-red-400/40 bg-red-500/20'
+                          : 'border-red-400/15 bg-red-500/8',
+                      )}>
+                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">高</div>
+                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-[#FF3333]"><NumberFlow value={dashboardData.left.alert.high} /></div>
+                      </div>
+                      <div className={cn(
+                        'rounded-lg p-2 text-center border',
+                        dashboardData.left.alert.medium > 0
+                          ? 'border-amber-400/30 bg-amber-500/12'
+                          : 'border-amber-300/10 bg-amber-500/5',
+                      )}>
+                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">中</div>
+                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-white/80"><NumberFlow value={dashboardData.left.alert.medium} /></div>
+                      </div>
+                      <div className="rounded-lg border border-slate-300/10 bg-slate-500/8 p-2 text-center">
+                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">总计</div>
+                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-slate-300"><NumberFlow value={dashboardData.left.alert.total} /></div>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-[#FF3333]/70 transition-all duration-500"
+                        style={{ width: `${Math.min(100, (dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-right text-[9px] text-slate-500">
+                      高优先级占比 {Math.round((dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-3 text-center text-xs text-[rgba(0,245,255,0.7)]">
+                    ✓ 当前无告警，系统运行正常
+                  </div>
+                )}
+              </GlassCard>
+
+              {/* 2. 实时功率 — 大字号 + 迷你条形图 */}
+              <GlassCard>
+                <CardHeader icon={<Zap className="h-4 w-4" strokeWidth={1.8} />} title="实时功率" />
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold font-mono tabular-nums text-white/95 kpi-glow">
+                        <NumberFlow value={dashboardData.left.realtimePower.currentKw} format={{ maximumFractionDigits: 1 }} />
+                      </span>
+                      <span className="text-xs text-slate-400">kW</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* 迷你趋势条 */}
+                      <div className="mt-1 flex h-5 items-end gap-px">
+                        {(dashboardData.left.hourlyCurve.today).slice(0, 12).map((v, i) => (
+                          <span
+                            key={i}
+                            className="w-1.5 rounded-sm"
+                            style={{
+                              height: `${Math.max(4, (v / Math.max(...dashboardData.left.hourlyCurve.today, 1)) * 20)}px`,
+                              backgroundColor: i === dashboardData.left.hourlyCurve.peak.hour ? 'rgba(255,159,26,0.9)' : 'rgba(0,229,255,0.6)',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={cn(
+                      'text-lg font-semibold tabular-nums',
+                      dashboardData.left.realtimePower.trend === 'up' ? 'text-[#FF3333]' :
+                        dashboardData.left.realtimePower.trend === 'down' ? 'text-[rgba(0,245,255,0.7)]' : 'text-white/50',
+                    )}>
+                      {dashboardData.left.realtimePower.trend === 'up' ? '↑' : dashboardData.left.realtimePower.trend === 'down' ? '↓' : '→'}
+                      {dashboardData.left.realtimePower.changePct > 0 ? '+' : ''}{dashboardData.left.realtimePower.changePct}%
+                    </div>
+                    <div className="text-[10px] text-slate-500">vs 昨日同时刻</div>
+                  </div>
+                </div>
+              </GlassCard>
+
+              {/* 3. 能耗强度 */}
+              <GlassCard>
+                <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="能耗强度" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
+                    <div className="text-[10px] text-slate-400">总电耗</div>
+                    <div className="mt-1 font-semibold font-mono text-white/95 kpi-glow text-lg">{dashboardData.left.energyIntensity.todayKwh.toFixed(0)}</div>
+                    <div className="text-[10px] text-slate-400">kWh</div>
+                  </div>
+                  <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
+                    <div className="text-[10px] text-slate-400">能耗强度</div>
+                    <div className="mt-1 font-semibold font-mono text-white/95 kpi-glow text-lg">{dashboardData.left.energyIntensity.todayKwhPerM2.toFixed(2)}</div>
+                    <div className="text-[10px] text-slate-400">kWh/m²</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-right">
+                  <span className={cn(
+                    'text-xs',
+                    dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? 'text-[#FF3333]' : 'text-[rgba(0,245,255,0.7)]',
+                  )}>
+                    {dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? '+' : ''}{dashboardData.left.energyIntensity.vsYesterdayPct}% vs 昨日
+                  </span>
+                </div>
+              </GlassCard>
+
+              {/* 4. 24h 负荷曲线 */}
+              <GlassCard>
+                <CardHeader icon={<Clock3 className="h-4 w-4" strokeWidth={1.8} />} title="24h 负荷曲线" />
+                <div className="h-36">
                   <ChartFrame>
                   <ReactECharts
-                    option={buildTrendOption(trendLabels, trendValues)}
-                    style={{ height: '160px', width: '100%' }}
+                    key={`dual-${timelineDate}`}
+                    option={buildDualLineOption(
+                      dashboardData.left.hourlyCurve.today,
+                      dashboardData.left.hourlyCurve.yesterday,
+                      dashboardData.left.hourlyCurve.peak,
+                      dashboardData.left.hourlyCurve.valley,
+                    )}
+                    style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
                 </div>
               </GlassCard>
 
+              {/* 5. 分项占比 */}
               <GlassCard>
-                <CardHeader icon={<Thermometer className="h-4 w-4" strokeWidth={1.8} />} title="负荷-温度散点" />
-                <div className="h-40">
+                <CardHeader icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />} title="分项占比" />
+                <div className="h-36">
                   <ChartFrame>
                   <ReactECharts
-                    option={buildScatterOption(resolvedScatterPoints)}
-                    style={{ height: '160px', width: '100%' }}
+                    key={`comp-${timelineDate}`}
+                    option={buildCompositionDonut(dashboardData.left.composition)}
+                    style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
                 </div>
               </GlassCard>
+
             </div>
           </div>
         </div>
 
-        <div className="pointer-events-none relative min-h-0 min-w-0" />
+        <div className="pointer-events-none relative min-h-0 min-w-0">
+          {floorHeatmapData ? (
+            <div className="pointer-events-auto absolute top-3 right-3 z-30">
+              <FloorHeatmapOverlay data={floorHeatmapData} />
+            </div>
+          ) : null}
+        </div>
 
         <div className="pointer-events-auto min-h-0 w-full max-w-[360px] justify-self-end">
           <div className="h-full">
             <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1">
-              <GlassCard>
-            <CardHeader
-              action={
-                <button
-                  className="rounded-md border border-orange-300/35 bg-orange-500/20 px-2 py-1 text-[10px] text-orange-100"
-                  type="button"
-                >
-                  一键催办
-                </button>
-              }
-              icon={<Siren className="h-4 w-4" strokeWidth={1.8} />}
-              title="实时告警漏斗"
-            />
-            <div className="h-40">
-              <ChartFrame>
-              <ReactECharts option={buildFunnelOption(funnelData)} style={{ height: '160px', width: '100%' }} />
-              </ChartFrame>
-            </div>
-              </GlassCard>
 
+              {/* 6. 能耗排行 */}
               <GlassCard>
-            <CardHeader
-              action={
-                <button
-                  className="rounded-md border border-cyan-300/35 bg-cyan-500/18 px-2 py-1 text-[10px] text-cyan-100"
-                  type="button"
-                >
-                  按时效
-                </button>
-              }
-              icon={<Clock3 className="h-4 w-4" strokeWidth={1.8} />}
-              title="响应时效分布"
-            />
-            <div className="h-40">
-              <ChartFrame>
-              <ReactECharts option={buildResponseTimeOption(responseTimeData)} style={{ height: '160px', width: '100%' }} />
-              </ChartFrame>
-            </div>
-              </GlassCard>
-
-              <GlassCard>
-            <CardHeader icon={<Leaf className="h-4 w-4" strokeWidth={1.8} />} title="设备健康矩阵" />
-            <div className="h-44">
-              <ChartFrame>
-              <ReactECharts
-                option={buildHealthHeatmapOption(healthMatrix)}
-                style={{ height: '176px', width: '100%' }}
-              />
-              </ChartFrame>
-            </div>
-              </GlassCard>
-
-              <GlassCard>
-                <CardHeader icon={<Wrench className="h-4 w-4" strokeWidth={1.8} />} title="分时负荷与电价" />
-                <div className="h-40">
+                <CardHeader icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />} title={filters.levelId ? '房间能耗排行' : '楼层能耗排行'} />
+                <div className="h-36">
                   <ChartFrame>
                   <ReactECharts
-                    option={buildLoadTariffOption(loadTariffLabels, loadTariffValues, tariffValues)}
-                    style={{ height: '160px', width: '100%' }}
+                    key={`rank-${timelineDate}`}
+                    option={buildRankingBar(dashboardData.right.ranking)}
+                    style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
                 </div>
               </GlassCard>
 
+              {/* 7. 峰值功率 — 仪表盘样式 */}
               <GlassCard>
-                <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="异常前后对比" />
-                <div className="h-40">
+                <CardHeader icon={<Siren className="h-4 w-4" strokeWidth={1.8} />} title="今日峰值" />
+                <div className="space-y-2">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-mono text-2xl font-bold text-white/95 kpi-glow">
+                          <NumberFlow value={dashboardData.right.peakPower.value} format={{ maximumFractionDigits: 1 }} />
+                        </span>
+                        <span className="text-xs text-slate-400">kW</span>
+                      </div>
+                    </div>
+                    <div className="rounded border border-white/8 bg-white/5 px-2 py-1">
+                      <span className="font-mono text-xs text-white/80">
+                        {String(dashboardData.right.peakPower.hour).padStart(2, '0')}:00
+                      </span>
+                    </div>
+                  </div>
+                  {/* 峰值占比进度条 */}
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#00F5FF]/60 via-[#00F5FF]/80 to-[#FF3333]/70 transition-all"
+                      style={{ width: `${Math.min(100, (dashboardData.right.peakPower.value / Math.max(1, dashboardData.left.realtimePower.currentKw + dashboardData.right.peakPower.value)) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-slate-500">
+                    <span>当前 {dashboardData.left.realtimePower.currentKw.toFixed(1)} kW</span>
+                    <span>峰值 {dashboardData.right.peakPower.value.toFixed(1)} kW</span>
+                  </div>
+                </div>
+              </GlassCard>
+
+              {/* 8. 室内外环境 — 与时间轴联动 */}
+              <GlassCard>
+                <CardHeader icon={<Thermometer className="h-4 w-4" strokeWidth={1.8} />} title="室内外环境" />
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className={cn(
+                        'h-1.5 w-1.5 rounded-full',
+                        dashboardData.right.indoorEnv.indoorTemp > 29 ? 'bg-red-400' :
+                          dashboardData.right.indoorEnv.indoorTemp > 27 ? 'bg-amber-400' : 'bg-emerald-400',
+                      )} />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/95 kpi-glow">{dashboardData.right.indoorEnv.indoorTemp}°</div>
+                    <div className="text-[8px] text-slate-400">室内温度</div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.indoorHumidity}%</div>
+                    <div className="text-[8px] text-slate-400">室内湿度</div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.co2}</div>
+                    <div className="text-[8px] text-slate-400">CO₂</div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className={cn(
+                        'h-1.5 w-1.5 rounded-full',
+                        dashboardData.right.indoorEnv.outdoorTemp > 35 ? 'bg-[#FF3333]' : 'bg-white/30',
+                      )} />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/95 kpi-glow">{dashboardData.right.indoorEnv.outdoorTemp}°</div>
+                    <div className="text-[8px] text-slate-400">室外温度</div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.outdoorHumidity}%</div>
+                    <div className="text-[8px] text-slate-400">室外湿度</div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2">
+                    <div className="mb-1 flex justify-center">
+                      <span className={cn(
+                        'h-1.5 w-1.5 rounded-full',
+                        dashboardData.right.indoorEnv.pm25 > 50 ? 'bg-[#FF3333]' : 'bg-white/25',
+                      )} />
+                    </div>
+                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.pm25}</div>
+                    <div className="text-[8px] text-slate-400">PM2.5</div>
+                  </div>
+                </div>
+              </GlassCard>
+
+              {/* 9. 电费估算 — 带对比 */}
+              <GlassCard>
+                <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="电费估算" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2.5">
+                    <div className="text-[9px] uppercase tracking-[0.08em] text-slate-400">今日</div>
+                    <div className="mt-1">
+                      <span className="text-xl font-bold font-mono text-white/95 kpi-glow">¥<NumberFlow value={dashboardData.right.cost.today} /></span>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-white/8 bg-black/25 p-2.5">
+                    <div className="text-[9px] uppercase tracking-[0.08em] text-slate-400">本月</div>
+                    <div className="mt-1">
+                      <span className="text-xl font-bold font-mono text-white/80">¥<NumberFlow value={dashboardData.right.cost.month} /></span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-center text-[9px] text-slate-400">
+                  按 0.82 元/kWh 综合电价估算
+                </div>
+              </GlassCard>
+
+              {/* 10. 本周趋势 */}
+              <GlassCard>
+                <CardHeader icon={<Leaf className="h-4 w-4" strokeWidth={1.8} />} title="本周趋势" />
+                <div className="h-36">
                   <ChartFrame>
                   <ReactECharts
-                    option={buildCompareOption(compareBefore, compareAfter)}
-                    style={{ height: '160px', width: '100%' }}
+                    key={`week-${timelineDate}`}
+                    option={buildWeeklyTrend(dashboardData.right.weeklyTrend)}
+                    style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
                 </div>
               </GlassCard>
+
             </div>
           </div>
         </div>
       </section>
+
+      {/* 时间轴 —— 工具栏正下方，紧贴底部 */}
+      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[calc(100%-32px)] max-w-[1200px] -translate-x-1/2">
+        <EnergyTimelineStrip
+          date={timelineDate}
+          hour={timelineHour}
+          hourlySamples={hourlySamples}
+          onChange={handleTimelineChange}
+        />
+      </div>
 
       <div className="absolute left-1/2 top-[104px] z-30 w-72 -translate-x-1/2 space-y-2">
         {energyLoading ? (
@@ -965,11 +687,6 @@ export default function EnergyTwinDashboard({
         {energyError ? (
           <div className="glass-panel pointer-events-auto rounded-lg border-red-400/35 px-3 py-2 text-xs text-red-200">
             数据异常: {energyError}
-          </div>
-        ) : null}
-        {energyResultZone ? (
-          <div className="glass-panel pointer-events-auto rounded-lg px-3 py-2 text-xs text-slate-200">
-            区域温度 {energyResultZone.indoor_temp}℃ · 湿度 {energyResultZone.indoor_humidity}%
           </div>
         ) : null}
       </div>

@@ -5,6 +5,8 @@ import {
   buildEnergyAssistantReply,
   type EnergyAssistantContext,
 } from '@/features/energy-insights/lib/energy-assistant'
+import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
+import { buildComponentEnergyFromDaily, buildDailySummary } from '@/features/energy-insights/lib/energy-mock-data'
 import { cn } from '@/lib/utils'
 
 interface ChatMessage {
@@ -38,12 +40,36 @@ function SendIcon() {
 }
 
 export interface EnergyAssistantChatProps extends EnergyAssistantContext {
+  onCreateWorkOrder?: (draft: AssistantWorkOrderDraft) => void
   onJumpToLevel3HighlightZones?: () => void
   tone?: 'dark' | 'light'
   variant?: 'panel' | 'workspace'
 }
 
+export interface AssistantWorkOrderDraft {
+  assignee: string
+  due: string
+  title: string
+}
+
+function buildSimulatedEnergyResult(context: EnergyAssistantContext): EnergyApiResponse {
+  const d = new Date()
+  const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const daily = buildDailySummary(
+    context.selectedComponentId ?? context.selectedComponentName,
+    'mixed',
+    35,
+    date,
+  )
+  return buildComponentEnergyFromDaily(
+    context.projectId,
+    context.selectedComponentId ?? `sim-${context.projectId}`,
+    daily,
+  )
+}
+
 export default function EnergyAssistantChat({
+  onCreateWorkOrder,
   onJumpToLevel3HighlightZones,
   tone = 'dark',
   variant = 'panel',
@@ -62,6 +88,7 @@ export default function EnergyAssistantChat({
   ])
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
   const pendingJumpTimerRef = useRef<number | null>(null)
+  const pendingWorkOrderTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -71,6 +98,9 @@ export default function EnergyAssistantChat({
     return () => {
       if (pendingJumpTimerRef.current !== null) {
         window.clearTimeout(pendingJumpTimerRef.current)
+      }
+      if (pendingWorkOrderTimerRef.current !== null) {
+        window.clearTimeout(pendingWorkOrderTimerRef.current)
       }
     }
   }, [])
@@ -93,7 +123,37 @@ export default function EnergyAssistantChat({
     if (!prompt || isSubmitting) return
 
     const compactPrompt = prompt.replace(/\s+/g, '')
+    const shouldInjectSimulatedEnergy = compactPrompt.includes('总结当前能耗情况')
+    const shouldCreateWorkOrder = compactPrompt.includes('把这个能耗异常生成工单')
     const shouldJumpToLevel3 = compactPrompt.includes('那层楼有问题')
+
+    const requestContext: EnergyAssistantContext =
+      shouldInjectSimulatedEnergy && !context.energyResult
+        ? {
+            ...context,
+            energyResult: buildSimulatedEnergyResult(context),
+          }
+        : context
+
+    if (shouldCreateWorkOrder && onCreateWorkOrder) {
+      const targetName =
+        context.selectedComponentName && context.selectedComponentName !== '未选中构件'
+          ? context.selectedComponentName
+          : '公寓楼 3F 新风机组'
+      const currentPower = requestContext.energyResult?.currentPower ?? 12.8
+
+      if (pendingWorkOrderTimerRef.current !== null) {
+        window.clearTimeout(pendingWorkOrderTimerRef.current)
+      }
+
+      pendingWorkOrderTimerRef.current = window.setTimeout(() => {
+        onCreateWorkOrder({
+          assignee: '综合运维值班组',
+          due: '今天 18:00',
+          title: `工单 WO-${context.projectId.toUpperCase()}-A${String(Date.now()).slice(-3)}：处置 ${targetName} 能耗异常（当前功率 ${currentPower.toFixed(1)} kW）`,
+        })
+      }, 3000)
+    }
 
     if (shouldJumpToLevel3 && onJumpToLevel3HighlightZones) {
       if (pendingJumpTimerRef.current !== null) {
@@ -123,7 +183,7 @@ export default function EnergyAssistantChat({
         body: JSON.stringify({
           prompt,
           sessionId,
-          context,
+          context: requestContext,
         }),
       })
 
@@ -143,7 +203,7 @@ export default function EnergyAssistantChat({
         },
       ])
     } catch (error) {
-      const fallback = buildEnergyAssistantReply(prompt, context)
+      const fallback = buildEnergyAssistantReply(prompt, requestContext)
       const errorText = error instanceof Error ? error.message : '未知错误'
 
       setMessages((current) => [
@@ -292,6 +352,12 @@ export default function EnergyAssistantChat({
                   : 'border-cyan-300/20 bg-[#0d182c] text-slate-100 placeholder:text-slate-500 focus:border-cyan-300/35',
             )}
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                void submitPrompt(draft)
+              }
+            }}
             placeholder="例如：帮我解释这个构件为什么峰值偏高，或者给我三条节能建议。"
             value={draft}
           />

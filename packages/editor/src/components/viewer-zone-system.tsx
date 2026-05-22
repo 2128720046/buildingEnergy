@@ -11,6 +11,7 @@ export const ViewerZoneSystem = () => {
     const { levelId, zoneId } = useViewer.getState().selection
     const structureLayer = useEditor.getState().structureLayer
     const nodes = useScene.getState().nodes
+    const readOnly = useScene.getState().readOnly
 
     sceneRegistry.byType.zone.forEach((id) => {
       const obj = sceneRegistry.nodes.get(id)
@@ -20,13 +21,14 @@ export const ViewerZoneSystem = () => {
       if (!zone) return
 
       const isOnSelectedLevel = zone.parentId === levelId
-
-      // Keep group visible (so <Html> labels stay active), hide/show meshes only.
-      // Zone geometry: visible in zone mode on the right level, OR when this zone is selected.
-      // The editor ZoneSystem handles the selected zone's opacity animation.
       const isSelected = id === zoneId
-      const shouldShowGeometry =
-        (structureLayer === 'zones' && !!levelId && isOnSelectedLevel) || isSelected
+
+      // 只读模式（能耗查询等）：显示当前楼层的所有 zone
+      // 编辑模式：仅在 zone 图层 + 选中楼层 或 选中特定 zone 时显示
+      const shouldShowGeometry = readOnly
+        ? (!!levelId && isOnSelectedLevel)
+        : ((structureLayer === 'zones' && !!levelId && isOnSelectedLevel) || isSelected)
+
       if (!obj.visible) obj.visible = true
       obj.traverse((child) => {
         if ((child as Mesh).isMesh) {
@@ -34,8 +36,11 @@ export const ViewerZoneSystem = () => {
         }
       })
 
-      // Labels are hidden by default and only shown for the active queried/selected zone.
-      const showLabel = zoneId === id && !!levelId && isOnSelectedLevel
+      // 只读模式：显示所有 zone 标签
+      // 编辑模式：仅显示选中 zone 的标签
+      const showLabel = readOnly
+        ? (!!levelId && isOnSelectedLevel)
+        : (zoneId === id && !!levelId && isOnSelectedLevel)
       const targetOpacity = showLabel ? '1' : '0'
       const labelEl = document.getElementById(`${id}-label`)
       if (labelEl && labelEl.style.opacity !== targetOpacity) {

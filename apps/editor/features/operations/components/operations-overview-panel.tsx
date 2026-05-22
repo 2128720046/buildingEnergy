@@ -5,6 +5,7 @@ import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import {
   buildOperationsDashboardData,
   type OperationsAlert,
+  type OperationsTask,
 } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ function severityClassName(alert: OperationsAlert) {
 
 export interface OperationsOverviewPanelProps {
   energyResult: EnergyApiResponse | null
+  generatedTasks?: OperationsTask[]
   projectId: string
   queryResults: HostQueryResult[]
   saveStatus: string
@@ -30,6 +32,7 @@ export interface OperationsOverviewPanelProps {
 
 export default function OperationsOverviewPanel({
   energyResult,
+  generatedTasks,
   projectId,
   queryResults,
   saveStatus,
@@ -37,6 +40,7 @@ export default function OperationsOverviewPanel({
   selectedComponentName,
 }: OperationsOverviewPanelProps) {
   const dashboard = buildOperationsDashboardData({
+    additionalTasks: generatedTasks,
     energyResult,
     projectId,
     queryResults,

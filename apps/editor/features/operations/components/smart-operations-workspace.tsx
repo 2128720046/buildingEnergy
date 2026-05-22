@@ -4,8 +4,12 @@ import EnergyAssistantChat from '@/features/energy-insights/components/energy-as
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import OperationsOverviewPanel from '@/features/operations/components/operations-overview-panel'
-import { buildOperationsDashboardData } from '@/features/operations/lib/operations-dashboard'
+import {
+  buildOperationsDashboardData,
+  type OperationsTask,
+} from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
+import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 
 function MetricStrip({
   detail,
@@ -27,6 +31,8 @@ function MetricStrip({
 
 export interface SmartOperationsWorkspaceProps {
   energyResult: EnergyApiResponse | null
+  generatedTasks?: OperationsTask[]
+  onCreateWorkOrder?: (draft: AssistantWorkOrderDraft) => void
   projectId: string
   queryResults: HostQueryResult[]
   saveStatus: string
@@ -36,6 +42,8 @@ export interface SmartOperationsWorkspaceProps {
 
 export default function SmartOperationsWorkspace({
   energyResult,
+  generatedTasks,
+  onCreateWorkOrder,
   projectId,
   queryResults,
   saveStatus,
@@ -43,6 +51,7 @@ export default function SmartOperationsWorkspace({
   selectedComponentName,
 }: SmartOperationsWorkspaceProps) {
   const dashboard = buildOperationsDashboardData({
+    additionalTasks: generatedTasks,
     energyResult,
     projectId,
     queryResults,
@@ -91,6 +100,7 @@ export default function SmartOperationsWorkspace({
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.08fr)_420px]">
           <OperationsOverviewPanel
             energyResult={energyResult}
+            generatedTasks={generatedTasks}
             projectId={projectId}
             queryResults={queryResults}
             saveStatus={saveStatus}
@@ -144,6 +154,7 @@ export default function SmartOperationsWorkspace({
 
             <EnergyAssistantChat
               energyResult={energyResult}
+              onCreateWorkOrder={onCreateWorkOrder}
               projectId={projectId}
               queryResults={queryResults}
               selectedComponentId={selectedComponentId}

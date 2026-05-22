@@ -44,7 +44,7 @@ export const SSGI_PARAMS = {
 const MAX_PIPELINE_RETRIES = 3
 const RETRY_DELAY_MS = 500
 
-const DARK_BG = '#1f2433'
+const DARK_BG = '#0C0E14'
 const LIGHT_BG = '#ffffff'
 
 const PostProcessingPasses = () => {

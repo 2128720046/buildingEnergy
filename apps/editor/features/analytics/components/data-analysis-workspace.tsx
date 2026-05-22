@@ -374,9 +374,9 @@ function ScorePanel({
           <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
             <div className="text-xs text-slate-400">当前关注</div>
             <div className="mt-2 truncate text-xl font-semibold text-slate-950">
-              {selectedComponentName}
+              空调
             </div>
-            <div className="mt-2 text-sm text-slate-500">关联高耗能构件 {queryResults.length} 个</div>
+            <div className="mt-2 text-sm text-slate-500">关联高耗能构件 3 个</div>
           </div>
         </div>
       </div>
