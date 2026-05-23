@@ -123,6 +123,31 @@ function buildScatterPoints<T>(
   })
 }
 
+function buildTrendLine(points: Array<{ x: number; y: number }>, padding: number, width: number) {
+  if (points.length < 2) return null
+
+  const count = points.length
+  const sumX = points.reduce((sum, point) => sum + point.x, 0)
+  const sumY = points.reduce((sum, point) => sum + point.y, 0)
+  const sumXY = points.reduce((sum, point) => sum + point.x * point.y, 0)
+  const sumXX = points.reduce((sum, point) => sum + point.x * point.x, 0)
+  const denominator = count * sumXX - sumX * sumX
+
+  if (Math.abs(denominator) < 0.001) return null
+
+  const slope = (count * sumXY - sumX * sumY) / denominator
+  const intercept = (sumY - slope * sumX) / count
+  const x1 = padding
+  const x2 = width - padding
+
+  return {
+    x1,
+    x2,
+    y1: slope * x1 + intercept,
+    y2: slope * x2 + intercept,
+  }
+}
+
 function statusToneClassName(tone: MonitoringStatusBucket['tone']) {
   switch (tone) {
     case 'amber':
@@ -184,40 +209,44 @@ function PanelHeader({
   title: string
 }) {
   return (
-    <div className="relative mb-4 min-h-9">
+    <div className="relative mb-5 min-h-11">
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-9 opacity-70"
+        className="absolute inset-x-0 top-0 h-11 opacity-70"
         style={{
           backgroundImage: `url(${PANEL_DIVIDERS[divider - 1]})`,
           backgroundRepeat: 'no-repeat',
           backgroundSize: '100% 100%',
         }}
       />
-      <div className="relative flex items-center gap-2 px-3 pt-1.5">
-        <span className="h-5 w-1 bg-[linear-gradient(180deg,#7AF7FF_0%,#00D4FF_50%,#034D7A_100%)] shadow-[0_0_14px_rgba(0,212,255,0.75)]" />
+      <div className="relative flex items-center gap-2.5 px-4 pt-2">
+        <span className="h-6 w-1.5 bg-[linear-gradient(180deg,#7AF7FF_0%,#00D4FF_50%,#034D7A_100%)] shadow-[0_0_14px_rgba(0,212,255,0.75)]" />
         {icon ? (
           <Image
             alt=""
             aria-hidden
-            className="h-5 w-5 object-contain opacity-90 drop-shadow-[0_0_10px_rgba(0,212,255,0.65)]"
-            height={20}
+            className="h-6 w-6 object-contain opacity-90 drop-shadow-[0_0_10px_rgba(0,212,255,0.65)]"
+            height={24}
             src={icon}
-            width={20}
+            width={24}
           />
         ) : null}
         <div>
           {eyebrow ? (
             <div
-              className="text-[9px] font-semibold uppercase tracking-[0.24em] text-cyan-100/45"
+              className="text-[10px] font-semibold not-italic uppercase tracking-[0.26em] text-cyan-100/50"
               style={{ fontFamily: DASHBOARD_FONTS.num }}
             >
               {eyebrow}
             </div>
           ) : null}
           <h2
-            className="text-[15px] font-bold leading-none text-cyan-50"
-            style={{ fontFamily: DASHBOARD_FONTS.cn }}
+            className="text-[21px] font-black not-italic leading-none text-cyan-50 tracking-[0.03em]"
+            style={{
+              fontFamily: '"Microsoft YaHei", "PingFang SC", sans-serif',
+              fontStyle: 'normal',
+              textShadow: '0 0 12px rgba(0,212,255,0.45)',
+            }}
           >
             {title}
           </h2>
@@ -552,6 +581,15 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const chartWidth = 460
   const chartHeight = 270
   const padding = 28
+  const maxHourlyElectricity = Math.max(...model.hourlySeries.map((point) => point.electricity), 1)
+  const minHourlyElectricity = Math.min(...model.hourlySeries.map((point) => point.electricity))
+  const swing = maxHourlyElectricity - minHourlyElectricity
+  const peakPoint = model.hourlySeries.reduce((best, point) =>
+    point.electricity > best.electricity ? point : best,
+  )
+  const quietPoint = model.hourlySeries.reduce((best, point) =>
+    point.electricity < best.electricity ? point : best,
+  )
   const electricityBars = buildBars(
     model.hourlySeries.map((point) => point.electricity),
     chartWidth,
@@ -590,6 +628,15 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
             style={{ fontFamily: DASHBOARD_FONTS.num }}
           >
             {model.relationshipInsights.quietHour}
+          </div>
+        </div>
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">峰谷差值</div>
+          <div
+            className="mt-1 text-xl font-bold text-[#FFB800]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {swing.toFixed(0)}
           </div>
         </div>
       </div>
@@ -673,6 +720,114 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
           </div>
         ))}
       </div>
+
+      <div className="mt-4 space-y-2.5">
+        {[
+          {
+            label: '峰值负荷',
+            value: `${peakPoint.electricity.toFixed(0)} kWh`,
+            width: (peakPoint.electricity / maxHourlyElectricity) * 100,
+            color: '#FFB800',
+          },
+          {
+            label: '低谷负荷',
+            value: `${quietPoint.electricity.toFixed(0)} kWh`,
+            width: (quietPoint.electricity / maxHourlyElectricity) * 100,
+            color: '#22D3A0',
+          },
+          {
+            label: '人流高峰',
+            value: model.relationshipInsights.busiestHour,
+            width:
+              (Math.max(...model.hourlySeries.map((point) => point.occupancy)) /
+                Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)) *
+              100,
+            color: '#00D4FF',
+          },
+        ].map((item) => (
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2.5" key={item.label}>
+            <div className="mb-1.5 flex items-center justify-between text-[13px] text-cyan-100/65">
+              <span>{item.label}</span>
+              <span className="font-bold text-cyan-50" style={{ fontFamily: DASHBOARD_FONTS.num }}>
+                {item.value}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden bg-cyan-950/80">
+              <div
+                className="h-full shadow-[0_0_16px_currentColor]"
+                style={{ backgroundColor: item.color, color: item.color, width: `${item.width}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </HudPanel>
+  )
+}
+
+function LoadFocusPanel({ model }: { model: MonitoringAnalyticsModel }) {
+  const totalElectricity = model.dailySeries.reduce((sum, point) => sum + point.electricity, 0)
+  const totalHvac = model.dailySeries.reduce((sum, point) => sum + point.hvac, 0)
+  const hvacRatio = totalElectricity === 0 ? 0 : (totalHvac / totalElectricity) * 100
+  const latestDay = model.dailySeries.at(-1)
+  const previousDay = model.dailySeries.at(-2)
+  const dailyDelta =
+    latestDay && previousDay
+      ? ((latestDay.electricity - previousDay.electricity) / previousDay.electricity) * 100
+      : 0
+  const peakBuilding = model.buildingSummaries[0]
+  const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
+
+  const cards = [
+    {
+      label: '暖通占比',
+      value: `${hvacRatio.toFixed(1)}%`,
+      tone: DASHBOARD_COLORS.primary,
+      width: hvacRatio,
+    },
+    {
+      label: '日环比',
+      value: `${dailyDelta >= 0 ? '+' : ''}${dailyDelta.toFixed(1)}%`,
+      tone: dailyDelta >= 0 ? DASHBOARD_COLORS.amber : DASHBOARD_COLORS.emerald,
+      width: clamp(Math.abs(dailyDelta) * 8, 18, 100),
+    },
+    {
+      label: '高负荷楼栋',
+      value: peakBuilding?.buildingId ?? '-',
+      tone: DASHBOARD_COLORS.amber,
+      width: 82,
+    },
+    {
+      label: '预警记录',
+      value: `${warningBucket?.count ?? 0}`,
+      tone: DASHBOARD_COLORS.rose,
+      width: clamp(((warningBucket?.count ?? 0) / Math.max(model.recentRecords.length, 1)) * 100, 24, 100),
+    },
+  ]
+
+  return (
+    <HudPanel divider={6} eyebrow="FOCUS" icon="/icons/environment.png" title="负荷策略摘要">
+      <div className="space-y-3">
+        {cards.map((card) => (
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-3" key={card.label}>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-[14px] font-semibold text-cyan-100/65">{card.label}</span>
+              <span
+                className="text-xl font-bold text-cyan-50"
+                style={{ color: card.tone, fontFamily: DASHBOARD_FONTS.num }}
+              >
+                {card.value}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden bg-cyan-950/80">
+              <div
+                className="h-full shadow-[0_0_16px_currentColor]"
+                style={{ backgroundColor: card.tone, color: card.tone, width: `${card.width}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </HudPanel>
   )
 }
@@ -694,9 +849,9 @@ function RelationshipScatterPanel({
   yAccessor: (point: MonitoringScatterPoint) => number
   yLabel: string
 }) {
-  const chartWidth = 520
-  const chartHeight = 290
-  const padding = 36
+  const chartWidth = 620
+  const chartHeight = 340
+  const padding = 54
   const scatterPoints = buildScatterPoints(
     points,
     chartWidth,
@@ -705,32 +860,88 @@ function RelationshipScatterPanel({
     xAccessor,
     yAccessor,
   )
+  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth)
+  const warningCount = points.filter((point) => point.tone === 'amber' || point.tone === 'rose').length
 
   return (
-    <HudPanel divider={4} eyebrow="RELATION" icon="/icons/zone.png" title={title}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <Pill tone="primary">{describeCorrelation(correlation)}</Pill>
-        <span
-          className="text-lg font-bold text-cyan-50"
-          style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
-        >
-          {correlation.toFixed(2)}
-        </span>
+    <HudPanel className="min-h-[430px]" divider={4} eyebrow="RELATION" icon="/icons/zone.png" title={title}>
+      <div className="mb-3 grid grid-cols-[1fr_auto] items-end gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Pill tone="primary">{describeCorrelation(correlation)}</Pill>
+          <Pill tone="neutral">样本 {points.length}</Pill>
+          <Pill tone={warningCount > points.length * 0.35 ? 'amber' : 'emerald'}>
+            风险点 {warningCount}
+          </Pill>
+        </div>
+        <div className="text-right">
+          <div className="text-[12px] tracking-[0.18em] text-cyan-100/45">CORR</div>
+          <div
+            className="text-3xl font-bold leading-none text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
+          >
+            {correlation.toFixed(2)}
+          </div>
+        </div>
       </div>
 
-      <div className="tech-chart-frame p-3">
+      <div className="tech-chart-frame p-2.5">
         <svg
           className="block h-auto w-full"
           preserveAspectRatio="xMidYMid meet"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         >
+          <defs>
+            <linearGradient id={`trend-${title}`} x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#00D4FF" stopOpacity="0.15" />
+              <stop offset="48%" stopColor="#7AF7FF" />
+              <stop offset="100%" stopColor="#FFB800" />
+            </linearGradient>
+            <filter id={`pointGlow-${title}`} x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur result="blur" stdDeviation="2.2" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect
+            fill="rgba(2, 8, 23, 0.32)"
+            height={chartHeight - padding * 2}
+            rx="10"
+            width={chartWidth - padding * 2}
+            x={padding}
+            y={padding}
+          />
+          <rect
+            fill="rgba(0, 212, 255, 0.04)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding}
+            y={padding}
+          />
+          <rect
+            fill="rgba(255, 184, 0, 0.055)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding + (chartWidth - padding * 2) / 2}
+            y={padding}
+          />
+          <rect
+            fill="rgba(34, 211, 160, 0.045)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding}
+            y={padding + (chartHeight - padding * 2) / 2}
+          />
+
           {[0, 1, 2, 3].map((index) => {
             const y = padding + ((chartHeight - padding * 2) / 3) * index
             return (
               <line
                 key={`y-${y}`}
-                stroke="rgba(141,168,197,0.2)"
-                strokeDasharray="5 8"
+                stroke="rgba(122,247,255,0.16)"
+                strokeDasharray="8 10"
                 x1={padding}
                 x2={chartWidth - padding}
                 y1={y}
@@ -744,8 +955,8 @@ function RelationshipScatterPanel({
             return (
               <line
                 key={`x-${x}`}
-                stroke="rgba(141,168,197,0.14)"
-                strokeDasharray="5 8"
+                stroke="rgba(122,247,255,0.12)"
+                strokeDasharray="8 10"
                 x1={x}
                 x2={x}
                 y1={padding}
@@ -754,30 +965,70 @@ function RelationshipScatterPanel({
             )
           })}
 
+          {trendLine ? (
+            <>
+              <line
+                stroke="rgba(0,212,255,0.18)"
+                strokeLinecap="round"
+                strokeWidth="12"
+                x1={trendLine.x1}
+                x2={trendLine.x2}
+                y1={trendLine.y1}
+                y2={trendLine.y2}
+              />
+              <line
+                stroke={`url(#trend-${title})`}
+                strokeLinecap="round"
+                strokeWidth="4"
+                x1={trendLine.x1}
+                x2={trendLine.x2}
+                y1={trendLine.y1}
+                y2={trendLine.y2}
+              />
+            </>
+          ) : null}
+
           {scatterPoints.map(({ item, x, y }) => (
             <circle
               cx={x}
               cy={y}
               fill={scatterToneFill(item.tone)}
+              filter={`url(#pointGlow-${title})`}
               key={item.id}
-              opacity="0.92"
-              r="6.5"
-              stroke="#DDFBFF"
-              strokeOpacity="0.7"
-              strokeWidth="1.5"
+              opacity="0.78"
+              r={item.tone === 'rose' ? 5.5 : 4.8}
+              stroke="rgba(221,251,255,0.82)"
+              strokeWidth="1.2"
             />
           ))}
 
-          <text className="fill-cyan-100/45 text-[11px]" x={padding} y={chartHeight - 8}>
-            {xLabel}
-          </text>
-          <text
-            className="fill-cyan-100/45 text-[11px]"
-            transform={`translate(14 ${padding}) rotate(-90)`}
-          >
+          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={padding - 18}>
             {yLabel}
           </text>
+          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={chartHeight - 16}>
+            {xLabel}
+          </text>
+          <text className="fill-cyan-100/32 text-[11px]" x={chartWidth - padding - 90} y={padding - 18}>
+            趋势线 / Trend
+          </text>
         </svg>
+      </div>
+
+      <div className="mt-3 grid grid-cols-4 gap-2 text-[13px] text-cyan-100/62">
+        {[
+          { label: '办公', color: DASHBOARD_COLORS.primary },
+          { label: '教学', color: DASHBOARD_COLORS.emerald },
+          { label: '实验', color: DASHBOARD_COLORS.amber },
+          { label: '预警', color: DASHBOARD_COLORS.rose },
+        ].map((item) => (
+          <div
+            className="flex items-center gap-2 border border-cyan-300/10 bg-cyan-950/20 px-3 py-2"
+            key={item.label}
+          >
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+            {item.label}
+          </div>
+        ))}
       </div>
     </HudPanel>
   )
