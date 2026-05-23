@@ -69,15 +69,27 @@ export default function WorkspaceNavigation({
         return (
           <button
             className={cn(
-              'inline-flex h-10 min-w-[118px] items-center justify-center gap-2 px-5 text-[13px] font-semibold tracking-[0.12em] transition-all',
+              'group inline-flex h-12 min-w-[146px] items-center justify-center gap-2.5 px-7 text-[13px] font-semibold tracking-[0.14em] transition-all',
               isActive ? 'cyber-tab-active' : 'cyber-tab',
             )}
             key={workspace.key}
             onClick={() => onChange(workspace.key)}
             type="button"
           >
-            <WorkspaceIcon active={isActive} workspace={workspace.key} />
-            <span>{workspace.label}</span>
+            <span aria-hidden className="cyber-tab__rail cyber-tab__rail--left" />
+            <span aria-hidden className="cyber-tab__rail cyber-tab__rail--right" />
+            <span
+              className={cn(
+                'grid h-5 w-5 place-items-center rounded-full border transition-all',
+                isActive
+                  ? 'border-cyan-200/55 bg-cyan-300/18 shadow-[0_0_14px_rgba(0,245,255,0.5)]'
+                  : 'border-white/10 bg-white/5 group-hover:border-cyan-200/35 group-hover:bg-cyan-300/10',
+              )}
+            >
+              <WorkspaceIcon active={isActive} workspace={workspace.key} />
+            </span>
+            <span className="cyber-tab__label">{workspace.label}</span>
+            <span aria-hidden className="cyber-tab__signal" />
           </button>
         )
       })}

@@ -594,32 +594,31 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     >
       <header
         className={cn(
-          'relative z-40 border-b px-4 py-3 backdrop-blur-md',
+          'relative z-40 border-b px-4 backdrop-blur-md',
           activeWorkspace === 'data-analysis'
-            ? 'border-cyan-300/15 bg-[#020817]/72 shadow-[0_8px_34px_rgba(0,212,255,0.12)]'
-            : 'border-white/6 bg-transparent',
+            ? 'border-cyan-300/10 bg-[linear-gradient(180deg,rgba(2,8,23,0.18)_0%,rgba(2,8,23,0)_100%)] py-2 shadow-[0_8px_34px_rgba(0,212,255,0.08)]'
+            : 'border-white/6 bg-transparent py-3',
         )}
       >
         <div
           className={cn(
-            'grid w-full items-center gap-3',
+            'relative w-full',
             activeWorkspace === 'data-analysis'
-              ? 'grid-cols-[auto_minmax(240px,560px)_1fr]'
-              : 'grid-cols-1',
+              ? 'flex min-h-[56px] items-center'
+              : 'grid grid-cols-1',
           )}
         >
           <WorkspaceNavigation activeWorkspace={activeWorkspace} onChange={setActiveWorkspace} />
           {activeWorkspace === 'data-analysis' ? (
-            <div className="flex min-w-0 justify-center">
+            <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[min(46vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center">
               <img
                 alt="数据分析标题"
-                className="h-auto w-[min(42vw,620px)] max-w-full object-contain"
+                className="h-auto w-full max-w-full object-contain"
                 draggable={false}
                 src={DASHBOARD_ASSETS.pageTitle}
               />
             </div>
           ) : null}
-          {activeWorkspace === 'data-analysis' ? <div aria-hidden /> : null}
         </div>
       </header>
 

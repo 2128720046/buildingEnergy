@@ -253,7 +253,7 @@ function HudPanel({
 }) {
   return (
     <BevelCard
-      className={cn('h-full min-h-0 p-4', className)}
+      className={cn('min-h-0 p-4', className)}
       contentClassName={contentClassName}
       size={size}
     >
@@ -318,12 +318,20 @@ function MetricCard({ index, metric }: { index: number; metric: MonitoringMetric
 
 function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
   const angle = (model.performanceScore / 100) * 360
+  const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
+  const normalBucket = model.statusDistribution.find((bucket) => bucket.tone === 'emerald')
   const gaugeStyle = {
     backgroundImage: `conic-gradient(${DASHBOARD_COLORS.primary} 0deg ${angle}deg, rgba(0,212,255,0.08) ${angle}deg 360deg)`,
   } satisfies CSSProperties
 
   return (
-    <HudPanel divider={1} eyebrow="HEALTH" icon="/icons/settings.png" title="运行健康评分">
+    <HudPanel
+      className="min-h-[300px]"
+      divider={1}
+      eyebrow="HEALTH"
+      icon="/icons/settings.png"
+      title="运行健康评分"
+    >
       <div className="grid grid-cols-[150px_1fr] gap-4 max-sm:grid-cols-1">
         <div className="flex items-center justify-center">
           <div
@@ -350,7 +358,7 @@ function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
 
             return (
               <div key={bucket.label}>
-                <div className="mb-1 flex items-center justify-between text-[12px] text-cyan-50/70">
+                <div className="mb-1 flex items-center justify-between text-[13px] text-cyan-50/70">
                   <span className="inline-flex items-center gap-2">
                     <span
                       className={cn(
@@ -373,6 +381,36 @@ function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">正常记录</div>
+          <div
+            className="mt-1 text-2xl font-bold text-[#22D3A0]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {normalBucket?.count ?? 0}
+          </div>
+        </div>
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">预警记录</div>
+          <div
+            className="mt-1 text-2xl font-bold text-[#FF4D6D]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {warningBucket?.count ?? 0}
+          </div>
+        </div>
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">监测总量</div>
+          <div
+            className="mt-1 text-2xl font-bold text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {model.recentRecords.length}
+          </div>
         </div>
       </div>
     </HudPanel>
@@ -493,12 +531,12 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
         </svg>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-cyan-50/55 md:grid-cols-4 xl:grid-cols-6">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[14px] text-cyan-50/65 md:grid-cols-4 2xl:grid-cols-6">
         {model.dailySeries.map((point) => (
-          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2" key={point.date}>
-            <div>{point.date}</div>
+          <div className="border border-cyan-300/12 bg-cyan-950/24 px-3 py-3.5" key={point.date}>
+            <div className="whitespace-nowrap font-semibold tracking-[0.04em]">{point.date}</div>
             <div
-              className="mt-1 font-semibold text-cyan-50"
+              className="mt-1 text-lg font-semibold text-cyan-50"
               style={{ fontFamily: DASHBOARD_FONTS.num }}
             >
               {point.electricity.toFixed(1)} kWh
@@ -528,10 +566,16 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   )
 
   return (
-    <HudPanel divider={3} eyebrow="HOURLY" icon="/icons/settings.png" title="时段负荷关系">
+    <HudPanel
+      className="min-h-[300px]"
+      divider={3}
+      eyebrow="HOURLY"
+      icon="/icons/settings.png"
+      title="时段负荷关系"
+    >
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
-          <div className="text-[11px] text-cyan-100/45">电耗高峰</div>
+          <div className="text-[13px] text-cyan-100/55">电耗高峰</div>
           <div
             className="mt-1 text-xl font-bold text-cyan-50"
             style={{ fontFamily: DASHBOARD_FONTS.num }}
@@ -540,7 +584,7 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
           </div>
         </div>
         <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
-          <div className="text-[11px] text-cyan-100/45">低谷时段</div>
+          <div className="text-[13px] text-cyan-100/55">低谷时段</div>
           <div
             className="mt-1 text-xl font-bold text-cyan-50"
             style={{ fontFamily: DASHBOARD_FONTS.num }}
@@ -613,6 +657,21 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
             />
           ))}
         </svg>
+      </div>
+
+      <div className="mt-4 grid grid-cols-4 gap-2">
+        {model.hourlySeries.map((point) => (
+          <div className="border border-cyan-300/12 bg-cyan-950/20 px-3 py-2" key={point.hour}>
+            <div className="text-[13px] text-cyan-100/60">{point.hour}</div>
+            <div
+              className="mt-1 text-xl font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {point.electricity.toFixed(0)}
+            </div>
+            <div className="text-[12px] text-cyan-100/45">kWh</div>
+          </div>
+        ))}
       </div>
     </HudPanel>
   )
@@ -738,12 +797,12 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
     >
       <div className="overflow-hidden border border-cyan-300/15 bg-cyan-950/20">
         <div className="grid grid-cols-[76px_repeat(4,minmax(0,1fr))] gap-px bg-cyan-300/10">
-          <div className="bg-[#061829]/90 px-3 py-2 text-[11px] font-semibold tracking-[0.16em] text-cyan-100/45">
+          <div className="bg-[#061829]/90 px-3 py-2.5 text-[12px] font-semibold tracking-[0.16em] text-cyan-100/55">
             日期
           </div>
           {hours.map((hour) => (
             <div
-              className="bg-[#061829]/90 px-3 py-2 text-center text-[11px] font-semibold tracking-[0.16em] text-cyan-100/45"
+              className="bg-[#061829]/90 px-3 py-2.5 text-center text-[12px] font-semibold tracking-[0.16em] text-cyan-100/55"
               key={hour}
             >
               {hour}
@@ -755,7 +814,7 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
 
             return [
               <div
-                className="bg-[#061829]/90 px-3 py-3 text-[12px] text-cyan-50/70"
+                className="bg-[#061829]/90 px-3 py-3 text-[15px] font-semibold text-cyan-50/80"
                 key={`${date}-label`}
               >
                 {date}
@@ -764,7 +823,7 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
                 const background = `rgba(0,212,255,${clamp(0.16 + cell.intensity * 0.72, 0.16, 0.88)})`
                 return (
                   <div
-                    className="min-h-[58px] bg-[#061829]/90 p-1.5 text-cyan-50"
+                    className="min-h-[72px] bg-[#061829]/90 p-2 text-cyan-50"
                     key={`${cell.date}-${cell.hour}`}
                     title={`${cell.date} ${cell.hour} 电耗 ${cell.electricity.toFixed(1)} kWh`}
                   >
@@ -772,9 +831,9 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
                       className="flex h-full flex-col justify-between px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_0_18px_rgba(0,212,255,0.12)]"
                       style={{ backgroundColor: background }}
                     >
-                      <span className="text-[10px] opacity-75">kWh</span>
+                      <span className="text-[13px] opacity-75">kWh</span>
                       <span
-                        className="text-base font-bold leading-none"
+                        className="text-2xl font-bold leading-none"
                         style={{ fontFamily: DASHBOARD_FONTS.num }}
                       >
                         {cell.electricity.toFixed(0)}
@@ -836,14 +895,17 @@ function CompositionPanel({
       <div className="mt-3 space-y-2">
         {composition.map((item) => (
           <div
-            className="flex items-center justify-between border border-cyan-300/10 bg-cyan-950/20 px-3 py-2 text-[12px]"
+            className="flex items-center justify-between border border-cyan-300/10 bg-cyan-950/20 px-3 py-3 text-[15px]"
             key={item.label}
           >
             <span className="flex items-center gap-2 text-cyan-50/70">
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
               {item.label}
             </span>
-            <span className="font-bold text-cyan-50" style={{ fontFamily: DASHBOARD_FONTS.num }}>
+            <span
+              className="text-lg font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
               {item.value.toFixed(0)}
             </span>
           </div>
@@ -853,12 +915,12 @@ function CompositionPanel({
       <div className="mt-4 grid grid-cols-2 gap-2">
         {statusDistribution.map((bucket) => (
           <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2" key={bucket.label}>
-            <div className="flex items-center gap-2 text-[11px] text-cyan-100/45">
+            <div className="flex items-center gap-2 text-[14px] text-cyan-100/60">
               <span className={cn('h-2 w-2 rounded-full', statusToneClassName(bucket.tone))} />
               {bucket.label}
             </div>
             <div
-              className="mt-1 text-lg font-bold text-cyan-50"
+              className="mt-1 text-2xl font-bold text-cyan-50"
               style={{ fontFamily: DASHBOARD_FONTS.num }}
             >
               {bucket.count}
@@ -930,37 +992,37 @@ function DetailTable({ model }: { model: MonitoringAnalyticsModel }) {
       title="近期监测明细"
     >
       <div className="overflow-auto border border-cyan-300/15 bg-cyan-950/20">
-        <table className="min-w-[1180px] text-sm text-cyan-50/70">
-          <thead className="bg-cyan-950/70 text-[11px] uppercase tracking-[0.16em] text-cyan-100/45">
+        <table className="min-w-[1320px] text-base text-cyan-50/78">
+          <thead className="bg-cyan-950/70 text-[13px] uppercase tracking-[0.14em] text-cyan-100/55">
             <tr>
-              <th className="px-4 py-3 text-left">楼栋</th>
-              <th className="px-4 py-3 text-left">时间</th>
-              <th className="px-4 py-3 text-right">电耗</th>
-              <th className="px-4 py-3 text-right">暖通</th>
-              <th className="px-4 py-3 text-right">用水</th>
-              <th className="px-4 py-3 text-right">温度</th>
-              <th className="px-4 py-3 text-right">湿度</th>
-              <th className="px-4 py-3 text-right">人流</th>
-              <th className="px-4 py-3 text-left">设备</th>
-              <th className="px-4 py-3 text-left">状态</th>
+              <th className="px-5 py-4 text-left">楼栋</th>
+              <th className="px-5 py-4 text-left">时间</th>
+              <th className="px-5 py-4 text-right">电耗</th>
+              <th className="px-5 py-4 text-right">暖通</th>
+              <th className="px-5 py-4 text-right">用水</th>
+              <th className="px-5 py-4 text-right">温度</th>
+              <th className="px-5 py-4 text-right">湿度</th>
+              <th className="px-5 py-4 text-right">人流</th>
+              <th className="px-5 py-4 text-left">设备</th>
+              <th className="px-5 py-4 text-left">状态</th>
             </tr>
           </thead>
           <tbody>
             {model.recentRecords.slice(0, 10).map((record) => (
               <tr className="border-t border-cyan-300/10 hover:bg-cyan-300/5" key={record.id}>
-                <td className="px-4 py-3 font-medium text-cyan-50">{record.building_id}</td>
-                <td className="px-4 py-3">{record.monitor_time}</td>
-                <td className="px-4 py-3 text-right">{record.electricity_kwh.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.hvac_kwh.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.water_m3.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.env_temperature.toFixed(1)}°C</td>
-                <td className="px-4 py-3 text-right">{record.env_humidity.toFixed(1)}%</td>
-                <td className="px-4 py-3 text-right">{record.occupancy_density.toFixed(1)}</td>
-                <td className="px-4 py-3">{record.device_id}</td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-4 font-semibold text-cyan-50">{record.building_id}</td>
+                <td className="px-5 py-4">{record.monitor_time}</td>
+                <td className="px-5 py-4 text-right">{record.electricity_kwh.toFixed(1)}</td>
+                <td className="px-5 py-4 text-right">{record.hvac_kwh.toFixed(1)}</td>
+                <td className="px-5 py-4 text-right">{record.water_m3.toFixed(1)}</td>
+                <td className="px-5 py-4 text-right">{record.env_temperature.toFixed(1)}°C</td>
+                <td className="px-5 py-4 text-right">{record.env_humidity.toFixed(1)}%</td>
+                <td className="px-5 py-4 text-right">{record.occupancy_density.toFixed(1)}</td>
+                <td className="px-5 py-4">{record.device_id}</td>
+                <td className="px-5 py-4">
                   <span
                     className={cn(
-                      'inline-flex min-w-14 justify-center rounded-full px-2.5 py-1 text-xs font-medium text-[#020817]',
+                      'inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-semibold text-[#020817]',
                       record.device_status === 'normal'
                         ? 'bg-[#22D3A0]'
                         : record.device_status === 'warning'
@@ -1003,18 +1065,18 @@ export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspa
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)_380px]">
-          <div className="flex min-h-0 flex-col gap-4">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[360px_minmax(0,1fr)_380px]">
+          <div className="flex min-w-0 flex-col gap-4">
             <HealthGaugePanel model={model} />
             <HourlyPatternPanel model={model} />
           </div>
 
-          <div className="flex min-h-0 flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             <DailyLoadPanel model={model} />
             <HeatmapPanel heatmap={model.heatmap} />
           </div>
 
-          <div className="flex min-h-0 flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             <BuildingRankingPanel buildingSummaries={model.buildingSummaries} />
             <CompositionPanel
               composition={model.composition}

@@ -1,9 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import type { CSSProperties, ReactNode } from 'react'
 import {
-  CARD_FRAME_BY_SIZE,
   type CardSize,
   DASHBOARD_ASSETS,
   DASHBOARD_COLORS,
@@ -14,16 +12,21 @@ export function VideoBackground() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       style={{ backgroundColor: DASHBOARD_COLORS.bgDeep }}
     >
       <video
         autoPlay
-        className="h-full w-full object-cover opacity-35"
+        className="h-full w-full object-cover opacity-70"
+        disablePictureInPicture
         loop
         muted
+        onCanPlay={(event) => {
+          void event.currentTarget.play()
+        }}
         playsInline
         preload="auto"
+        style={{ filter: 'saturate(1.12) contrast(1.08) brightness(1.08)' }}
       >
         <source src={DASHBOARD_ASSETS.videoBg} type="video/mp4" />
         <source src={DASHBOARD_ASSETS.videoBgFallback} type="video/mp4" />
@@ -32,8 +35,8 @@ export function VideoBackground() {
         className="absolute inset-0"
         style={{
           background: `radial-gradient(120% 80% at 50% 0%, rgba(0, 212, 255, 0.18) 0%, transparent 55%),
-            radial-gradient(100% 70% at 50% 100%, rgba(10, 37, 64, 0.86) 0%, transparent 60%),
-            linear-gradient(180deg, rgba(2, 8, 23, 0.58) 0%, rgba(2, 8, 23, 0.78) 100%)`,
+            radial-gradient(100% 70% at 50% 100%, rgba(10, 37, 64, 0.56) 0%, transparent 60%),
+            linear-gradient(180deg, rgba(2, 8, 23, 0.28) 0%, rgba(2, 8, 23, 0.54) 100%)`,
         }}
       />
     </div>
@@ -57,70 +60,28 @@ export function BevelCard({
   withCorners = false,
   contentClassName,
 }: BevelCardProps) {
-  const frame = CARD_FRAME_BY_SIZE[size]
+  const sizeClassName = {
+    small: 'hud-drawn-card--small',
+    medium: 'hud-drawn-card--medium',
+    large: 'hud-drawn-card--large',
+    kpi: 'hud-drawn-card--kpi',
+  }[size]
 
   return (
     <div
-      className={`glass-panel relative overflow-hidden ${className ?? ''}`}
-      style={{
-        backgroundImage: `linear-gradient(135deg, rgba(8, 38, 68, 0.7), rgba(3, 11, 28, 0.46) 42%, rgba(1, 22, 40, 0.72)), url(${frame})`,
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        ...style,
-      }}
+      className={`hud-drawn-card ${sizeClassName} relative overflow-hidden ${className ?? ''}`}
+      style={style}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-px"
-        style={{
-          background:
-            'linear-gradient(135deg, rgba(122,247,255,0.1), transparent 30%, rgba(0,212,255,0.08) 68%, transparent)',
-          boxShadow:
-            'inset 0 0 32px rgba(0, 212, 255, 0.08), inset 0 1px 0 rgba(221, 251, 255, 0.12)',
-        }}
-      />
       {withCorners ? (
         <>
-          <CornerPiece position="tl" />
-          <CornerPiece position="tr" />
-          <CornerPiece position="bl" />
-          <CornerPiece position="br" />
+          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--tl" />
+          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--tr" />
+          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--br" />
+          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--bl" />
         </>
       ) : null}
       <div className={`relative h-full w-full ${contentClassName ?? ''}`}>{children}</div>
     </div>
-  )
-}
-
-function CornerPiece({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const base: CSSProperties = {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    pointerEvents: 'none',
-  }
-  const rotation: Record<typeof position, number> = {
-    tl: 0,
-    tr: 90,
-    br: 180,
-    bl: 270,
-  }
-  const placement: Record<typeof position, CSSProperties> = {
-    tl: { top: 6, left: 6 },
-    tr: { top: 6, right: 6 },
-    br: { bottom: 6, right: 6 },
-    bl: { bottom: 6, left: 6 },
-  }
-  return (
-    <Image
-      alt=""
-      aria-hidden
-      className="select-none"
-      height={24}
-      src={DASHBOARD_ASSETS.cornerDecor1}
-      style={{ ...base, ...placement[position], transform: `rotate(${rotation[position]}deg)` }}
-      width={24}
-    />
   )
 }
 
