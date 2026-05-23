@@ -123,7 +123,12 @@ function buildScatterPoints<T>(
   })
 }
 
-function buildTrendLine(points: Array<{ x: number; y: number }>, padding: number, width: number) {
+function buildTrendLine(
+  points: Array<{ x: number; y: number }>,
+  padding: number,
+  width: number,
+  height: number,
+) {
   if (points.length < 2) return null
 
   const count = points.length
@@ -143,8 +148,8 @@ function buildTrendLine(points: Array<{ x: number; y: number }>, padding: number
   return {
     x1,
     x2,
-    y1: slope * x1 + intercept,
-    y2: slope * x2 + intercept,
+    y1: clamp(slope * x1 + intercept, padding, height - padding),
+    y2: clamp(slope * x2 + intercept, padding, height - padding),
   }
 }
 
@@ -582,6 +587,7 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const chartHeight = 270
   const padding = 28
   const maxHourlyElectricity = Math.max(...model.hourlySeries.map((point) => point.electricity), 1)
+  const maxHourlyOccupancy = Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)
   const minHourlyElectricity = Math.min(...model.hourlySeries.map((point) => point.electricity))
   const swing = maxHourlyElectricity - minHourlyElectricity
   const peakPoint = model.hourlySeries.reduce((best, point) =>
@@ -637,6 +643,15 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
             style={{ fontFamily: DASHBOARD_FONTS.num }}
           >
             {swing.toFixed(0)}
+          </div>
+        </div>
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">人流峰值</div>
+          <div
+            className="mt-1 text-xl font-bold text-[#7AF7FF]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {maxHourlyOccupancy.toFixed(0)}
           </div>
         </div>
       </div>
@@ -721,7 +736,7 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
         ))}
       </div>
 
-      <div className="mt-4 space-y-2.5">
+      <div className="mt-3 grid grid-cols-3 gap-2">
         {[
           {
             label: '峰值负荷',
@@ -738,21 +753,19 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
           {
             label: '人流高峰',
             value: model.relationshipInsights.busiestHour,
-            width:
-              (Math.max(...model.hourlySeries.map((point) => point.occupancy)) /
-                Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)) *
-              100,
+            width: 100,
             color: '#00D4FF',
           },
         ].map((item) => (
-          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2.5" key={item.label}>
-            <div className="mb-1.5 flex items-center justify-between text-[13px] text-cyan-100/65">
-              <span>{item.label}</span>
-              <span className="font-bold text-cyan-50" style={{ fontFamily: DASHBOARD_FONTS.num }}>
-                {item.value}
-              </span>
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-2.5 py-2" key={item.label}>
+            <div className="text-[13px] font-semibold text-cyan-100/62">{item.label}</div>
+            <div
+              className="mt-1 truncate text-[15px] font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {item.value}
             </div>
-            <div className="h-2 overflow-hidden bg-cyan-950/80">
+            <div className="mt-2 h-1.5 overflow-hidden bg-cyan-950/80">
               <div
                 className="h-full shadow-[0_0_16px_currentColor]"
                 style={{ backgroundColor: item.color, color: item.color, width: `${item.width}%` }}
@@ -801,25 +814,29 @@ function LoadFocusPanel({ model }: { model: MonitoringAnalyticsModel }) {
       label: '预警记录',
       value: `${warningBucket?.count ?? 0}`,
       tone: DASHBOARD_COLORS.rose,
-      width: clamp(((warningBucket?.count ?? 0) / Math.max(model.recentRecords.length, 1)) * 100, 24, 100),
+      width: clamp(
+        ((warningBucket?.count ?? 0) / Math.max(model.recentRecords.length, 1)) * 100,
+        24,
+        100,
+      ),
     },
   ]
 
   return (
     <HudPanel divider={6} eyebrow="FOCUS" icon="/icons/environment.png" title="负荷策略摘要">
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
         {cards.map((card) => (
-          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-3" key={card.label}>
-            <div className="mb-2 flex items-center justify-between gap-3">
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2.5" key={card.label}>
+            <div className="flex items-start justify-between gap-2">
               <span className="text-[14px] font-semibold text-cyan-100/65">{card.label}</span>
               <span
-                className="text-xl font-bold text-cyan-50"
+                className="whitespace-nowrap text-xl font-bold text-cyan-50"
                 style={{ color: card.tone, fontFamily: DASHBOARD_FONTS.num }}
               >
                 {card.value}
               </span>
             </div>
-            <div className="h-2 overflow-hidden bg-cyan-950/80">
+            <div className="mt-2 h-1.5 overflow-hidden bg-cyan-950/80">
               <div
                 className="h-full shadow-[0_0_16px_currentColor]"
                 style={{ backgroundColor: card.tone, color: card.tone, width: `${card.width}%` }}
@@ -850,8 +867,8 @@ function RelationshipScatterPanel({
   yLabel: string
 }) {
   const chartWidth = 620
-  const chartHeight = 340
-  const padding = 54
+  const chartHeight = 260
+  const padding = 34
   const scatterPoints = buildScatterPoints(
     points,
     chartWidth,
@@ -860,12 +877,24 @@ function RelationshipScatterPanel({
     xAccessor,
     yAccessor,
   )
-  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth)
-  const warningCount = points.filter((point) => point.tone === 'amber' || point.tone === 'rose').length
+  const chartId = xLabel.includes('温度') || xLabel.includes('度') ? 'temperature' : 'occupancy'
+  const trendId = `scatterTrend-${chartId}`
+  const pointGlowId = `scatterPointGlow-${chartId}`
+  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth, chartHeight)
+  const warningCount = points.filter(
+    (point) => point.tone === 'amber' || point.tone === 'rose',
+  ).length
 
   return (
-    <HudPanel className="min-h-[430px]" divider={4} eyebrow="RELATION" icon="/icons/zone.png" title={title}>
-      <div className="mb-3 grid grid-cols-[1fr_auto] items-end gap-3">
+    <HudPanel
+      className="min-h-[318px]"
+      contentClassName="[&>div:first-child]:mb-2"
+      divider={4}
+      eyebrow="RELATION"
+      icon="/icons/zone.png"
+      title={title}
+    >
+      <div className="mb-2 grid grid-cols-[1fr_auto] items-center gap-3">
         <div className="flex flex-wrap gap-2">
           <Pill tone="primary">{describeCorrelation(correlation)}</Pill>
           <Pill tone="neutral">样本 {points.length}</Pill>
@@ -876,7 +905,7 @@ function RelationshipScatterPanel({
         <div className="text-right">
           <div className="text-[12px] tracking-[0.18em] text-cyan-100/45">CORR</div>
           <div
-            className="text-3xl font-bold leading-none text-cyan-50"
+            className="text-[30px] font-bold leading-none text-cyan-50"
             style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
           >
             {correlation.toFixed(2)}
@@ -884,19 +913,19 @@ function RelationshipScatterPanel({
         </div>
       </div>
 
-      <div className="tech-chart-frame p-2.5">
+      <div className="tech-chart-frame relative p-2">
         <svg
           className="block h-auto w-full"
           preserveAspectRatio="xMidYMid meet"
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
         >
           <defs>
-            <linearGradient id={`trend-${title}`} x1="0" x2="1" y1="0" y2="0">
+            <linearGradient id={trendId} x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stopColor="#00D4FF" stopOpacity="0.15" />
               <stop offset="48%" stopColor="#7AF7FF" />
               <stop offset="100%" stopColor="#FFB800" />
             </linearGradient>
-            <filter id={`pointGlow-${title}`} x="-80%" y="-80%" width="260%" height="260%">
+            <filter id={pointGlowId} x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur result="blur" stdDeviation="2.2" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -977,7 +1006,7 @@ function RelationshipScatterPanel({
                 y2={trendLine.y2}
               />
               <line
-                stroke={`url(#trend-${title})`}
+                stroke={`url(#${trendId})`}
                 strokeLinecap="round"
                 strokeWidth="4"
                 x1={trendLine.x1}
@@ -993,7 +1022,7 @@ function RelationshipScatterPanel({
               cx={x}
               cy={y}
               fill={scatterToneFill(item.tone)}
-              filter={`url(#pointGlow-${title})`}
+              filter={`url(#${pointGlowId})`}
               key={item.id}
               opacity="0.78"
               r={item.tone === 'rose' ? 5.5 : 4.8}
@@ -1002,33 +1031,40 @@ function RelationshipScatterPanel({
             />
           ))}
 
-          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={padding - 18}>
+          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={padding - 10}>
             {yLabel}
           </text>
-          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={chartHeight - 16}>
+          <text
+            className="fill-cyan-100/62 text-[13px] font-semibold"
+            x={padding}
+            y={chartHeight - 9}
+          >
             {xLabel}
           </text>
-          <text className="fill-cyan-100/32 text-[11px]" x={chartWidth - padding - 90} y={padding - 18}>
+          <text
+            className="fill-cyan-100/32 text-[11px]"
+            x={chartWidth - padding - 90}
+            y={padding - 10}
+          >
             趋势线 / Trend
           </text>
         </svg>
-      </div>
-
-      <div className="mt-3 grid grid-cols-4 gap-2 text-[13px] text-cyan-100/62">
-        {[
-          { label: '办公', color: DASHBOARD_COLORS.primary },
-          { label: '教学', color: DASHBOARD_COLORS.emerald },
-          { label: '实验', color: DASHBOARD_COLORS.amber },
-          { label: '预警', color: DASHBOARD_COLORS.rose },
-        ].map((item) => (
-          <div
-            className="flex items-center gap-2 border border-cyan-300/10 bg-cyan-950/20 px-3 py-2"
-            key={item.label}
-          >
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-            {item.label}
-          </div>
-        ))}
+        <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-1.5 text-[12px] font-semibold text-cyan-100/70">
+          {[
+            { label: '办公', color: DASHBOARD_COLORS.primary },
+            { label: '教学', color: DASHBOARD_COLORS.emerald },
+            { label: '实验', color: DASHBOARD_COLORS.amber },
+            { label: '预警', color: DASHBOARD_COLORS.rose },
+          ].map((item) => (
+            <span
+              className="inline-flex items-center gap-1.5 border border-cyan-300/10 bg-[#041527]/72 px-2 py-1 backdrop-blur-md"
+              key={item.label}
+            >
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </span>
+          ))}
+        </div>
       </div>
     </HudPanel>
   )
@@ -1242,35 +1278,47 @@ function DetailTable({ model }: { model: MonitoringAnalyticsModel }) {
       size="large"
       title="近期监测明细"
     >
-      <div className="overflow-auto border border-cyan-300/15 bg-cyan-950/20">
-        <table className="min-w-[1320px] text-base text-cyan-50/78">
+      <div className="overflow-hidden border border-cyan-300/15 bg-cyan-950/20">
+        <table className="w-full table-fixed text-base text-cyan-50/78">
+          <colgroup>
+            <col className="w-[12%]" />
+            <col className="w-[15%]" />
+            <col className="w-[8%]" />
+            <col className="w-[8%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[20%]" />
+            <col className="w-[9%]" />
+          </colgroup>
           <thead className="bg-cyan-950/70 text-[13px] uppercase tracking-[0.14em] text-cyan-100/55">
             <tr>
               <th className="px-5 py-4 text-left">楼栋</th>
               <th className="px-5 py-4 text-left">时间</th>
-              <th className="px-5 py-4 text-right">电耗</th>
-              <th className="px-5 py-4 text-right">暖通</th>
-              <th className="px-5 py-4 text-right">用水</th>
-              <th className="px-5 py-4 text-right">温度</th>
-              <th className="px-5 py-4 text-right">湿度</th>
-              <th className="px-5 py-4 text-right">人流</th>
+              <th className="px-4 py-4 text-right">电耗</th>
+              <th className="px-4 py-4 text-right">暖通</th>
+              <th className="px-4 py-4 text-right">用水</th>
+              <th className="px-4 py-4 text-right">温度</th>
+              <th className="px-4 py-4 text-right">湿度</th>
+              <th className="px-4 py-4 text-right">人流</th>
               <th className="px-5 py-4 text-left">设备</th>
-              <th className="px-5 py-4 text-left">状态</th>
+              <th className="px-5 py-4 text-center">状态</th>
             </tr>
           </thead>
           <tbody>
             {model.recentRecords.slice(0, 10).map((record) => (
               <tr className="border-t border-cyan-300/10 hover:bg-cyan-300/5" key={record.id}>
                 <td className="px-5 py-4 font-semibold text-cyan-50">{record.building_id}</td>
-                <td className="px-5 py-4">{record.monitor_time}</td>
-                <td className="px-5 py-4 text-right">{record.electricity_kwh.toFixed(1)}</td>
-                <td className="px-5 py-4 text-right">{record.hvac_kwh.toFixed(1)}</td>
-                <td className="px-5 py-4 text-right">{record.water_m3.toFixed(1)}</td>
-                <td className="px-5 py-4 text-right">{record.env_temperature.toFixed(1)}°C</td>
-                <td className="px-5 py-4 text-right">{record.env_humidity.toFixed(1)}%</td>
-                <td className="px-5 py-4 text-right">{record.occupancy_density.toFixed(1)}</td>
-                <td className="px-5 py-4">{record.device_id}</td>
-                <td className="px-5 py-4">
+                <td className="truncate px-5 py-4">{record.monitor_time}</td>
+                <td className="px-4 py-4 text-right">{record.electricity_kwh.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.hvac_kwh.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.water_m3.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.env_temperature.toFixed(1)}°C</td>
+                <td className="px-4 py-4 text-right">{record.env_humidity.toFixed(1)}%</td>
+                <td className="px-4 py-4 text-right">{record.occupancy_density.toFixed(1)}</td>
+                <td className="truncate px-5 py-4">{record.device_id}</td>
+                <td className="px-5 py-4 text-center">
                   <span
                     className={cn(
                       'inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-semibold text-[#020817]',
@@ -1320,6 +1368,7 @@ export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspa
           <div className="flex min-w-0 flex-col gap-4">
             <HealthGaugePanel model={model} />
             <HourlyPatternPanel model={model} />
+            <LoadFocusPanel model={model} />
           </div>
 
           <div className="flex min-w-0 flex-col gap-4">
