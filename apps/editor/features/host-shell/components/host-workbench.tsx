@@ -1102,7 +1102,9 @@ export default function HostWorkbench({
     <main
       className={cn(
         'flex h-screen w-screen flex-col overflow-hidden text-slate-950',
-        activeWorkspace === 'energy-query' || activeWorkspace === 'data-analysis'
+        activeWorkspace === 'energy-query' ||
+          activeWorkspace === 'data-analysis' ||
+          activeWorkspace === 'smart-operations'
           ? 'bg-[#030712] text-slate-100'
           : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
       )}
@@ -1110,7 +1112,7 @@ export default function HostWorkbench({
       <header
         className={cn(
           'relative z-40 border-b px-4 backdrop-blur-md',
-          activeWorkspace === 'data-analysis'
+          activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations'
             ? 'border-cyan-300/10 bg-[linear-gradient(180deg,rgba(2,8,23,0.18)_0%,rgba(2,8,23,0)_100%)] py-2 shadow-[0_8px_34px_rgba(0,212,255,0.08)]'
             : 'border-white/6 bg-transparent py-3',
         )}
@@ -1118,7 +1120,7 @@ export default function HostWorkbench({
         <div
           className={cn(
             'relative w-full',
-            activeWorkspace === 'data-analysis'
+            activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations'
               ? 'flex min-h-[56px] items-center'
               : 'grid grid-cols-1',
           )}
@@ -1150,19 +1152,23 @@ export default function HostWorkbench({
                 </div>
               </div>
             </div>
-          ) : activeWorkspace === 'data-analysis' ? (
-            <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[min(34vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center 2xl:w-[min(42vw,620px)]">
+          ) : activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations' ? (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[min(34vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center xl:flex 2xl:w-[min(42vw,620px)]">
               <DataAnalysisTitlePlate />
             </div>
           ) : null}
-          {activeWorkspace === 'data-analysis' ? <DataAnalysisHeaderStatus /> : null}
+          {activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations' ? (
+            <DataAnalysisHeaderStatus />
+          ) : null}
         </div>
       </header>
 
       <div
         className={cn(
           'relative min-h-0 flex-1 overflow-hidden',
-          activeWorkspace === 'data-analysis' ? 'px-0 pb-0' : 'px-4 pb-3',
+          activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations'
+            ? 'px-0 pb-0'
+            : 'px-4 pb-3',
         )}
       >
         <div

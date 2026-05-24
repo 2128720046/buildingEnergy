@@ -14,6 +14,10 @@ import {
   DashboardTooltipLayer,
   tooltipAttrs,
 } from '@/features/analytics/components/dashboard-tooltip'
+import {
+  INITIAL_GLOBAL_STATS,
+  type GlobalStats,
+} from '@/features/analytics/lib/global-stats'
 import type {
   MonitoringAnalyticsModel,
   MonitoringBuildingSummary,
@@ -86,14 +90,6 @@ function parseMetricValue(value: string) {
   }
 }
 
-type GlobalStats = {
-  healthScore: number
-  maintenance: number
-  normal: number
-  offline: number
-  warning: number
-}
-
 type DashboardToast = {
   id: number
   tone: 'cyan' | 'emerald' | 'rose'
@@ -108,14 +104,6 @@ type RealtimeModelState = {
   sampleRate: number
   toasts: DashboardToast[]
   model: MonitoringAnalyticsModel
-}
-
-const INITIAL_GLOBAL_STATS: GlobalStats = {
-  healthScore: 74,
-  maintenance: 2,
-  normal: 103,
-  offline: 2,
-  warning: 133,
 }
 
 const LIVE_BUILDINGS = [
@@ -144,12 +132,19 @@ function deriveStatusDistribution(stats: GlobalStats): MonitoringStatusBucket[] 
 }
 
 function statsFromModel(model: MonitoringAnalyticsModel): GlobalStats {
+  const normal = model.statusDistribution.find((bucket) => bucket.tone === 'emerald')?.count ?? 0
+  const warning = model.statusDistribution.find((bucket) => bucket.tone === 'rose')?.count ?? 0
+  const maintenance = model.statusDistribution.find((bucket) => bucket.tone === 'amber')?.count ?? 0
+  const offline = model.statusDistribution.find((bucket) => bucket.tone === 'slate')?.count ?? 0
+
   return {
+    ...INITIAL_GLOBAL_STATS,
     healthScore: model.performanceScore,
-    maintenance: model.statusDistribution.find((bucket) => bucket.tone === 'amber')?.count ?? 0,
-    normal: model.statusDistribution.find((bucket) => bucket.tone === 'emerald')?.count ?? 0,
-    offline: model.statusDistribution.find((bucket) => bucket.tone === 'slate')?.count ?? 0,
-    warning: model.statusDistribution.find((bucket) => bucket.tone === 'rose')?.count ?? 0,
+    maintenance,
+    normal,
+    offline,
+    total: normal + warning + maintenance + offline,
+    warning,
   }
 }
 
@@ -2606,7 +2601,7 @@ function RelationshipScatterPanel({
   const [hiddenTones, setHiddenTones] = useState<Set<MonitoringScatterPoint['tone']>>(
     () => new Set(),
   )
-  const [sampledPointId, setSampledPointId] = useState<number | null>(null)
+  const [sampledPointId, setSampledPointId] = useState<string | null>(null)
   const [riskAreaHovered, setRiskAreaHovered] = useState(false)
   const [trendHovered, setTrendHovered] = useState(false)
   const trendProgress = useLoopProgress(4000)
