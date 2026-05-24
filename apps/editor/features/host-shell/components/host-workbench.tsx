@@ -1112,7 +1112,9 @@ export default function HostWorkbench({
       <header
         className={cn(
           'relative z-40 border-b px-4 backdrop-blur-md',
-          activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations'
+          activeWorkspace === 'energy-query' ||
+          activeWorkspace === 'data-analysis' ||
+          activeWorkspace === 'smart-operations'
             ? 'border-cyan-300/10 bg-[linear-gradient(180deg,rgba(2,8,23,0.18)_0%,rgba(2,8,23,0)_100%)] py-2 shadow-[0_8px_34px_rgba(0,212,255,0.08)]'
             : 'border-white/6 bg-transparent py-3',
         )}
@@ -1120,48 +1122,58 @@ export default function HostWorkbench({
         <div
           className={cn(
             'relative w-full',
-            activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations'
+            activeWorkspace === 'energy-query' ||
+            activeWorkspace === 'data-analysis' ||
+            activeWorkspace === 'smart-operations'
               ? 'flex min-h-[56px] items-center'
               : 'grid grid-cols-1',
           )}
         >
           <WorkspaceNavigation activeWorkspace={activeWorkspace} onChange={handleWorkspaceChange} />
-          {activeWorkspace === 'energy-query' ? (
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <HostFilterBar
-                  filters={draftFilters}
-                  hasQueried={hasQueried}
-                  levelOptions={draftQueryModel.levelOptions}
-                  onFiltersChange={setDraftFilters}
-                  onQuery={handleSubmitQuery}
-                  resultCount={queryResults.length}
-                  variant="cockpit"
-                  zoneOptions={draftQueryModel.zoneOptions}
-                />
-              </div>
-              <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
-                {cockpitToolbar ? (
-                  <div className="glass-panel whitespace-nowrap rounded border border-white/6 px-2 py-0.5">
-                    {cockpitToolbar}
-                  </div>
-                ) : null}
-                <div className="whitespace-nowrap text-right">
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-white/40">项目</div>
-                  <div className="text-sm text-white/70">{projectId}</div>
-                </div>
-              </div>
-            </div>
-          ) : activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations' ? (
+          {activeWorkspace === 'energy-query' ||
+          activeWorkspace === 'data-analysis' ||
+          activeWorkspace === 'smart-operations' ? (
             <div className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[min(34vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center xl:flex 2xl:w-[min(42vw,620px)]">
               <DataAnalysisTitlePlate />
             </div>
           ) : null}
-          {activeWorkspace === 'data-analysis' || activeWorkspace === 'smart-operations' ? (
+          {activeWorkspace === 'energy-query' ||
+          activeWorkspace === 'data-analysis' ||
+          activeWorkspace === 'smart-operations' ? (
             <DataAnalysisHeaderStatus />
           ) : null}
         </div>
       </header>
+
+      {activeWorkspace === 'energy-query' ? (
+        <div className="relative z-30 border-b border-cyan-300/10 bg-[#030712]/70 px-4 py-1.5 shadow-[0_8px_34px_rgba(0,212,255,0.06)] backdrop-blur-md">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <HostFilterBar
+                filters={draftFilters}
+                hasQueried={hasQueried}
+                levelOptions={draftQueryModel.levelOptions}
+                onFiltersChange={setDraftFilters}
+                onQuery={handleSubmitQuery}
+                resultCount={queryResults.length}
+                variant="cockpit"
+                zoneOptions={draftQueryModel.zoneOptions}
+              />
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
+              {cockpitToolbar ? (
+                <div className="glass-panel whitespace-nowrap rounded border border-white/6 px-2 py-0.5">
+                  {cockpitToolbar}
+                </div>
+              ) : null}
+              <div className="whitespace-nowrap text-right">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-white/40">项目</div>
+                <div className="text-sm text-white/70">{projectId}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div
         className={cn(
