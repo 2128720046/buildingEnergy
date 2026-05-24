@@ -1,0 +1,68 @@
+[     676ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[     805ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    3958ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    5233ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[    5341ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  237446ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  238293ms] [LOG] [Fast Refresh] done in 978ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  282846ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  282847ms] [LOG] [Fast Refresh] done in 163ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  284762ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  284901ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  285991ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  289713ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[  289923ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  428321ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  429189ms] [LOG] [Fast Refresh] done in 445ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  447285ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  447505ms] [LOG] [Fast Refresh] done in 210ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  493614ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  493733ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  494784ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  497829ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[  498454ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  498455ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1751472ms] [ERROR] WebSocket connection to 'ws://localhost:3002/_next/webpack-hmr?id=NLt8HUjce315kyeAEMpQ8' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3002/_next/static/chunks/0nan_next_dist_client_0e.jdgy._.js:13299
+[ 1754004ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1756028ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1756173ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1759695ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1760797ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2790
+[ 1761217ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 1761337ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1761510ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2790
+[ 1762733ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1765042ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1765110ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1768549ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1770124ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 1770244ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2030224ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2031090ms] [LOG] [Fast Refresh] done in 867ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2046452ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2047637ms] [LOG] [Fast Refresh] done in 1167ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2068909ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2069247ms] [LOG] [Fast Refresh] done in 486ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2119320ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2119453ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2123206ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2124695ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 2124971ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2187683ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2188779ms] [LOG] [Fast Refresh] done in 1163ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2224157ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2224239ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2228118ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2229734ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 2229842ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2396589ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2397564ms] [LOG] [Fast Refresh] done in 1011ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2425012ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2425389ms] [LOG] [Fast Refresh] done in 514ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2474634ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2474635ms] [LOG] [Fast Refresh] done in 202ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2476334ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2476437ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2480312ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 2481795ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 2481893ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431

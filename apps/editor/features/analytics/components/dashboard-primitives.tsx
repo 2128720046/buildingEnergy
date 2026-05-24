@@ -17,16 +17,11 @@ export function VideoBackground() {
     >
       <video
         autoPlay
-        className="h-full w-full object-cover opacity-70"
-        disablePictureInPicture
+        className="h-full w-full object-cover opacity-80"
         loop
         muted
-        onCanPlay={(event) => {
-          void event.currentTarget.play()
-        }}
         playsInline
         preload="auto"
-        style={{ filter: 'saturate(1.12) contrast(1.08) brightness(1.08)' }}
       >
         <source src={DASHBOARD_ASSETS.videoBg} type="video/mp4" />
         <source src={DASHBOARD_ASSETS.videoBgFallback} type="video/mp4" />
@@ -35,8 +30,8 @@ export function VideoBackground() {
         className="absolute inset-0"
         style={{
           background: `radial-gradient(120% 80% at 50% 0%, rgba(0, 212, 255, 0.18) 0%, transparent 55%),
-            radial-gradient(100% 70% at 50% 100%, rgba(10, 37, 64, 0.56) 0%, transparent 60%),
-            linear-gradient(180deg, rgba(2, 8, 23, 0.28) 0%, rgba(2, 8, 23, 0.54) 100%)`,
+            radial-gradient(100% 70% at 50% 100%, rgba(10, 37, 64, 0.48) 0%, transparent 62%),
+            linear-gradient(180deg, rgba(0, 8, 18, 0.34) 0%, rgba(0, 8, 18, 0.48) 100%)`,
         }}
       />
     </div>
@@ -60,28 +55,51 @@ export function BevelCard({
   withCorners = false,
   contentClassName,
 }: BevelCardProps) {
-  const sizeClassName = {
-    small: 'hud-drawn-card--small',
-    medium: 'hud-drawn-card--medium',
-    large: 'hud-drawn-card--large',
-    kpi: 'hud-drawn-card--kpi',
-  }[size]
-
   return (
     <div
-      className={`hud-drawn-card ${sizeClassName} relative overflow-hidden ${className ?? ''}`}
+      className={`hud-drawn-card hud-drawn-card-${size} relative ${className ?? ''}`}
+      data-corners={withCorners ? 'true' : undefined}
       style={style}
     >
       {withCorners ? (
         <>
-          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--tl" />
-          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--tr" />
-          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--br" />
-          <span aria-hidden className="hud-drawn-card__corner hud-drawn-card__corner--bl" />
+          <CornerPiece position="tl" />
+          <CornerPiece position="tr" />
+          <CornerPiece position="bl" />
+          <CornerPiece position="br" />
         </>
       ) : null}
-      <div className={`relative h-full w-full ${contentClassName ?? ''}`}>{children}</div>
+      <div className={`relative z-[1] h-full w-full ${contentClassName ?? ''}`}>{children}</div>
     </div>
+  )
+}
+
+function CornerPiece({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
+  const base: CSSProperties = {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    pointerEvents: 'none',
+  }
+  const rotation: Record<typeof position, number> = {
+    tl: 0,
+    tr: 90,
+    br: 180,
+    bl: 270,
+  }
+  const placement: Record<typeof position, CSSProperties> = {
+    tl: { top: 6, left: 6 },
+    tr: { top: 6, right: 6 },
+    br: { bottom: 6, right: 6 },
+    bl: { bottom: 6, left: 6 },
+  }
+  return (
+    <span
+      aria-hidden
+      className="hud-corner-piece"
+      data-position={position}
+      style={{ ...base, ...placement[position], transform: `rotate(${rotation[position]}deg)` }}
+    />
   )
 }
 
@@ -92,15 +110,6 @@ export interface SectionHeaderProps {
   rightSlot?: ReactNode
   divider?: 1 | 2 | 3 | 4 | 5 | 6
 }
-
-const DIVIDERS = [
-  DASHBOARD_ASSETS.divider1,
-  DASHBOARD_ASSETS.divider2,
-  DASHBOARD_ASSETS.divider3,
-  DASHBOARD_ASSETS.divider4,
-  DASHBOARD_ASSETS.divider5,
-  DASHBOARD_ASSETS.divider6,
-]
 
 export function SectionHeader({
   title,
@@ -141,11 +150,8 @@ export function SectionHeader({
         ) : null}
         <div
           aria-hidden
-          className="mt-2 h-[10px] w-full max-w-[280px] bg-no-repeat"
-          style={{
-            backgroundImage: `url(${DIVIDERS[divider - 1]})`,
-            backgroundSize: '100% 100%',
-          }}
+          className="hud-title-rail mt-2 h-[10px] w-full max-w-[280px]"
+          data-divider={divider}
         />
       </div>
       {rightSlot ? <div className="shrink-0">{rightSlot}</div> : null}

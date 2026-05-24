@@ -1,0 +1,125 @@
+[  494058ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  494058ms] [LOG] [Fast Refresh] done in 242ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  540163ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  540389ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  540495ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3002/images/%E7%A7%91%E6%8A%80%E6%84%9F%E8%BE%B9%E6%A1%86/256727e7023fffa775402f670b106cbeba5fb85216ad6-6P63yF_fw658webp.webp:0
+[  540496ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  540496ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1197357ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1197526ms] [LOG] [Fast Refresh] done in 262ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1221068ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1222013ms] ReferenceError: METRIC_ICONS is not defined
+    at MetricCard (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_085_.14._.js?id=%255Bproject%255D%252Fapps%252Feditor%252Ffeatures%252Fanalytics%252Fcomponents%252Fdata-analysis-workspace.tsx+%255Bapp-client%255D+%2528ecmascript%2529:312:30)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performSyncWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10179:316)
+    at flushSyncWork$1 (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9230:86)
+    at Object.scheduleRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:299:13)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:391:33
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:384:38)
+    at applyUpdate (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:878:31)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:886:13
+[ 1222221ms] [LOG] [Fast Refresh] done in 1059ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1272821ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1273050ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1274397ms] ReferenceError: METRIC_ICONS is not defined
+    at MetricCard (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_085_.14._.js?id=%255Bproject%255D%252Fapps%252Feditor%252Ffeatures%252Fanalytics%252Fcomponents%252Fdata-analysis-workspace.tsx+%255Bapp-client%255D+%2528ecmascript%2529:636:30)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performSyncWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10179:316)
+    at flushSyncWork$1 (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9230:86)
+    at Object.scheduleRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:299:13)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:391:33
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:384:38)
+    at applyUpdate (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:878:31)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:886:13
+[ 1274398ms] [LOG] [Fast Refresh] done in 324ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1275834ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[ 1276435ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1276479ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1277363ms] ReferenceError: METRIC_ICONS is not defined
+    at MetricCard (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_085_.14._.js:1654:30)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[ 1277989ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1277989ms] [LOG] [Fast Refresh] done in 108ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340060ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340106ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340151ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340161ms] [LOG] [Fast Refresh] done in 201ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340266ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1340430ms] [LOG] [Fast Refresh] done in 268ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1342428ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[ 1342496ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1342540ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1343205ms] ReferenceError: METRIC_ICONS is not defined
+    at MetricCard (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_085_.14._.js:1618:30)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[ 1343325ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1343345ms] [LOG] [Fast Refresh] done in 119ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363349ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363445ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363500ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363511ms] [LOG] [Fast Refresh] done in 258ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363612ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1363730ms] [LOG] [Fast Refresh] done in 218ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1365641ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1365647ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1366282ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1366358ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1370964ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1373698ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[ 1374110ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1436851ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1437653ms] [LOG] [Fast Refresh] done in 909ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1662821ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1662950ms] [LOG] [Fast Refresh] done in 233ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1674025ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1674153ms] [LOG] [Fast Refresh] done in 327ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1709143ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1709740ms] [LOG] [Fast Refresh] done in 174ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1761121ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1761993ms] [LOG] [Fast Refresh] done in 783ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1805917ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1805997ms] [LOG] [Fast Refresh] done in 188ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1817189ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1818923ms] [LOG] [Fast Refresh] done in 1140ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1849623ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1849624ms] [LOG] [Fast Refresh] done in 204ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431

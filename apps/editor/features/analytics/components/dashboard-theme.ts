@@ -29,6 +29,27 @@ export const DASHBOARD_ASSETS = {
   videoBg: '/images/背景/f0eae8eb-a117-46f0-b742-db44dc705b1446161.mp4',
   videoBgFallback: '/images/背景/f0eae8eb-a117-46f0-b742-db44dc705b1446161.mp4',
 
+  cardFrameLarge:
+    '/images/科技感边框/256727e7023fffa775402f670b106cbeba5fb85216ad6-6P63yF_fw658webp.webp',
+  cardFrameMedium:
+    '/images/科技边框/dc8f71ef563fe81fe3efe177765198b22ccf49e060dc-n8XCec_fw658webp.webp',
+  cardFrameSmall:
+    '/images/科技边框/234657f90e87074770525e66dd4ceaef4229406ca392-ota13k_fw658webp.webp',
+  cardFrameKpi:
+    '/images/科技边框/b028713a539ad89dc3450ee77951e19358260537274ea-3Bk7pK_fw658webp.webp',
+  cardFrameAlt1:
+    '/images/科技感边框/70803fb41827bcf08afd7db784912a2150f2135f6208-89BRth_fw658webp.webp',
+  cardFrameAlt2:
+    '/images/科技感边框/84774ba019e95b2d77d7cf6082c65e121b81d5cc1160d-bsbtzP_fw658webp.webp',
+  cardFrameAlt3:
+    '/images/科技感边框/8f87da0baa09be090c99589de95fc183a3400ca93ccef-UtweaW_fw658webp.webp',
+  cardFrameAlt4:
+    '/images/科技感边框/aa5fa66cb4da0edacd7e6556f2d6ccdf049fcd4c3cb4-mV1luZ_fw658webp.webp',
+  cardFrameAlt5:
+    '/images/科技感边框/c2ee57be67ba8d766ce0329597a92f448c93c646129c9-gBUlJd_fw658webp.webp',
+  cardFrameAlt6:
+    '/images/科技感边框/ec407c3e666862fa1007f5f22e48be07db52405e3416-BkSxAz_fw658webp.webp',
+
   cornerDecor1:
     '/images/四角装饰/dfb1ad6ab5a680720e750db3e5a3938d796cbcfb102c7-dwrXvR_fw658webp.webp',
   cornerDecor2:
@@ -41,13 +62,21 @@ export const DASHBOARD_ASSETS = {
   divider5: '/images/分割线/cfab8ce2dee1ad1e8f91c28515fa7b4e24722d31e245bb-IuBpUO_fw658webp.webp',
   divider6: '/images/分割线/fe09620a9baee2271c2215a85edaa7023d04c40173c5-azluJd_fw658webp.webp',
 
-  pageTitle: '/顶部标题.png',
+  pageTitle: '/images/标题.png',
 } as const
 
 export const DASHBOARD_FONTS = {
-  cn: 'var(--font-puhuiti)',
+  cn: 'var(--font-alimama-shuhei)',
+  title: 'var(--font-douyu)',
   num: 'var(--font-rajdhani)',
   numHeavy: 'var(--font-dinpro)',
 } as const
 
 export type CardSize = 'small' | 'medium' | 'large' | 'kpi'
+
+export const CARD_FRAME_BY_SIZE: Record<CardSize, string> = {
+  small: DASHBOARD_ASSETS.cardFrameSmall,
+  medium: DASHBOARD_ASSETS.cardFrameMedium,
+  large: DASHBOARD_ASSETS.cardFrameLarge,
+  kpi: DASHBOARD_ASSETS.cardFrameKpi,
+}

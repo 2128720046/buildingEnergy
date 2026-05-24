@@ -8,7 +8,7 @@ function EnergyIcon({ active }: { active: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className={cn('h-4 w-4', active ? 'text-[#00F5FF]' : 'text-white/30')}
+      className={cn('h-5 w-5', active ? 'text-[#00F5FF]' : 'text-white/38')}
       viewBox="0 0 24 24"
     >
       <path d="M12.5 3.5 7 13h4l-.5 7.5L17 11h-4.25L12.5 3.5Z" fill="currentColor" />
@@ -19,7 +19,7 @@ function ChartIcon({ active }: { active: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className={cn('h-4 w-4', active ? 'text-[#00F5FF]' : 'text-white/30')}
+      className={cn('h-5 w-5', active ? 'text-[#00F5FF]' : 'text-white/38')}
       viewBox="0 0 24 24"
     >
       <path
@@ -33,7 +33,7 @@ function OperationsIcon({ active }: { active: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className={cn('h-4 w-4', active ? 'text-[#FFB300]' : 'text-white/30')}
+      className={cn('h-5 w-5', active ? 'text-[#FFB300]' : 'text-white/38')}
       viewBox="0 0 24 24"
     >
       <path
@@ -62,34 +62,23 @@ export default function WorkspaceNavigation({
   return (
     <nav
       aria-label="Workspace navigation"
-      className="flex flex-wrap items-center gap-2 bg-transparent"
+      className="cyber-nav-shell"
+      style={{ fontFamily: 'var(--font-alimama-shuhei)' }}
     >
       {HOST_WORKSPACES.map((workspace) => {
         const isActive = workspace.key === activeWorkspace
         return (
           <button
             className={cn(
-              'group inline-flex h-12 min-w-[146px] items-center justify-center gap-2.5 px-7 text-[13px] font-semibold tracking-[0.14em] transition-all',
+              'inline-flex items-center gap-2.5 transition-all',
               isActive ? 'cyber-tab-active' : 'cyber-tab',
             )}
             key={workspace.key}
             onClick={() => onChange(workspace.key)}
             type="button"
           >
-            <span aria-hidden className="cyber-tab__rail cyber-tab__rail--left" />
-            <span aria-hidden className="cyber-tab__rail cyber-tab__rail--right" />
-            <span
-              className={cn(
-                'grid h-5 w-5 place-items-center rounded-full border transition-all',
-                isActive
-                  ? 'border-cyan-200/55 bg-cyan-300/18 shadow-[0_0_14px_rgba(0,245,255,0.5)]'
-                  : 'border-white/10 bg-white/5 group-hover:border-cyan-200/35 group-hover:bg-cyan-300/10',
-              )}
-            >
-              <WorkspaceIcon active={isActive} workspace={workspace.key} />
-            </span>
-            <span className="cyber-tab__label">{workspace.label}</span>
-            <span aria-hidden className="cyber-tab__signal" />
+            <WorkspaceIcon active={isActive} workspace={workspace.key} />
+            <span>{workspace.label}</span>
           </button>
         )
       })}
