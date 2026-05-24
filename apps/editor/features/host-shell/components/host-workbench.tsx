@@ -1,35 +1,43 @@
 'use client'
 
-import { emitter, useScene, type AnyNode, type LevelNode, type ZoneNode } from '@pascal-app/core'
-import { useViewer } from '@pascal-app/viewer'
+import { type AnyNode, emitter, type LevelNode, useScene, type ZoneNode } from '@pascal-app/core'
+import {
+  applySceneGraphToEditor,
+  buildSceneGraphFromReferenceFile,
+  useEditor,
+} from '@pascal-app/editor'
+import {
+  DefaultModelingViewerToolbarLeft,
+  DefaultModelingViewerToolbarRight,
+} from '@pascal-app/editor/chrome'
+import { createEditorApiClient } from '@pascal-app/editor/host'
 import {
   ModelingEditorCoreModule,
   type ModelingSelectionSnapshot,
   type SceneGraph,
 } from '@pascal-app/editor/modeling'
-import {
-  DefaultModelingViewerToolbarLeft,
-  DefaultModelingViewerToolbarRight,
-} from '@pascal-app/editor/chrome'
-import { applySceneGraphToEditor, buildSceneGraphFromReferenceFile, useEditor } from '@pascal-app/editor'
-import { createEditorApiClient } from '@pascal-app/editor/host'
+import { useViewer } from '@pascal-app/viewer'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { DASHBOARD_ASSETS } from '@/features/analytics/components/dashboard-theme'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
 import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import {
-  loadComponentEnergy,
   type EnergyApiResponse,
+  loadComponentEnergy,
   type ZoneEnergyResponse,
 } from '@/features/energy-insights/lib/energy-api'
 import {
   buildDailySummary,
-  estimateZoneArea,
   classifyRoomType,
+  estimateZoneArea,
 } from '@/features/energy-insights/lib/energy-mock-data'
-import { buildHostQueryModel, type HostQueryFilters } from '@/features/energy-insights/lib/host-query'
+import {
+  buildHostQueryModel,
+  type HostQueryFilters,
+} from '@/features/energy-insights/lib/host-query'
 import WorkspaceNavigation from '@/features/host-shell/components/workspace-navigation'
 import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
@@ -80,7 +88,7 @@ function HostViewerToolbarRight({
     try {
       const sceneGraph = await buildSceneGraphFromReferenceFile(file)
 
-      // 如果配置了后端，将 GLB 文件再上传到后端，替换 asset:// URL
+      // 如果配置了后端，先 GLB 文件再上传到后端，替换 asset:// URL
       if (apiBaseUrl) {
         const isGlb = /\.(glb|gltf)$/i.test(file.name)
         for (const node of Object.values(sceneGraph.nodes) as any[]) {
@@ -169,9 +177,9 @@ function HostViewerToolbarRight({
             <div className="mt-3 space-y-2 text-[12px] leading-relaxed text-white/60">
               <p>未能成功导入所选文件。常见原因：</p>
               <ul className="space-y-1 pl-3">
-                <li>• 文件格式不受支持（支持 .glb/.gltf/.svg/.json 或图片）</li>
-                <li>• 文件已损坏或不是有效的 3D 模型</li>
-                <li>• 文件中不包含可解析的场景数据</li>
+                <li>文件格式不受支持（支持 .glb/.gltf/.svg/.json 或图片）</li>
+                <li>文件已损坏或不是有效的 3D 模型</li>
+                <li>文件中不包含可解析的场景数据</li>
               </ul>
               {importError ? (
                 <div className="mt-2 rounded-lg border border-red-500/20 bg-red-500/8 px-2.5 py-2 font-mono text-[11px] text-red-300/80 leading-relaxed">
@@ -231,7 +239,9 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [insightsCollapsed, setInsightsCollapsed] = useState(false)
   const [insightsWidth, setInsightsWidth] = useState(432)
   const [activeWorkspace, setActiveWorkspace] = useState<HostWorkspace>('energy-query')
-  const [activeRightRailModule, setActiveRightRailModule] = useState<'query' | 'operations'>('query')
+  const [activeRightRailModule, setActiveRightRailModule] = useState<'query' | 'operations'>(
+    'query',
+  )
   const [draftFilters, setDraftFilters] = useState<HostQueryFilters>(DEFAULT_FILTERS)
   const [appliedFilters, setAppliedFilters] = useState<HostQueryFilters>(DEFAULT_FILTERS)
   const [hasQueried, setHasQueried] = useState(false)
@@ -265,7 +275,10 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     [apiBaseUrl, projectId],
   )
 
-  const draftQueryModel = useMemo(() => buildHostQueryModel(nodes, draftFilters), [nodes, draftFilters])
+  const draftQueryModel = useMemo(
+    () => buildHostQueryModel(nodes, draftFilters),
+    [nodes, draftFilters],
+  )
   const appliedQueryModel = useMemo(
     () => buildHostQueryModel(nodes, appliedFilters),
     [appliedFilters, nodes],
@@ -275,12 +288,13 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const selectedComponentId = selection?.selectedIds[0] ?? null
   const selectedNodeType = selection?.selectedNodes[0]?.type
   const selectedComponentName =
-    (selection?.selectedNodes[0]?.name as string | undefined) ??
-    selectedComponentId ??
-    '未选中构件'
+    (selection?.selectedNodes[0]?.name as string | undefined) ?? selectedComponentId ?? '未选中构件'
 
   const handleLoad = useCallback(async () => apiClient.loadScene(), [apiClient])
-  const handleSave = useCallback(async (scene: SceneGraph) => apiClient.saveScene(scene), [apiClient])
+  const handleSave = useCallback(
+    async (scene: SceneGraph) => apiClient.saveScene(scene),
+    [apiClient],
+  )
   const handleSubmitQuery = useCallback(() => {
     setAppliedFilters(draftFilters)
     setHasQueried(true)
@@ -292,7 +306,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
   const handleToggleEdit = useCallback(() => {
     if (!editEnabled) {
-      // 进入编辑：保存快照（改为 state，触发 React 重渲染传递 prop）
+      // 进入编辑：保存快照（改为 state，触发 React 重渲染传递 props）
       const clone = JSON.parse(JSON.stringify(nodes)) as Record<string, AnyNode>
       setEditSnapshot(clone)
       setEditEnabled(true)
@@ -328,7 +342,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   }, [mode, setMode])
 
   const handleDiscardEdits = useCallback(() => {
-    // 用 RAF 确保在 React 批处理外恢复状态
+    // RAF 确保在 React 批处理外恢复状态
     requestAnimationFrame(() => {
       const stored = editSnapshot // 从闭包捕获当时的快照
       if (stored) {
@@ -393,7 +407,6 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     })
     viewer.setHoveredId(null)
     viewer.setLevelMode('solo')
-
   }, [nodes])
 
   const handleCreateWorkOrder = useCallback((draft: AssistantWorkOrderDraft) => {
@@ -548,7 +561,11 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           ? pendingHighlight.zoneIds
           : selection.selectedIds
 
-      if (selection.zoneId !== null || selection.levelId !== levelId || pendingSelectedIds !== selection.selectedIds) {
+      if (
+        selection.zoneId !== null ||
+        selection.levelId !== levelId ||
+        pendingSelectedIds !== selection.selectedIds
+      ) {
         viewer.setSelection({ levelId, zoneId: null, selectedIds: pendingSelectedIds })
         if (isSelectionDebugEnabled()) {
           console.debug('[host-selection-sync] apply level filter', {
@@ -582,13 +599,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
       }
     }
     viewer.setLevelMode('stacked')
-  }, [
-    draftFilters.levelId,
-    draftFilters.zoneId,
-    hoveredId,
-    isSelectionDebugEnabled,
-    nodes,
-  ])
+  }, [draftFilters.levelId, draftFilters.zoneId, hoveredId, isSelectionDebugEnabled, nodes])
 
   useEffect(() => {
     let cancelled = false
@@ -632,7 +643,10 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
               occupancy_density: summary.avg_occupancy,
               co2_ppm: Math.round(summary.hourly.reduce((s, r) => s + r.co2_ppm, 0) / 24),
               pm25_ugm3: Math.round(summary.hourly.reduce((s, r) => s + r.pm25_ugm3, 0) / 24),
-              series: summary.hourly.map((r) => ({ time: `${String(r.hour).padStart(2, '0')}:00`, value: r.electricity_kwh })),
+              series: summary.hourly.map((r) => ({
+                time: `${String(r.hour).padStart(2, '0')}:00`,
+                value: r.electricity_kwh,
+              })),
               updatedAt: new Date().toISOString(),
             }
             if (!cancelled) {
@@ -680,7 +694,10 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
             occupancy_density: summary.avg_occupancy,
             co2_ppm: Math.round(summary.hourly.reduce((s, r) => s + r.co2_ppm, 0) / 24),
             pm25_ugm3: Math.round(summary.hourly.reduce((s, r) => s + r.pm25_ugm3, 0) / 24),
-            series: summary.hourly.map((r) => ({ time: `${String(r.hour).padStart(2, '0')}:00`, value: r.electricity_kwh })),
+            series: summary.hourly.map((r) => ({
+              time: `${String(r.hour).padStart(2, '0')}:00`,
+              value: r.electricity_kwh,
+            })),
             updatedAt: new Date().toISOString(),
           }
           if (!cancelled) setEnergyResultZone(zoneResponse)
@@ -716,17 +733,28 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     <main
       className={cn(
         'flex h-screen w-screen flex-col overflow-hidden text-slate-950',
-        activeWorkspace === 'energy-query'
+        activeWorkspace === 'energy-query' || activeWorkspace === 'data-analysis'
           ? 'bg-[#030712] text-slate-100'
           : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
       )}
     >
-      <header className="relative z-40 border-b border-white/6 bg-transparent px-4 py-2 backdrop-blur-md">
-        <div className="flex w-full items-center gap-3">
-          <WorkspaceNavigation
-            activeWorkspace={activeWorkspace}
-            onChange={setActiveWorkspace}
-          />
+      <header
+        className={cn(
+          'relative z-40 border-b px-4 backdrop-blur-md',
+          activeWorkspace === 'data-analysis'
+            ? 'border-cyan-300/10 bg-[linear-gradient(180deg,rgba(2,8,23,0.18)_0%,rgba(2,8,23,0)_100%)] py-2 shadow-[0_8px_34px_rgba(0,212,255,0.08)]'
+            : 'border-white/6 bg-transparent py-3',
+        )}
+      >
+        <div
+          className={cn(
+            'relative w-full',
+            activeWorkspace === 'data-analysis'
+              ? 'flex min-h-[56px] items-center'
+              : 'grid grid-cols-1',
+          )}
+        >
+          <WorkspaceNavigation activeWorkspace={activeWorkspace} onChange={setActiveWorkspace} />
           {activeWorkspace === 'energy-query' ? (
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <div className="min-w-0 flex-1 overflow-hidden">
@@ -742,19 +770,36 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 />
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
-                {cockpitToolbar ? <div className="glass-panel whitespace-nowrap rounded border border-white/6 px-2 py-0.5">{cockpitToolbar}</div> : null}
+                {cockpitToolbar ? (
+                  <div className="glass-panel whitespace-nowrap rounded border border-white/6 px-2 py-0.5">
+                    {cockpitToolbar}
+                  </div>
+                ) : null}
                 <div className="whitespace-nowrap text-right">
                   <div className="text-[10px] uppercase tracking-[0.22em] text-white/40">项目</div>
                   <div className="text-sm text-white/70">{projectId}</div>
                 </div>
               </div>
             </div>
+          ) : activeWorkspace === 'data-analysis' ? (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[min(46vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center">
+              <img
+                alt="数据分析标题"
+                className="h-auto w-full max-w-full object-contain"
+                draggable={false}
+                src={DASHBOARD_ASSETS.pageTitle}
+              />
+            </div>
           ) : null}
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-hidden px-4 pb-3">
-
+      <div
+        className={cn(
+          'relative min-h-0 flex-1 overflow-hidden',
+          activeWorkspace === 'data-analysis' ? 'px-0 pb-0' : 'px-4 pb-3',
+        )}
+      >
         <div
           className={cn(
             'absolute inset-0 transition-opacity',
@@ -780,7 +825,9 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 showHelperManager: true,
                 showPanelManager: editEnabled,
               }}
-              viewerToolbarLeft={activeWorkspace === 'energy-query' ? null : <DefaultModelingViewerToolbarLeft />}
+              viewerToolbarLeft={
+                activeWorkspace === 'energy-query' ? null : <DefaultModelingViewerToolbarLeft />
+              }
               viewerToolbarRight={activeWorkspace === 'energy-query' ? null : cockpitToolbar}
             />
 
