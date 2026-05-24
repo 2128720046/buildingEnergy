@@ -1,8 +1,10 @@
 ﻿'use client'
 
+import NumberFlow from '@number-flow/react'
 import { type AnyNode, useScene } from '@pascal-app/core'
 import { useEditor, type ViewMode } from '@pascal-app/editor'
-import NumberFlow from '@number-flow/react'
+import type { EChartsOption } from 'echarts'
+import ReactECharts from 'echarts-for-react'
 import {
   AlertTriangle,
   Building2,
@@ -16,23 +18,22 @@ import {
   Zap,
 } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
-import ReactECharts from 'echarts-for-react'
-import type { EChartsOption } from 'echarts'
-import type { CompositionData, RankingItem, WeeklyTrendData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
 import FloorHeatmapOverlay from '@/features/energy-insights/components/floor-heatmap-overlay'
-import {
-  buildFloorHeatmapData,
-  buildFloorHourlyAggregate,
-} from '@/features/energy-insights/lib/floor-heatmap'
+import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
+import type { CompositionData, RankingItem, WeeklyTrendData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import { buildPrediction, type EditImpact, type PredictionPoint } from '@/features/energy-insights/lib/energy-prediction'
 import {
   applyEnergyHighlights,
   resetAllEnergyHighlights,
 } from '@/features/energy-insights/lib/energy-zone-highlight'
-import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
-import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
-import { buildPrediction, type PredictionPoint, type EditImpact } from '@/features/energy-insights/lib/energy-prediction'
+import {
+  buildFloorHeatmapData,
+  buildFloorHourlyAggregate,
+} from '@/features/energy-insights/lib/floor-heatmap'
 import type {
   HostFilterOption,
   HostQueryFilters,
@@ -68,8 +69,60 @@ interface EnergyTwinDashboardProps {
 const CYAN = '#00F5FF'
 const AMBER = '#FFB300'
 const RED = '#FF3333'
-const LABEL = 'rgba(255,255,255,0.55)'
-const GRID = 'rgba(0,245,255,0.08)'
+const BLUE = '#1D8BFF'
+const PINK = '#FF5CA8'
+const LABEL = 'rgba(206,244,255,0.72)'
+const MUTED_LABEL = 'rgba(164,211,226,0.48)'
+const GRID = 'rgba(122,247,255,0.14)'
+const AXIS_LINE = 'rgba(122,247,255,0.22)'
+
+function hudTooltip(trigger: 'axis' | 'item' = 'axis') {
+  return {
+    trigger,
+    appendToBody: true,
+    confine: true,
+    backgroundColor: 'rgba(2, 8, 23, 0.92)',
+    borderColor: 'rgba(122, 247, 255, 0.34)',
+    borderWidth: 1,
+    padding: [8, 10],
+    textStyle: {
+      color: '#E8FEFF',
+      fontFamily: DASHBOARD_FONTS.cn,
+      fontSize: 11,
+      lineHeight: 18,
+    },
+    extraCssText: 'box-shadow:0 0 18px rgba(0,212,255,0.24);backdrop-filter:blur(10px);border-radius:3px;',
+  }
+}
+
+function axisPointer(): Record<string, unknown> {
+  return {
+    type: 'line',
+    lineStyle: {
+      color: 'rgba(122,247,255,0.42)',
+      type: 'dashed',
+      width: 1,
+    },
+  }
+}
+
+function chartAxisLabel(fontFamily: string = DASHBOARD_FONTS.num) {
+  return {
+    color: LABEL,
+    fontFamily,
+    fontSize: 10,
+  }
+}
+
+function splitLine(): Record<string, unknown> {
+  return {
+    lineStyle: {
+      color: GRID,
+      type: 'dashed',
+      width: 1,
+    },
+  }
+}
 
 function buildDualLineOption(
   today: number[], yesterday: number[],
@@ -79,21 +132,75 @@ function buildDualLineOption(
   const labels = today.map((_, i) => `${String(i).padStart(2, '0')}:00`)
   return {
     backgroundColor: 'transparent',
-    grid: { top: 16, right: 8, bottom: 20, left: 40 },
-    tooltip: { trigger: 'axis' },
-    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
-    xAxis: { type: 'category', data: labels, axisLabel: { color: LABEL, fontSize: 9, interval: 3 }, axisTick: { show: false }, axisLine: { lineStyle: { color: GRID } } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
+    grid: { top: 28, right: 14, bottom: 24, left: 42 },
+    tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
+    legend: {
+      right: 2,
+      top: 0,
+      itemWidth: 18,
+      itemHeight: 8,
+      textStyle: { color: LABEL, fontFamily: DASHBOARD_FONTS.cn, fontSize: 11 },
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      boundaryGap: false,
+      axisLabel: { ...chartAxisLabel(), interval: 3 },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: AXIS_LINE } },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: splitLine(),
+      axisLabel: chartAxisLabel(),
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
     series: [
       {
-        name: '今日', type: 'line', data: today, smooth: true, symbol: 'none',
-        lineStyle: { color: CYAN, width: 2 },
-        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.1)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
-        markPoint: { data: [{ coord: [peak.hour, peak.value], value: peak.value.toFixed(1), symbol: 'pin', symbolSize: 18, itemStyle: { color: RED as any }, label: { show: true, fontSize: 9, color: '#fff' } }] },
+        name: '今日',
+        type: 'line',
+        data: today,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        itemStyle: { color: CYAN, borderColor: '#E8FEFF', borderWidth: 1 },
+        lineStyle: {
+          color: CYAN,
+          shadowBlur: 14,
+          shadowColor: 'rgba(0,245,255,0.56)',
+          width: 3,
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(0,245,255,0.28)' },
+              { offset: 0.55, color: 'rgba(0,130,255,0.08)' },
+              { offset: 1, color: 'rgba(0,245,255,0)' },
+            ],
+          },
+        },
+        markPoint: {
+          data: [{ coord: [peak.hour, peak.value], value: peak.value.toFixed(1), symbol: 'pin', symbolSize: 28 }],
+          itemStyle: { color: RED as any, shadowBlur: 12, shadowColor: 'rgba(255,51,51,0.5)' },
+          label: { color: '#fff', fontFamily: DASHBOARD_FONTS.num, fontSize: 11, fontWeight: 700 },
+        },
       },
       {
-        name: '昨日', type: 'line', data: yesterday, smooth: true, symbol: 'none',
-        lineStyle: { color: AMBER, width: 1.5, type: 'dashed' },
+        name: '昨日',
+        type: 'line',
+        data: yesterday,
+        smooth: true,
+        symbol: 'none',
+        emphasis: { focus: 'series' },
+        lineStyle: { color: AMBER, opacity: 0.78, shadowBlur: 8, shadowColor: 'rgba(255,179,0,0.32)', type: 'dashed', width: 2 },
       },
     ],
   } as unknown as EChartsOption
@@ -104,15 +211,116 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
     { name: 'HVAC', value: c.hvac }, { name: '照明', value: c.lighting },
     { name: '插座', value: c.socket }, { name: '其他', value: c.other },
   ].filter((d) => d.value > 0)
+  const total = data.reduce((sum, item) => sum + item.value, 0)
+  const compositionCenter = ['50%', '43%']
   return {
-    backgroundColor: 'transparent', tooltip: { trigger: 'item' },
-    legend: { bottom: 0, itemWidth: 8, itemHeight: 6, textStyle: { color: LABEL, fontSize: 9 } },
-    series: [{
-      type: 'pie', radius: ['65%', '82%'], center: ['50%', '44%'], label: { show: false }, labelLine: { show: false },
-      itemStyle: { borderColor: 'rgba(3,7,18,0.8)', borderWidth: 2 },
-      data,
-    }],
-    color: [CYAN, 'rgba(0,245,255,0.55)', 'rgba(255,179,0,0.5)', 'rgba(255,255,255,0.12)'],
+    backgroundColor: 'transparent',
+    tooltip: hudTooltip('item'),
+    legend: {
+      bottom: 0,
+      icon: 'roundRect',
+      itemGap: 10,
+      itemHeight: 7,
+      itemWidth: 14,
+      textStyle: { color: LABEL, fontFamily: DASHBOARD_FONTS.cn, fontSize: 11 },
+    },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '34%',
+        style: {
+          text: total.toFixed(0),
+          align: 'center',
+          fill: '#E8FEFF',
+          fontFamily: DASHBOARD_FONTS.num,
+          fontSize: 26,
+          fontWeight: 700,
+        },
+      },
+      {
+        type: 'text',
+        left: 'center',
+        top: '49%',
+        style: {
+          text: 'kWh',
+          align: 'center',
+          fill: MUTED_LABEL,
+          fontFamily: DASHBOARD_FONTS.cn,
+          fontSize: 10,
+        },
+      },
+    ],
+    series: [
+      {
+        type: 'pie',
+        silent: true,
+        animation: false,
+        radius: ['0%', '48%'],
+        center: compositionCenter,
+        label: { show: false },
+        labelLine: { show: false },
+        itemStyle: {
+          color: 'rgba(0,212,255,0.06)',
+          borderColor: 'rgba(122,247,255,0.18)',
+          borderWidth: 1,
+          shadowBlur: 18,
+          shadowColor: 'rgba(0,212,255,0.18)',
+        },
+        data: [{ value: 1 }],
+        z: 0,
+      },
+      {
+        type: 'pie',
+        radius: ['62%', '82%'],
+        center: compositionCenter,
+        padAngle: 2,
+        minAngle: 8,
+        label: { show: false },
+        labelLine: { show: false },
+        itemStyle: {
+          borderColor: 'rgba(2,8,23,0.9)',
+          borderRadius: 4,
+          borderWidth: 2,
+          shadowBlur: 10,
+          shadowColor: 'rgba(0,212,255,0.14)',
+        },
+        emphasis: {
+          scale: true,
+          scaleSize: 4,
+          itemStyle: { shadowBlur: 20, shadowColor: 'rgba(122,247,255,0.36)' },
+        },
+        data,
+        z: 2,
+      },
+    ],
+    color: [
+      {
+        type: 'linear',
+        x: 0,
+        y: 0,
+        x2: 1,
+        y2: 1,
+        colorStops: [{ offset: 0, color: '#7AF7FF' }, { offset: 1, color: CYAN }],
+      },
+      {
+        type: 'linear',
+        x: 0,
+        y: 0,
+        x2: 1,
+        y2: 1,
+        colorStops: [{ offset: 0, color: BLUE }, { offset: 1, color: '#00D4FF' }],
+      },
+      {
+        type: 'linear',
+        x: 0,
+        y: 0,
+        x2: 1,
+        y2: 1,
+        colorStops: [{ offset: 0, color: '#FFE08A' }, { offset: 1, color: AMBER }],
+      },
+      'rgba(226,244,255,0.3)',
+    ],
   }
 }
 
@@ -120,30 +328,123 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
   if (items.length === 0) return {}
   return {
     backgroundColor: 'transparent',
-    grid: { top: 4, right: 12, bottom: 4, left: 72 },
-    xAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 8 } },
-    yAxis: { type: 'category', data: items.map((r) => r.name), axisLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 9 }, axisTick: { show: false }, axisLine: { show: false } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    series: [{ type: 'bar', data: items.map((r) => r.value), barWidth: 10, itemStyle: { borderRadius: 2, color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: CYAN }, { offset: 1, color: 'rgba(0,245,255,0.35)' }] } } }],
+    grid: { top: 8, right: 18, bottom: 8, left: 78 },
+    xAxis: {
+      type: 'value',
+      splitLine: splitLine(),
+      axisLabel: chartAxisLabel(),
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
+    yAxis: {
+      type: 'category',
+      data: items.map((r) => r.name),
+      axisLabel: { ...chartAxisLabel(DASHBOARD_FONTS.cn), color: LABEL, width: 68, overflow: 'truncate' },
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
+    tooltip: { ...hudTooltip('axis'), axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,212,255,0.08)' } } },
+    series: [
+      {
+        type: 'bar',
+        data: items.map((r) => r.value),
+        barWidth: 12,
+        showBackground: true,
+        backgroundStyle: {
+          color: 'rgba(122,247,255,0.05)',
+          borderRadius: [0, 8, 8, 0],
+        },
+        itemStyle: {
+          borderRadius: [0, 8, 8, 0],
+          shadowBlur: 10,
+          shadowColor: 'rgba(0,245,255,0.28)',
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 1,
+            y2: 0,
+            colorStops: [
+              { offset: 0, color: 'rgba(0,116,255,0.26)' },
+              { offset: 0.55, color: CYAN },
+              { offset: 1, color: '#A7FFFF' },
+            ],
+          },
+        },
+      },
+    ],
   }
 }
 
 function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
   return {
     backgroundColor: 'transparent',
-    grid: { top: 14, right: 12, bottom: 18, left: 40 },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: w.labels, axisLabel: { color: LABEL, fontSize: 9 } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
+    grid: { top: 30, right: 14, bottom: 22, left: 42 },
+    tooltip: { ...hudTooltip('axis'), axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(122,247,255,0.08)' } } },
+    legend: {
+      right: 2,
+      top: 0,
+      itemHeight: 8,
+      itemWidth: 16,
+      textStyle: { color: LABEL, fontFamily: DASHBOARD_FONTS.cn, fontSize: 11 },
+    },
+    xAxis: {
+      type: 'category',
+      data: w.labels,
+      axisLabel: chartAxisLabel(DASHBOARD_FONTS.cn),
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: AXIS_LINE } },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: splitLine(),
+      axisLabel: chartAxisLabel(),
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
     series: [
-      { name: '本周', type: 'bar', data: w.values, barWidth: 10, itemStyle: { borderRadius: 2, color: 'rgba(0,245,255,0.6)' } },
-      { name: '上周', type: 'bar', data: w.prevWeekValues, barWidth: 10, itemStyle: { borderRadius: 2, color: 'rgba(255,255,255,0.08)' } },
+      {
+        name: '本周',
+        type: 'bar',
+        data: w.values,
+        barGap: '28%',
+        barWidth: 10,
+        itemStyle: {
+          borderRadius: [8, 8, 2, 2],
+          shadowBlur: 10,
+          shadowColor: 'rgba(0,245,255,0.25)',
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{ offset: 0, color: '#A7FFFF' }, { offset: 0.45, color: CYAN }, { offset: 1, color: 'rgba(0,116,255,0.24)' }],
+          },
+        },
+      },
+      {
+        name: '上周',
+        type: 'bar',
+        data: w.prevWeekValues,
+        barWidth: 10,
+        itemStyle: {
+          borderRadius: [8, 8, 2, 2],
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(255,255,255,0.28)' }, { offset: 1, color: 'rgba(255,255,255,0.05)' }],
+          },
+        },
+      },
     ],
-    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
   }
 }
 
-const PRED_COLORS = { actual: AMBER, base: CYAN, adjusted: '#FF6B9B' }
+const PRED_COLORS = { actual: AMBER, base: CYAN, adjusted: PINK }
 
 function buildPredictionOption(
   labels: string[],
@@ -158,9 +459,17 @@ function buildPredictionOption(
       data: actual,
       smooth: true,
       symbol: 'diamond',
-      symbolSize: 5,
+      symbolSize: 6,
+      showSymbol: false,
       itemStyle: { color: PRED_COLORS.actual },
-      lineStyle: { color: PRED_COLORS.actual, width: 1.5, type: 'dashed' },
+      lineStyle: {
+        color: PRED_COLORS.actual,
+        opacity: 0.88,
+        shadowBlur: 10,
+        shadowColor: 'rgba(255,179,0,0.34)',
+        type: 'dashed',
+        width: 2,
+      },
       z: 1,
     },
     {
@@ -169,10 +478,29 @@ function buildPredictionOption(
       data: predicted.map((p) => p.predicted),
       smooth: true,
       symbol: 'circle',
-      symbolSize: 4,
-      itemStyle: { color: PRED_COLORS.base },
-      lineStyle: { color: PRED_COLORS.base, width: 2 },
-      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.08)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
+      symbolSize: 6,
+      showSymbol: false,
+      itemStyle: { color: PRED_COLORS.base, borderColor: '#E8FEFF', borderWidth: 1 },
+      lineStyle: {
+        color: PRED_COLORS.base,
+        shadowBlur: 16,
+        shadowColor: 'rgba(0,245,255,0.5)',
+        width: 3,
+      },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(0,245,255,0.24)' },
+            { offset: 0.58, color: 'rgba(29,139,255,0.08)' },
+            { offset: 1, color: 'rgba(0,245,255,0)' },
+          ],
+        },
+      },
       z: 2,
     },
   ]
@@ -184,20 +512,46 @@ function buildPredictionOption(
       data: editImpact.adjusted.map((p: PredictionPoint) => p.predicted),
       smooth: true,
       symbol: 'rect',
-      symbolSize: 5,
+      symbolSize: 6,
+      showSymbol: false,
       itemStyle: { color: PRED_COLORS.adjusted },
-      lineStyle: { color: PRED_COLORS.adjusted, width: 2, type: 'dotted' },
+      lineStyle: {
+        color: PRED_COLORS.adjusted,
+        shadowBlur: 14,
+        shadowColor: 'rgba(255,92,168,0.42)',
+        type: 'dotted',
+        width: 3,
+      },
       z: 3,
     })
   }
 
   return {
     backgroundColor: 'transparent',
-    grid: { top: 22, right: 8, bottom: 22, left: 42 },
-    tooltip: { trigger: 'axis' },
-    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
-    xAxis: { type: 'category', data: labels, axisLabel: { color: LABEL, fontSize: 9, interval: 3 }, axisTick: { show: false } },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
+    grid: { top: 30, right: 16, bottom: 24, left: 44 },
+    tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
+    legend: {
+      right: 2,
+      top: 0,
+      itemHeight: 8,
+      itemWidth: 18,
+      textStyle: { color: LABEL, fontFamily: DASHBOARD_FONTS.cn, fontSize: 11 },
+    },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      boundaryGap: false,
+      axisLabel: { ...chartAxisLabel(), interval: 3 },
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: AXIS_LINE } },
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: splitLine(),
+      axisLabel: chartAxisLabel(),
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
     series,
   } as unknown as EChartsOption
 }
@@ -227,12 +581,24 @@ function CardHeader({
   title: string
 }) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2">
-        <span className="text-white/50">{icon}</span>
-        <h3 className="font-semibold text-[13px] tracking-[0.16em] text-cyan-50 uppercase">{title}</h3>
+    <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-start gap-2">
+        <span className="operations-panel-icon shrink-0 text-cyan-300">{icon}</span>
+        <div className="min-w-0">
+          <h3
+            className="text-[17px] font-black leading-tight text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.cn }}
+          >
+            <span
+              aria-hidden
+              className="operations-title-bar mr-2 inline-block h-3.5 w-1 align-middle"
+            />
+            {title}
+          </h3>
+          <div aria-hidden className="hud-title-rail mt-1.5 h-[8px] w-full max-w-[200px]" />
+        </div>
       </div>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   )
 }
@@ -274,6 +640,7 @@ function DockedViewModeSwitch() {
             )}
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
+            style={{ fontFamily: DASHBOARD_FONTS.cn }}
             type="button"
           >
             {mode.label}
@@ -418,8 +785,8 @@ export default function EnergyTwinDashboard({
                           ? 'animate-pulse border-red-400/40 bg-red-500/20'
                           : 'border-red-400/15 bg-red-500/8',
                       )}>
-                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">高</div>
-                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-[#FF3333]"><NumberFlow value={dashboardData.left.alert.high} /></div>
+                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>高</div>
+                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-[#FF3333]" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.high} /></div>
                       </div>
                       <div className={cn(
                         'rounded-lg p-2 text-center border',
@@ -427,12 +794,12 @@ export default function EnergyTwinDashboard({
                           ? 'border-amber-400/30 bg-amber-500/12'
                           : 'border-amber-300/10 bg-amber-500/5',
                       )}>
-                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">中</div>
-                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-white/80"><NumberFlow value={dashboardData.left.alert.medium} /></div>
+                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>中</div>
+                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.medium} /></div>
                       </div>
                       <div className="rounded-lg border border-slate-300/10 bg-slate-500/8 p-2 text-center">
-                        <div className="text-[9px] uppercase tracking-[0.1em] text-slate-400">总计</div>
-                        <div className="mt-0.5 text-2xl font-bold tabular-nums text-slate-300"><NumberFlow value={dashboardData.left.alert.total} /></div>
+                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>总计</div>
+                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-slate-300" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.total} /></div>
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
@@ -441,12 +808,12 @@ export default function EnergyTwinDashboard({
                         style={{ width: `${Math.min(100, (dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%` }}
                       />
                     </div>
-                    <div className="mt-1 text-right text-[9px] text-slate-500">
+                    <div className="mt-1 text-right text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
                       高优先级占比 {Math.round((dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%
                     </div>
                   </>
                 ) : (
-                  <div className="py-3 text-center text-xs text-[rgba(0,245,255,0.7)]">
+                  <div className="py-3 text-center text-[14px] text-[rgba(0,245,255,0.7)]" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
                     ✓ 当前无告警，系统运行正常
                   </div>
                 )}
@@ -458,10 +825,10 @@ export default function EnergyTwinDashboard({
                 <div className="flex items-end justify-between">
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold font-mono tabular-nums text-white/95 kpi-glow">
+                      <span className="text-3xl font-bold tabular-nums text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>
                         <NumberFlow value={dashboardData.left.realtimePower.currentKw} format={{ maximumFractionDigits: 1 }} />
                       </span>
-                      <span className="text-xs text-slate-400">kW</span>
+                      <span className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kW</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {/* 迷你趋势条 */}
@@ -484,11 +851,13 @@ export default function EnergyTwinDashboard({
                       'text-lg font-semibold tabular-nums',
                       dashboardData.left.realtimePower.trend === 'up' ? 'text-[#FF3333]' :
                         dashboardData.left.realtimePower.trend === 'down' ? 'text-[rgba(0,245,255,0.7)]' : 'text-white/50',
-                    )}>
+                    )}
+                    style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
                       {dashboardData.left.realtimePower.trend === 'up' ? '↑' : dashboardData.left.realtimePower.trend === 'down' ? '↓' : '→'}
                       {dashboardData.left.realtimePower.changePct > 0 ? '+' : ''}{dashboardData.left.realtimePower.changePct}%
                     </div>
-                    <div className="text-[10px] text-slate-500">vs 昨日同时刻</div>
+                    <div className="text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>vs 昨日同时刻</div>
                   </div>
                 </div>
               </GlassCard>
@@ -498,21 +867,23 @@ export default function EnergyTwinDashboard({
                 <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="能耗强度" />
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                    <div className="text-[10px] text-slate-400">总电耗</div>
-                    <div className="mt-1 font-semibold font-mono text-white/95 kpi-glow text-lg">{dashboardData.left.energyIntensity.todayKwh.toFixed(0)}</div>
-                    <div className="text-[10px] text-slate-400">kWh</div>
+                    <div className="text-[14px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>总电耗</div>
+                    <div className="mt-1 text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.left.energyIntensity.todayKwh.toFixed(0)}</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kWh</div>
                   </div>
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                    <div className="text-[10px] text-slate-400">能耗强度</div>
-                    <div className="mt-1 font-semibold font-mono text-white/95 kpi-glow text-lg">{dashboardData.left.energyIntensity.todayKwhPerM2.toFixed(2)}</div>
-                    <div className="text-[10px] text-slate-400">kWh/m²</div>
+                    <div className="text-[14px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>能耗强度</div>
+                    <div className="mt-1 text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.left.energyIntensity.todayKwhPerM2.toFixed(2)}</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kWh/m²</div>
                   </div>
                 </div>
                 <div className="mt-2 text-right">
                   <span className={cn(
-                    'text-xs',
+                    'text-[14px]',
                     dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? 'text-[#FF3333]' : 'text-[rgba(0,245,255,0.7)]',
-                  )}>
+                  )}
+                  style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                  >
                     {dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? '+' : ''}{dashboardData.left.energyIntensity.vsYesterdayPct}% vs 昨日
                   </span>
                 </div>
@@ -588,14 +959,14 @@ export default function EnergyTwinDashboard({
                   <div className="flex items-end justify-between">
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="font-mono text-2xl font-bold text-white/95 kpi-glow">
+                        <span className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>
                           <NumberFlow value={dashboardData.right.peakPower.value} format={{ maximumFractionDigits: 1 }} />
                         </span>
-                        <span className="text-xs text-slate-400">kW</span>
+                        <span className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kW</span>
                       </div>
                     </div>
                     <div className="rounded border border-white/8 bg-white/5 px-2 py-1">
-                      <span className="font-mono text-xs text-white/80">
+                      <span className="text-[12px] text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>
                         {String(dashboardData.right.peakPower.hour).padStart(2, '0')}:00
                       </span>
                     </div>
@@ -607,7 +978,7 @@ export default function EnergyTwinDashboard({
                       style={{ width: `${Math.min(100, (dashboardData.right.peakPower.value / Math.max(1, dashboardData.left.realtimePower.currentKw + dashboardData.right.peakPower.value)) * 100)}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[9px] text-slate-500">
+                  <div className="flex justify-between text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
                     <span>当前 {dashboardData.left.realtimePower.currentKw.toFixed(1)} kW</span>
                     <span>峰值 {dashboardData.right.peakPower.value.toFixed(1)} kW</span>
                   </div>
@@ -626,22 +997,22 @@ export default function EnergyTwinDashboard({
                           dashboardData.right.indoorEnv.indoorTemp > 27 ? 'bg-amber-400' : 'bg-emerald-400',
                       )} />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/95 kpi-glow">{dashboardData.right.indoorEnv.indoorTemp}°</div>
-                    <div className="text-[8px] text-slate-400">室内温度</div>
+                    <div className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.indoorTemp}°</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室内温度</div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.indoorHumidity}%</div>
-                    <div className="text-[8px] text-slate-400">室内湿度</div>
+                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.indoorHumidity}%</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室内湿度</div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.co2}</div>
-                    <div className="text-[8px] text-slate-400">CO₂</div>
+                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.co2}</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>CO₂</div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
@@ -650,15 +1021,15 @@ export default function EnergyTwinDashboard({
                         dashboardData.right.indoorEnv.outdoorTemp > 35 ? 'bg-[#FF3333]' : 'bg-white/30',
                       )} />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/95 kpi-glow">{dashboardData.right.indoorEnv.outdoorTemp}°</div>
-                    <div className="text-[8px] text-slate-400">室外温度</div>
+                    <div className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.outdoorTemp}°</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室外温度</div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.outdoorHumidity}%</div>
-                    <div className="text-[8px] text-slate-400">室外湿度</div>
+                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.outdoorHumidity}%</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室外湿度</div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
@@ -667,8 +1038,8 @@ export default function EnergyTwinDashboard({
                         dashboardData.right.indoorEnv.pm25 > 50 ? 'bg-[#FF3333]' : 'bg-white/25',
                       )} />
                     </div>
-                    <div className="font-semibold font-mono text-sm text-white/80">{dashboardData.right.indoorEnv.pm25}</div>
-                    <div className="text-[8px] text-slate-400">PM2.5</div>
+                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.pm25}</div>
+                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>PM2.5</div>
                   </div>
                 </div>
               </GlassCard>
@@ -678,19 +1049,19 @@ export default function EnergyTwinDashboard({
                 <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="电费估算" />
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2.5">
-                    <div className="text-[9px] uppercase tracking-[0.08em] text-slate-400">今日</div>
+                    <div className="text-[12px] uppercase tracking-[0.08em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>今日</div>
                     <div className="mt-1">
-                      <span className="text-xl font-bold font-mono text-white/95 kpi-glow">¥<NumberFlow value={dashboardData.right.cost.today} /></span>
+                      <span className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>¥<NumberFlow value={dashboardData.right.cost.today} /></span>
                     </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2.5">
-                    <div className="text-[9px] uppercase tracking-[0.08em] text-slate-400">本月</div>
+                    <div className="text-[12px] uppercase tracking-[0.08em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>本月</div>
                     <div className="mt-1">
-                      <span className="text-xl font-bold font-mono text-white/80">¥<NumberFlow value={dashboardData.right.cost.month} /></span>
+                      <span className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>¥<NumberFlow value={dashboardData.right.cost.month} /></span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-center text-[9px] text-slate-400">
+                <div className="mt-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-center text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
                   按 0.82 元/kWh 综合电价估算
                 </div>
               </GlassCard>
@@ -715,14 +1086,17 @@ export default function EnergyTwinDashboard({
       </section>
 
       {/* 能耗预测图（始终可见） */}
-      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[calc(100%-100px)] max-w-[1100px] -translate-x-1/2">
-          <div className="rounded border border-white/6 bg-[#061522]/60 p-2 backdrop-blur-sm">
+      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[min(44vw,680px)] min-w-[420px] -translate-x-1/2">
+          <div className="rounded border border-cyan-300/15 bg-[#061522]/72 p-2 shadow-[0_0_28px_rgba(0,212,255,0.12)] backdrop-blur-sm">
             <div className="mb-1 flex items-center gap-2">
               <Clock3 className="h-3 w-3 text-[#00F5FF]" />
-              <span className="font-semibold text-[10px] uppercase tracking-[0.12em] text-white/55">
+              <span
+                className="font-semibold text-[14px] uppercase tracking-[0.12em] text-white/55"
+                style={{ fontFamily: DASHBOARD_FONTS.cn }}
+              >
                 未来 24h 能耗预测
               </span>
-              <span className="ml-auto text-[9px] text-white/30">
+              <span className="ml-auto text-[12px] text-white/30" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
                 {filters.zoneId ? '房间级' : filters.levelId ? '楼层级' : '整栋级'}
               </span>
             </div>
@@ -751,10 +1125,18 @@ export default function EnergyTwinDashboard({
 
       <div className="absolute left-1/2 top-[104px] z-30 w-72 -translate-x-1/2 space-y-2">
         {energyLoading ? (
-          <div className="glass-panel pointer-events-auto rounded-lg px-3 py-2 text-xs text-cyan-100">实时数据同步中...</div>
+          <div
+            className="glass-panel pointer-events-auto rounded-lg px-3 py-2 text-[12px] text-cyan-100"
+            style={{ fontFamily: DASHBOARD_FONTS.cn }}
+          >
+            实时数据同步中...
+          </div>
         ) : null}
         {energyError ? (
-          <div className="glass-panel pointer-events-auto rounded-lg border-red-400/35 px-3 py-2 text-xs text-red-200">
+          <div
+            className="glass-panel pointer-events-auto rounded-lg border-red-400/35 px-3 py-2 text-[12px] text-red-200"
+            style={{ fontFamily: DASHBOARD_FONTS.cn }}
+          >
             数据异常: {energyError}
           </div>
         ) : null}
