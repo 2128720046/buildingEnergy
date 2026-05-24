@@ -40,7 +40,7 @@ export const ScanRenderer = ({ node }: { node: ScanNode }) => {
       visible={showScans}
     >
       {resolvedUrl && (
-        <Suspense>
+        <Suspense fallback={<ScanLoadingPlaceholder />}>
           <ScanModel opacity={node.opacity} url={resolvedUrl} />
         </Suspense>
       )}
@@ -48,6 +48,17 @@ export const ScanRenderer = ({ node }: { node: ScanNode }) => {
     </group>
   )
 }
+
+// ── Invisible placeholder while GLB loads ───────────────────────────────────
+
+const ScanLoadingPlaceholder = memo(() => {
+  return (
+    <mesh visible={false}>
+      <boxGeometry args={[1, 1, 1]} />
+    </mesh>
+  )
+})
+ScanLoadingPlaceholder.displayName = 'ScanLoadingPlaceholder'
 
 const ScanModel = memo(({ url, opacity }: { url: string; opacity: number }) => {
   const gltf = useGLTFKTX2(url) as any

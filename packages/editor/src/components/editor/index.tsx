@@ -11,6 +11,7 @@ import { useViewer, Viewer } from '@pascal-app/viewer'
 import {
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
+  startTransition,
   useCallback,
   useEffect,
   useRef,
@@ -657,12 +658,23 @@ export default function Editor({
       try {
         const sceneGraph = onLoad ? await onLoad() : loadSceneFromLocalStorage()
         if (!cancelled) {
-          applySceneGraphToEditor(sceneGraph)
+          // Use startTransition to keep the UI responsive during scene switch.
+          // The scene graph application can be expensive (many nodes), so React
+          // will yield to more urgent updates like paint/layout.
+          startTransition(() => {
+            applySceneGraphToEditor(sceneGraph)
+          })
         }
       } catch {
-        if (!cancelled) applySceneGraphToEditor(null)
+        if (!cancelled) {
+          startTransition(() => {
+            applySceneGraphToEditor(null)
+          })
+        }
       } finally {
         if (!cancelled) {
+          // Delay clearing loading state slightly so the new scene has a chance
+          // to render its first frame before we remove the loader.
           setIsSceneLoading(false)
           setHasLoadedInitialScene(true)
           requestAnimationFrame(() => {

@@ -47,6 +47,36 @@ import SmartOperationsWorkspace from '@/features/operations/components/smart-ope
 import type { OperationsTask } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
 
+/**
+ * 预加载场景中所有 scan/guide 节点的资产 URL，使文件提前进入浏览器缓存。
+ * 当渲染器挂载时可直接从缓存读取，避免 GLB 文件加载延迟导致的卡顿感。
+ */
+function preloadSceneAssets(scene: SceneGraph): void {
+  if (!scene?.nodes) return
+
+  const urls = new Set<string>()
+  for (const node of Object.values(scene.nodes)) {
+    const url = (node as any)?.url
+    if (typeof url === 'string' && url.length > 0 && !url.startsWith('data:')) {
+      urls.add(url)
+    }
+  }
+
+  // 使用 fetch + link preload 同时预热 HTTP 缓存和浏览器缓存
+  for (const url of urls) {
+    // 对绝对 HTTP URL 使用 fetch 预热
+    if (url.startsWith('http')) {
+      fetch(url, { cache: 'force-cache', mode: 'cors' }).catch(() => {})
+    }
+    // 对 asset:// URL 通过 loadAssetUrl 预热 IndexedDB
+    if (url.startsWith('asset://')) {
+      import('@pascal-app/core').then(({ loadAssetUrl }) => {
+        loadAssetUrl(url).catch(() => {})
+      })
+    }
+  }
+}
+
 const DEFAULT_PROJECT_ID = 'building'
 const ACTIVE_WORKSPACE_STORAGE_KEY = 'building-energy:active-workspace'
 const HOST_WORKSPACE_VALUES = new Set<HostWorkspace>([
@@ -512,7 +542,15 @@ export default function HostWorkbench({
   const selectedComponentName =
     (selection?.selectedNodes[0]?.name as string | undefined) ?? selectedComponentId ?? '未选中构件'
 
-  const handleLoad = useCallback(async () => apiClient.loadScene(), [apiClient])
+  const handleLoad = useCallback(async () => {
+    const scene = await apiClient.loadScene()
+    if (scene) {
+      // 预加载场景中的所有 scan 模型资产，使 GLB 文件提前进入浏览器缓存。
+      // 渲染器挂载时即可直接从缓存读取，避免加载延迟导致的卡顿。
+      preloadSceneAssets(scene)
+    }
+    return scene
+  }, [apiClient])
   const handleSave = useCallback(
     async (scene: SceneGraph) => apiClient.saveScene(scene),
     [apiClient],

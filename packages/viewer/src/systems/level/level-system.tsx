@@ -37,7 +37,8 @@ export const LevelSystem = () => {
       const explodedExtra = levelMode === 'exploded' ? index * EXPLODED_GAP : 0
       const targetY = baseY + explodedExtra
 
-      obj.position.y = lerp(obj.position.y, targetY, delta * 12) // Smoothly animate to new Y position
+      const t = Math.min(delta * 12, 1)
+      obj.position.y = lerp(obj.position.y, targetY, t) // Smoothly animate to new Y position
       obj.visible = levelMode !== 'solo' || level?.id === selectedLevel || !selectedLevel
 
       cumulativeY += getLevelHeight(levelId, nodes)
