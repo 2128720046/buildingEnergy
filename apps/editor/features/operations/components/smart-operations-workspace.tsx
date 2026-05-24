@@ -4,15 +4,18 @@ import NumberFlow from '@number-flow/react'
 import {
   AlertTriangle,
   Bot,
+  ChevronDown,
   ClipboardList,
+  CloudSun,
   Cpu,
+  Filter,
   Lightbulb,
   Radar,
   Send,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
-import type { CSSProperties, Dispatch, ReactNode, SetStateAction } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BevelCard, VideoBackground } from '@/features/analytics/components/dashboard-primitives'
 import { DASHBOARD_COLORS, DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
@@ -21,7 +24,6 @@ import {
   DashboardTooltipLayer,
   tooltipAttrs,
 } from '@/features/analytics/components/dashboard-tooltip'
-import { INITIAL_GLOBAL_STATS } from '@/features/analytics/lib/global-stats'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
@@ -36,69 +38,182 @@ import { cn } from '@/lib/utils'
 type Severity = OperationsAlert['severity']
 type ToastTone = 'cyan' | 'emerald' | 'rose'
 
-interface OperationsToast {
-  body: string
-  id: number
-  title: string
-  tone: ToastTone
-}
-
 interface LiveAlert extends OperationsAlert {
-  createdAt: string
-  deltaText: string
-  duration: string
-  historyCount: number
-  inserted?: boolean
   linkedTaskId?: string
-  loadText: string
-  locationText: string
-  similarCount: number
 }
 
 interface LiveTask extends OperationsTask {
   code: string
-  createdAt: string
-  estimate: string
   linkedAlertId?: string
   progress: number
+  status: string
   steps: string[]
   tools: string
 }
 
 interface AgentMessage {
   content: string
+  followUps?: string[]
   id: string
-  proactive?: boolean
   role: 'assistant' | 'user'
   typing?: boolean
 }
 
-const QUICK_PROMPTS = [
-  '总结当前能耗情况',
-  '峰值出现在什么时段？',
-  '给我三条优化建议',
-  '列出当前高能耗对象',
-]
-
-const AGENT_REPLIES: Record<string, string> = {
-  总结当前能耗情况:
-    '当前运维侧重点集中在 BLDG-APT-3F 新风机组。近 1 小时负荷高于基线约 34%，建议优先派单核查过滤器压差、送回风温差和阀门开度。',
-  '峰值出现在什么时段？':
-    '峰值主要出现在 14:00-16:00，与人员回流和暖通调节叠加有关。建议把巡检窗口前移到 13:30，并在峰值前复核新风策略。',
-  给我三条优化建议:
-    '1. 将 BLDG-APT 峰值时段加入优先巡检策略。\n2. 把高负荷告警自动关联到抢修工单。\n3. 对照明和排风回路增加夜间闭锁复核。',
-  列出当前高能耗对象:
-    '当前高能耗对象包括 BLDG-APT-3F 新风机组、BLDG-APT-2F 公区照明回路、BLDG-APT-B1 车库排风机。建议先处理 3F 新风机组。',
+interface AgentAnswer {
+  followUps: string[]
+  text: string
 }
 
-const PROACTIVE_INSIGHTS = [
-  '检测到 BLDG-APT-3F 新风机组负荷持续走高，建议派单复核。',
-  '过去 1 小时新增告警 2 条，整体健康度下降 1.2 分。',
-  '建议将巡检策略调整为峰值时段优先，并保留夜间照明复核。',
+const QUICK_PROMPTS = [
+  '总结当前能耗情况',
+  '峰值出现在什么时段?',
+  '给我三条优化建议',
+  '列出当前高能耗设备',
 ]
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value))
+const DEFAULT_AGENT_QUESTION = '总结当前能耗情况'
+
+const DEFAULT_AGENT_ANSWER = `【问题理解】
+快速掌握公寓楼当前整体能耗状况与异常点。
+
+【核心结论】
+整体能耗在合理区间,但有 2 个重点异常:BLDG-APT-3F 新风机组负荷
+高于基线 29.8%,需优先处置;2F 公区照明夜间未按计划闭锁,产生
+16.4% 的无效负荷。
+
+【分析依据】
+● 数据依据:近 1 小时新风机组负荷 112.4 kWh(基线 86.6 kWh);
+  2F 公区照明夜间负荷 78.8 kWh(基线 67.7 kWh)。
+● 知识依据:基线取自过去 30 天同时段加权平均。
+
+【原因分析】
+● 新风机组:阀门开度异常或过滤器压差超标,导致风机长时间高频运转
+  (可能性高)。
+● 公区照明:人体感应阈值过低或定时控制策略失效,触发夜间常亮
+  (可能性中)。
+
+【排查与优化建议】
+● 排查步骤:
+  1. 现场核查 3F 新风机组过滤器压差与送回风温差
+  2. 调取 2F 照明回路 21:00–06:00 控制日志
+● 优化措施:
+  - 短期:推进工单 WO-BUILDING-031,今晚前完成新风机组复核;
+    调整 2F 公区照明定时策略至 22:00 强制闭锁
+  - 中长期:为新风机组增配振动传感器,接入预测性维护模型;
+    统一公区照明人体感应阈值标准`
+
+const ANSWER_BANK: Record<string, AgentAnswer> = {
+  总结当前能耗情况: {
+    followUps: ['新风机组的能耗趋势怎么样?', '怎么排查照明回路夜间未闭锁?'],
+    text: `【问题理解】
+快速复盘当前运行负荷和未闭环异常。
+【核心结论】
+站点健康度 97 分,活跃告警 5 条。
+当前优先级最高的是 3F 新风机组。
+【分析依据】
+● 新风机组当前 112.4 kWh,高于基线 29.8%。
+● 2F 公区照明当前 78.8 kWh,高于基线 16.4%。
+【原因分析】
+● 暖通侧更像过滤器压差或阀门开度问题。
+● 照明侧更像夜间闭锁策略未生效。
+【排查与优化建议】
+● 今天先推进 WO-BUILDING-031。
+● 同步复核 WO-BUILDING-032 的夜间控制日志。
+● B1 水泵和 5F 空调机组纳入当班巡检清单。`,
+  },
+  '峰值出现在什么时段?': {
+    followUps: ['新风机组的能耗趋势怎么样?', '列出当前高能耗设备'],
+    text: `【问题理解】
+定位今天能耗峰值的时间窗口和主因设备。
+【核心结论】
+峰值集中在 19:00-20:00。
+峰值主要由 3F 新风机组和 2F 公区照明叠加造成。
+【分析依据】
+● 19:42 新风机组负荷达到 112.4 kWh。
+● 19:18 公区照明负荷达到 78.8 kWh。
+● 两项异常都高于过去 30 天同时段基线。
+【原因分析】
+● 新风机组可能在晚高峰后仍保持高频运行。
+● 照明回路未闭锁扩大了夜间底负荷。
+【排查与优化建议】
+● 先核对 18:30-20:30 的设备启停记录。
+● 检查新风阀门开度是否自动回落。
+● 将 2F 照明 22:00 强制闭锁策略今晚生效。`,
+  },
+  给我三条优化建议: {
+    followUps: ['怎么排查照明回路夜间未闭锁?', '列出当前高能耗设备'],
+    text: `【问题理解】
+给出可执行、能落到班组的优化动作。
+【核心结论】
+建议先做 3 项:新风复核、照明闭锁、水泵阈值校准。
+这些动作能覆盖当前主要异常来源。
+【分析依据】
+● 高优告警来自 3F 新风机组。
+● 中优告警中有照明、水泵、空调机组三类。
+● 待处理工单正好 2 条,均未超期。
+【原因分析】
+● 当前问题不是单点仪表误差,而是策略和设备状态共同偏离。
+【排查与优化建议】
+● 推进 WO-BUILDING-031 至 100%,完成过滤器压差复核。
+● 推进 WO-BUILDING-032,今晚核对照明闭锁日志。
+● 本周内校准 B1 水泵压差报警阈值。`,
+  },
+  列出当前高能耗设备: {
+    followUps: ['新风机组的能耗趋势怎么样?', '峰值出现在什么时段?'],
+    text: `【问题理解】
+列出当前最影响能耗的设备和处理顺序。
+【核心结论】
+当前高能耗设备有 4 类。
+首位是 BLDG-APT-3F 新风机组。
+【分析依据】
+● 3F 新风机组:112.4 kWh,+29.8%。
+● 2F 公区照明回路:78.8 kWh,+16.4%。
+● 5F 空调机组:回风温度 28.6°C,+3.2°C。
+● B1 水泵:11 次/小时,启停频次偏高。
+【原因分析】
+● 暖通负荷和照明底负荷共同抬高晚间总负荷。
+【排查与优化建议】
+● 先处理新风机组,再复核照明闭锁。
+● 空调回风和水泵启停纳入当班复核。`,
+  },
+  '新风机组的能耗趋势怎么样?': {
+    followUps: ['峰值出现在什么时段?', '给我三条优化建议'],
+    text: `【问题理解】
+判断 3F 新风机组是短时波动还是持续偏高。
+【核心结论】
+近 1 小时呈持续高位,不是单个采样点异常。
+当前 112.4 kWh,较 86.6 kWh 基线高 29.8%。
+【分析依据】
+● 告警发生在 19:42,状态为处理中。
+● 工单 WO-BUILDING-031 已推进到 65%。
+● 偏差幅度超过当班复核阈值。
+【原因分析】
+● 过滤器压差超标会抬高风机功率。
+● 阀门开度异常会导致系统持续补风。
+【排查与优化建议】
+● 现场复核过滤器压差、送回风温差和电流。
+● 若压差超标,本周内完成过滤器更换。
+● 复核后观察 30 分钟负荷是否回落。`,
+  },
+  '怎么排查照明回路夜间未闭锁?': {
+    followUps: ['列出当前高能耗设备', '给我三条优化建议'],
+    text: `【问题理解】
+给出 2F 公区照明夜间常亮的排查路径。
+【核心结论】
+优先检查时控策略,再检查人体感应阈值。
+当前负荷 78.8 kWh,较基线高 16.4%。
+【分析依据】
+● 告警发生在 19:18,状态为已派单。
+● 关联工单 WO-BUILDING-032 进度 30%。
+● 异常位置为 Level 2 公区走廊。
+【原因分析】
+● 定时闭锁未下发会导致夜间常亮。
+● 感应阈值过低会频繁触发照明保持。
+【排查与优化建议】
+● 调取 21:00-06:00 控制日志。
+● 抽查网关策略是否覆盖该回路。
+● 今晚将 22:00 强制闭锁策略先行生效。`,
+  },
 }
 
 function randomBetween(min: number, max: number) {
@@ -107,16 +222,6 @@ function randomBetween(min: number, max: number) {
 
 function randomInt(min: number, max: number) {
   return Math.floor(randomBetween(min, max + 1))
-}
-
-function stableRatio(seed: string, min: number, max: number) {
-  let hash = 0
-
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) % 9973
-  }
-
-  return min + (hash / 9973) * (max - min)
 }
 
 function parseNumber(value: string | undefined, fallback: number) {
@@ -146,6 +251,15 @@ function formatClock(date: Date) {
   }).format(date)
 }
 
+function formatClockWithSeconds(date: Date) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    hour12: false,
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(date)
+}
+
 function severityTone(severity: Severity): 'amber' | 'emerald' | 'rose' {
   if (severity === 'high') return 'rose'
   if (severity === 'medium') return 'amber'
@@ -153,9 +267,9 @@ function severityTone(severity: Severity): 'amber' | 'emerald' | 'rose' {
 }
 
 function severityLabel(severity: Severity) {
-  if (severity === 'high') return '高优先级'
-  if (severity === 'medium') return '中优先级'
-  return '低优先级'
+  if (severity === 'high') return '高优'
+  if (severity === 'medium') return '中优'
+  return '低优'
 }
 
 function severityColor(severity: Severity) {
@@ -164,120 +278,26 @@ function severityColor(severity: Severity) {
   return DASHBOARD_COLORS.emerald
 }
 
-function splitAlertDetail(detail: string) {
-  const [location = 'BLDG-APT / 设备区域', load = detail] = detail.split(' · ')
-  const deltaMatch = detail.match(/较基线\s*([+-]?\d+(?:\.\d+)?%)/)
-
-  return {
-    deltaText: deltaMatch?.[1] ?? '+12.0%',
-    loadText: load.replace(/[（）]/g, ''),
-    locationText: location,
+function taskSteps(task: OperationsTask) {
+  if (task.code === 'WO-BUILDING-031') {
+    return ['现场到达', '读取压差与电流', '复核送回风温差', '回填处理记录']
   }
+
+  return ['调取控制日志', '复核感应阈值', '更新时控策略', '提交复核结论']
 }
 
-function normalizeBuildingLabel(title: string) {
-  return title
-    .replace('公寓楼 3F', 'BLDG-APT-3F')
-    .replace('公寓楼 2F', 'BLDG-APT-2F')
-    .replace('公寓楼 B1', 'BLDG-APT-B1')
+function taskTools(task: OperationsTask) {
+  return task.code === 'WO-BUILDING-031'
+    ? '钳形表 / 压差计 / 温度探针'
+    : '网关面板 / 巡检终端'
 }
 
-function normalizeOperationsCopy(copy: string) {
-  return normalizeBuildingLabel(copy)
-    .replace('公寓楼-设备样本', 'BLDG-APT-设备样本')
-    .replace('公寓楼', 'BLDG-APT')
+function taskCode(task: OperationsTask, index: number) {
+  return task.code ?? `WO-BUILDING-${String(31 + index).padStart(3, '0')}`
 }
 
-function createLiveAlert(alert: OperationsAlert, index: number, taskId?: string): LiveAlert {
-  const detail = splitAlertDetail(alert.detail)
-  const minutesAgo = 8 + index * 13
-
-  return {
-    ...alert,
-    ...detail,
-    createdAt: formatClock(new Date(Date.now() - minutesAgo * 60_000)),
-    duration: `${minutesAgo} 分钟`,
-    historyCount: 2 + index,
-    linkedTaskId: taskId,
-    similarCount: 1 + index,
-    title: normalizeBuildingLabel(alert.title),
-  }
-}
-
-function createSyntheticAlert(projectId: string, linkedTaskId?: string): LiveAlert {
-  const templates: Array<Omit<LiveAlert, 'createdAt' | 'duration' | 'id' | 'inserted'>> = [
-    {
-      detail: 'Level 3 / 西侧设备间 · 当前负荷 112.4 kWh（较基线 +29.8%）',
-      deltaText: '+29.8%',
-      historyCount: 4,
-      linkedTaskId,
-      loadText: '当前负荷 112.4 kWh 较基线 +29.8%',
-      locationText: 'Level 3 / 西侧设备间',
-      recommendation: '建议派发暖通巡检，核查新风阀开度与过滤器压差。',
-      severity: 'high',
-      similarCount: 2,
-      title: 'BLDG-APT-3F 新风机组 负荷偏高',
-    },
-    {
-      detail: 'Level 2 / 公区走廊 · 当前负荷 78.8 kWh（较基线 +16.4%）',
-      deltaText: '+16.4%',
-      historyCount: 3,
-      linkedTaskId,
-      loadText: '当前负荷 78.8 kWh 较基线 +16.4%',
-      locationText: 'Level 2 / 公区走廊',
-      recommendation: '建议复核照明时控策略，确认人体感应器阈值。',
-      severity: 'medium',
-      similarCount: 1,
-      title: 'BLDG-APT-2F 公区照明回路 夜间未闭锁',
-    },
-  ]
-  const template = templates[randomInt(0, templates.length - 1)]!
-
-  return {
-    ...template,
-    createdAt: formatClock(new Date()),
-    duration: '刚刚',
-    id: `live-${projectId}-${Date.now()}`,
-    inserted: true,
-  }
-}
-
-function extractTaskCode(task: OperationsTask, index: number, projectId: string) {
-  return task.title.match(/WO-[A-Z0-9-]+-\w+/)?.[0] ?? `WO-${projectId.toUpperCase()}-${31 + index}`
-}
-
-function cleanTaskTitle(task: OperationsTask) {
-  return task.title.replace(/^工单\s*WO-[A-Z0-9-]+-\w+[:：]\s*/, '')
-}
-
-function createLiveTask(
-  task: OperationsTask,
-  index: number,
-  projectId: string,
-  linkedAlertId?: string,
-): LiveTask {
-  return {
-    ...task,
-    code: extractTaskCode(task, index, projectId),
-    createdAt: formatClock(new Date(Date.now() - (36 + index * 18) * 60_000)),
-    estimate: index === 0 ? '45 分钟' : '70 分钟',
-    linkedAlertId,
-    progress: clamp(46 + index * 17, 8, 88),
-    steps:
-      index === 0
-        ? ['到场确认', '读取电流与压差', '复核送回风温差', '回填闭环记录']
-        : ['远程复核策略', '现场抽查设备', '更新时控模板', '提交复盘'],
-    title: cleanTaskTitle(task),
-    tools: index === 0 ? '钳形表 / 压差计 / 温度探针' : '网关面板 / 巡检终端',
-  }
-}
-
-function pushToast(
-  setToasts: Dispatch<SetStateAction<OperationsToast[]>>,
-  toast: Omit<OperationsToast, 'id'>,
-) {
-  const id = Date.now() + randomInt(0, 999)
-  setToasts((current) => [{ ...toast, id }, ...current].slice(0, 3))
+function metricValue(metrics: Array<{ label: string; value: string }>, label: string, fallback: number) {
+  return parseNumber(metrics.find((metric) => metric.label === label)?.value, fallback)
 }
 
 function AnimatedNumber({
@@ -293,28 +313,8 @@ function AnimatedNumber({
   suffix?: string
   value: number
 }) {
-  const [flash, setFlash] = useState<'down' | 'up' | null>(null)
-  const [deltaLabel, setDeltaLabel] = useState<string | null>(null)
-  const [previous, setPrevious] = useState(value)
-
-  useEffect(() => {
-    if (value === previous) return
-
-    const delta = value - previous
-    setFlash(delta > 0 ? 'up' : 'down')
-    setDeltaLabel(`${delta > 0 ? '↑+' : '↓'}${Math.abs(delta).toFixed(decimals > 0 ? 1 : 0)}`)
-    setPrevious(value)
-
-    const flashTimer = window.setTimeout(() => setFlash(null), 560)
-    const deltaTimer = window.setTimeout(() => setDeltaLabel(null), 1000)
-    return () => {
-      window.clearTimeout(flashTimer)
-      window.clearTimeout(deltaTimer)
-    }
-  }, [decimals, previous, value])
-
   return (
-    <span className={cn('live-number', className)} data-flash={flash ?? undefined} style={style}>
+    <span className={cn('live-number', className)} style={style}>
       <NumberFlow
         format={{
           maximumFractionDigits: decimals,
@@ -323,65 +323,7 @@ function AnimatedNumber({
         value={value}
       />
       {suffix ? <span className="live-number-unit">{suffix}</span> : null}
-      {deltaLabel ? (
-        <span className="live-number-delta" data-tone={flash ?? undefined}>
-          {deltaLabel}
-        </span>
-      ) : null}
     </span>
-  )
-}
-
-function MetricMiniTrend({ seed }: { seed: string }) {
-  const [points, setPoints] = useState<number[]>(() =>
-    Array.from({ length: 10 }, (_, index) => stableRatio(`${seed}-${index}`, 0.18, 0.86)),
-  )
-
-  useIntervalTick(() => {
-    setPoints((current) => [
-      ...current.slice(1),
-      clamp(current[current.length - 1]! + randomBetween(-0.22, 0.22), 0.12, 0.9),
-    ])
-  }, 2000)
-
-  const path = points
-    .map((value, index) => {
-      const x = index * 10
-      const y = 22 - value * 18
-      return `${index === 0 ? 'M' : 'L'}${x},${y}`
-    })
-    .join(' ')
-
-  return (
-    <svg
-      aria-hidden="true"
-      className="metric-mini-trend mt-2 h-6 w-full overflow-visible"
-      preserveAspectRatio="none"
-      viewBox="0 0 90 24"
-    >
-      <path
-        d={path}
-        fill="none"
-        stroke="rgba(122,247,255,0.9)"
-        strokeLinecap="round"
-        strokeWidth="2"
-      />
-      <path d={`${path} L90,24 L0,24 Z`} fill="rgba(0,212,255,0.12)" stroke="none" />
-      <circle cx="90" cy={22 - points[points.length - 1]! * 18} fill="#7AF7FF" r="2.2" />
-    </svg>
-  )
-}
-
-function OperationsToastStack({ toasts }: { toasts: OperationsToast[] }) {
-  return (
-    <div className="dashboard-toast-stack fixed right-5 top-[138px] z-40 flex w-[330px] flex-col gap-2">
-      {toasts.map((toast) => (
-        <div className="dashboard-toast" data-tone={toast.tone} key={toast.id}>
-          <div className="dashboard-toast-title">{toast.title}</div>
-          <div className="dashboard-toast-body">{toast.body}</div>
-        </div>
-      ))}
-    </div>
   )
 }
 
@@ -400,7 +342,7 @@ function PanelHeader({
         <span className="operations-panel-icon shrink-0">{icon}</span>
         <div className="min-w-0">
           <h3
-            className="text-[17px] font-black leading-tight text-cyan-50"
+            className="text-[22px] font-black leading-tight text-cyan-50"
             style={{ fontFamily: DASHBOARD_FONTS.cn }}
           >
             <span
@@ -469,7 +411,6 @@ function OperationsKpiCard({
   icon,
   label,
   numeric,
-  seed,
   suffix,
   textValue,
   tone,
@@ -479,7 +420,6 @@ function OperationsKpiCard({
   icon: ReactNode
   label: string
   numeric?: number
-  seed: string
   suffix?: string
   textValue?: string
   tone: 'amber' | 'cyan' | 'emerald' | 'rose'
@@ -487,15 +427,15 @@ function OperationsKpiCard({
 }) {
   return (
     <BevelCard
-      className="metric-card-interactive operations-kpi-card min-h-[142px] px-5 py-4"
+      className="metric-card-interactive operations-kpi-card min-h-[158px] px-6 py-5"
       size="kpi"
       {...tooltipAttrs(tooltip)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[15px] font-black tracking-[0.04em] text-cyan-100/72">{label}</div>
+          <div className="operations-kpi-label font-black tracking-[0.04em] text-cyan-100/76">{label}</div>
           <div
-            className="mt-3 text-[36px] font-black leading-none text-cyan-50"
+            className="operations-kpi-value mt-3 font-black leading-none text-cyan-50"
             data-tone={tone}
             style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
           >
@@ -510,8 +450,7 @@ function OperationsKpiCard({
           {icon}
         </span>
       </div>
-      <div className="mt-2 text-[13px] font-semibold text-cyan-100/60">{detail}</div>
-      <MetricMiniTrend seed={seed} />
+      <div className="operations-kpi-detail mt-4 font-semibold text-cyan-100/68">{detail}</div>
     </BevelCard>
   )
 }
@@ -525,40 +464,41 @@ function FocusSummary({
   onFocusAlert: (id: string) => void
   summary: string
 }) {
-  const keyword = alert?.title.replace(' 负荷偏高', '') ?? 'BLDG-APT-3F 新风机组'
-  const normalizedSummary = normalizeOperationsCopy(summary)
-  const hasKeyword = normalizedSummary.includes(keyword)
-  const [before = '', ...rest] = hasKeyword ? normalizedSummary.split(keyword) : []
-  const after = rest.join(keyword)
+  const keyword = alert?.title ?? 'BLDG-APT-3F 新风机组'
+  const [before = summary, after = ''] = summary.includes(keyword)
+    ? (summary.split(keyword) as [string, string])
+    : [summary, '']
 
   return (
     <OperationsPanel
       icon={<Sparkles className="h-5 w-5" strokeWidth={1.8} />}
-      title="运维焦点建议"
+      title="优先事项"
       contentClassName="flex-1"
     >
       <div
-        className="operations-focus-copy relative min-h-[96px] border border-cyan-300/24 bg-cyan-950/20 px-4 py-4 text-[17px] leading-8 text-cyan-50/86"
+        className="operations-focus-copy relative min-h-[132px] border border-cyan-300/24 bg-cyan-950/20 px-5 py-5 text-cyan-50/88"
         {...tooltipAttrs({
           rows: [
-            { label: '建议来源', value: '告警优先级 / 工单状态 / 峰值负荷' },
-            { label: '联动对象', value: keyword },
-            { label: '点击动作', value: '高亮告警中心对应项' },
+            { label: '来源', value: '告警优先级 / 工单状态 / 负荷偏差' },
+            { label: '关联设备', value: keyword },
+            { label: '当前工单', value: 'WO-BUILDING-031' },
           ],
-          title: '运维焦点建议',
+          title: '优先事项',
         })}
       >
         <span className="operations-focus-rail" />
         <span className="operations-typewriter">
-          {hasKeyword ? before : '当前最值得优先处理的是 '}
-          <button
-            className="operations-focus-keyword"
-            onClick={() => alert && onFocusAlert(alert.id)}
-            type="button"
-          >
-            {keyword}
-          </button>
-          {hasKeyword ? after : '，建议把它作为智慧运维的首个告警闭环样板。'}
+          {before}
+          {summary.includes(keyword) ? (
+            <button
+              className="operations-focus-keyword"
+              onClick={() => alert && onFocusAlert(alert.id)}
+              type="button"
+            >
+              {keyword}
+            </button>
+          ) : null}
+          {after}
         </span>
       </div>
     </OperationsPanel>
@@ -582,71 +522,55 @@ function AlertCard({
     <article
       className="operations-alert-card group relative overflow-hidden border bg-cyan-950/20 p-4"
       data-highlighted={highlighted ? 'true' : undefined}
-      data-new={alert.inserted || pulse ? 'true' : undefined}
+      data-new={pulse ? 'true' : undefined}
       data-severity={alert.severity}
       onPointerEnter={() => onHighlightTask(alert.linkedTaskId ?? null)}
       onPointerLeave={() => onHighlightTask(null)}
       {...tooltipAttrs({
-        actions: ['立即派单', '忽略'],
+        actions: ['查看详情'],
         rows: [
-          { label: '首次触发', value: alert.createdAt },
-          {
-            label: '持续时长',
-            tone: alert.severity === 'high' ? 'rose' : 'cyan',
-            value: alert.duration,
-          },
-          { label: '历史发生', value: `${alert.historyCount} 次` },
-          { label: '同设备类似告警', value: `${alert.similarCount} 条` },
-          { label: '关联工单', value: alert.linkedTaskId ? '已关联' : '待派单' },
+          { label: '设备位置', value: alert.location },
+          { label: '当前值', value: alert.currentValue },
+          { label: '基线偏差', tone, value: alert.baselineDelta },
+          { label: '发生时间', value: alert.occurredAt },
+          { label: '状态', value: alert.status },
+          { label: '关联工单', value: alert.linkedTaskId ?? '未关联' },
         ],
         title: alert.title,
       })}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h4 className="text-[17px] font-black leading-6 text-cyan-50">{alert.title}</h4>
-          <div className="mt-2 text-[13px] font-semibold leading-5 text-cyan-100/62">
-            {alert.locationText} · {alert.loadText}{' '}
-            <span className="operations-delta" data-tone={tone}>
-              ↑ {alert.deltaText}
+          <h4 className="operations-card-title font-black text-cyan-50">{alert.title}</h4>
+          <div className="operations-alert-detail-grid mt-3">
+            <span>
+              <b>位置</b>
+              {alert.location}
+            </span>
+            <span>
+              <b>当前值</b>
+              {alert.currentValue}
+            </span>
+            <span>
+              <b>基线偏差</b>
+              {alert.baselineDelta}
+            </span>
+            <span>
+              <b>发生时间</b>
+              {alert.occurredAt}
             </span>
           </div>
         </div>
-        <StatusBadge
-          tone={tone}
-          tooltip={{
-            rows: [
-              {
-                label: '定义',
-                value:
-                  alert.severity === 'high'
-                    ? '需 30 分钟内响应'
-                    : alert.severity === 'medium'
-                      ? '当班复核'
-                      : '纳入巡检观察',
-              },
-              {
-                label: 'SLA',
-                value:
-                  alert.severity === 'high'
-                    ? '30 分钟'
-                    : alert.severity === 'medium'
-                      ? '4 小时'
-                      : '24 小时',
-              },
-            ],
-            title: severityLabel(alert.severity),
-          }}
-        >
-          {severityLabel(alert.severity)}
-        </StatusBadge>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <StatusBadge tone={tone}>{severityLabel(alert.severity)}</StatusBadge>
+          <StatusBadge tone={alert.status === '处理中' ? 'rose' : 'cyan'}>{alert.status}</StatusBadge>
+        </div>
       </div>
-      <div className="mt-3 border-l border-dashed border-cyan-300/55 bg-cyan-950/24 px-3 py-2 text-[13px] leading-6 text-cyan-50/78">
+      <div className="operations-alert-recommendation mt-4 border-l border-dashed border-cyan-300/45 bg-cyan-950/20 px-4 py-3 text-cyan-50/82">
         {alert.recommendation}
       </div>
       <div className="operations-alert-actions mt-3 flex justify-end gap-2">
-        <button type="button">立即派单</button>
-        <button type="button">忽略</button>
+        <button type="button">查看详情</button>
       </div>
     </article>
   )
@@ -666,7 +590,7 @@ function AlertCenter({
   return (
     <OperationsPanel
       icon={<AlertTriangle className="h-5 w-5" strokeWidth={1.8} />}
-      rightSlot={<StatusBadge tone="rose">{alerts.length} 项活跃</StatusBadge>}
+      rightSlot={<StatusBadge tone="rose">5 条活跃</StatusBadge>}
       title="告警中心"
     >
       <div className="operations-alert-list space-y-3">
@@ -694,12 +618,11 @@ function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask 
       {...tooltipAttrs({
         actions: ['打开工单', '追加记录'],
         rows: [
-          { label: '创建时间', value: task.createdAt },
           { label: '关联告警', value: task.linkedAlertId ? '已绑定' : '未绑定' },
           { label: '处理步骤', value: task.steps.join(' / ') },
-          { label: '负责人联系方式', value: `${task.assignee} 值班终端` },
+          { label: '责任人', value: task.assignee },
           { label: '工具材料', value: task.tools },
-          { label: '预计耗时', value: task.estimate },
+          { label: '当前状态', value: task.status },
         ],
         title: task.code,
       })}
@@ -712,18 +635,18 @@ function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask 
           >
             {task.code}
           </div>
-          <h4 className="mt-2 text-[16px] font-black leading-6 text-cyan-50">{task.title}</h4>
+          <h4 className="operations-card-title mt-2 font-black text-cyan-50">{task.title}</h4>
           <div className="mt-3 flex flex-wrap gap-2">
             <StatusBadge
               tooltip={{
                 rows: [
-                  { label: '值班组', value: task.assignee },
-                  { label: '状态', value: '处理中' },
+                  { label: '责任人', value: task.assignee },
+                  { label: '状态', value: task.status },
                 ],
-                title: '负责人',
+                title: '责任信息',
               }}
             >
-              负责人 {task.assignee}
+              责任人 {task.assignee}
             </StatusBadge>
             <StatusBadge
               tone={dueTone}
@@ -740,6 +663,7 @@ function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask 
             >
               截止 {task.due}
             </StatusBadge>
+            <StatusBadge tone={task.status === '处理中' ? 'rose' : 'amber'}>{task.status}</StatusBadge>
           </div>
         </div>
         <div
@@ -747,7 +671,7 @@ function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask 
           {...tooltipAttrs({
             rows: [
               { label: '当前进度', value: `${task.progress}%` },
-              { label: '更新频率', value: '每 10 秒模拟推进' },
+              { label: '推进口径', value: '来自工单系统状态' },
             ],
             title: '工单进度',
           })}
@@ -777,7 +701,7 @@ function TaskList({
   return (
     <OperationsPanel
       icon={<ClipboardList className="h-5 w-5" strokeWidth={1.8} />}
-      rightSlot={<StatusBadge tone="amber">待推进 {tasks.length} 项</StatusBadge>}
+      rightSlot={<StatusBadge tone="amber">待办 2 · 处理中 1 · 超期 0</StatusBadge>}
       title="巡检与工单"
     >
       <div className="space-y-3">
@@ -799,10 +723,7 @@ function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
   }, [expanded, strategies])
 
   return (
-    <OperationsPanel
-      icon={<Lightbulb className="h-5 w-5" strokeWidth={1.8} />}
-      title="下一步建设建议"
-    >
+    <OperationsPanel icon={<Lightbulb className="h-5 w-5" strokeWidth={1.8} />} title="待优化项">
       <div className="space-y-3">
         {strategies.map((strategy, index) => {
           const isExpanded = expanded === strategy.title
@@ -815,8 +736,8 @@ function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
               type="button"
               {...tooltipAttrs({
                 rows: [
-                  { label: '采纳后预期收益', tone: 'emerald', value: `${4 + index * 2}% 节能潜力` },
-                  { label: '建设周期', value: index < 2 ? '1-2 周' : '2-4 周' },
+                  { label: '处理类型', value: '运维待办' },
+                  { label: '计划窗口', value: index === 1 ? '今晚' : '本周' },
                 ],
                 title: strategy.title,
               })}
@@ -826,7 +747,7 @@ function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
                 <span className="min-w-0 flex-1 text-[16px] font-black text-cyan-50">
                   {strategy.title}
                 </span>
-                <span className="operations-adopt-btn">采纳</span>
+                <span className="operations-adopt-btn">查看</span>
               </div>
               {isExpanded ? (
                 <div className="mt-3 pl-11 text-[13px] leading-6 text-cyan-100/66">
@@ -853,7 +774,7 @@ function FocusOverview({
   return (
     <OperationsPanel icon={<Radar className="h-5 w-5" strokeWidth={1.8} />} title="当前运维焦点">
       <div className="space-y-3">
-        {alerts.slice(0, 3).map((alert, index) => (
+        {alerts.slice(0, 4).map((alert, index) => (
           <button
             className="operations-focus-card w-full border border-cyan-300/24 bg-cyan-950/18 p-3 text-left"
             data-highlighted={highlightedAlertId === alert.id ? 'true' : undefined}
@@ -869,7 +790,7 @@ function FocusOverview({
                   tone: severityTone(alert.severity),
                   value: severityLabel(alert.severity),
                 },
-                { label: '联动', value: '悬停高亮告警中心对应项' },
+                { label: '状态', value: alert.status },
               ],
               title: alert.title,
             })}
@@ -884,7 +805,9 @@ function FocusOverview({
                 }}
               />
             </div>
-            <div className="mt-2 text-[12px] leading-5 text-cyan-100/58">{alert.locationText}</div>
+            <div className="mt-2 text-[12px] leading-5 text-cyan-100/58">
+              {alert.location} · {alert.currentValue}
+            </div>
           </button>
         ))}
       </div>
@@ -892,8 +815,21 @@ function FocusOverview({
   )
 }
 
-function TypingText({ active, content }: { active?: boolean; content: string }) {
+function TypingText({
+  active,
+  content,
+  onDone,
+}: {
+  active?: boolean
+  content: string
+  onDone?: () => void
+}) {
   const [visible, setVisible] = useState(active ? '' : content)
+  const onDoneRef = useRef(onDone)
+
+  useEffect(() => {
+    onDoneRef.current = onDone
+  }, [onDone])
 
   useEffect(() => {
     if (!active) {
@@ -908,8 +844,9 @@ function TypingText({ active, content }: { active?: boolean; content: string }) 
       setVisible(content.slice(0, index))
       if (index >= content.length) {
         window.clearInterval(timer)
+        onDoneRef.current?.()
       }
-    }, 30)
+    }, 33)
 
     return () => window.clearInterval(timer)
   }, [active, content])
@@ -917,25 +854,41 @@ function TypingText({ active, content }: { active?: boolean; content: string }) 
   return <>{visible}</>
 }
 
-function AgentChat({
-  agentPulse,
-  onCreateWorkOrder,
-  projectId,
-}: {
-  agentPulse: boolean
-  onCreateWorkOrder?: (draft: AssistantWorkOrderDraft) => void
-  projectId: string
-}) {
+function buildFallbackAnswer(prompt: string): AgentAnswer {
+  return {
+    followUps: ['总结当前能耗情况', '给我三条优化建议'],
+    text: `【问题理解】
+你想确认:${prompt}
+【核心结论】
+当前先按 5 条活跃告警和 2 条待处理工单处置。
+【分析依据】
+● 高优告警为 3F 新风机组负荷偏高。
+● 两张工单均未超期。
+【原因分析】
+● 当前主要风险来自暖通负荷和夜间照明策略。
+【排查与优化建议】
+● 优先查看 WO-BUILDING-031。
+● 同步复核 WO-BUILDING-032。
+● 处理后再观察 30 分钟负荷回落情况。`,
+  }
+}
+
+function AgentChat({ agentPulse }: { agentPulse: boolean }) {
   const [draft, setDraft] = useState('')
   const [thinking, setThinking] = useState(false)
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
-      content:
-        '我已经接入智能体。你可以直接问我当前构件的能耗趋势、峰值成因、节能建议，或者让我结合筛选结果做分析。',
-      id: 'assistant-welcome',
+      content: DEFAULT_AGENT_QUESTION,
+      id: 'user-default-summary',
+      role: 'user',
+    },
+    {
+      content: DEFAULT_AGENT_ANSWER,
+      followUps: ['新风机组的能耗趋势怎么样?', '怎么排查照明回路夜间未闭锁?'],
+      id: 'assistant-default-summary',
       role: 'assistant',
-      typing: true,
+      typing: false,
     },
   ])
   const messageAreaRef = useRef<HTMLDivElement>(null)
@@ -944,60 +897,47 @@ function AgentChat({
     const area = messageAreaRef.current
     if (!area) return
     area.scrollTop = area.scrollHeight
-  })
+  }, [messages, thinking])
+
+  const completeTyping = (messageId: string) => {
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId ? { ...message, typing: false } : message,
+      ),
+    )
+  }
 
   const submitPrompt = (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
     if (!prompt || thinking) return
 
+    const answer = ANSWER_BANK[prompt] ?? buildFallbackAnswer(prompt)
+    const now = Date.now()
+    const assistantId = `assistant-${now}`
+
     setMessages((current) => [
       ...current,
-      { content: prompt, id: `user-${Date.now()}`, role: 'user' },
+      { content: prompt, id: `user-${now}`, role: 'user' },
     ])
     setDraft('')
     setThinking(true)
     setActivePrompt(prompt)
-
-    if (prompt.includes('工单') && onCreateWorkOrder) {
-      window.setTimeout(() => {
-        onCreateWorkOrder({
-          assignee: '综合运维值班组',
-          due: '今天 18:00',
-          title: `工单 WO-${projectId.toUpperCase()}-A${String(Date.now()).slice(-3)}：处置 BLDG-APT-3F 新风机组能耗异常`,
-        })
-      }, 1800)
-    }
 
     window.setTimeout(() => {
       setThinking(false)
       setMessages((current) => [
         ...current,
         {
-          content:
-            AGENT_REPLIES[prompt] ??
-            '已收到。我会结合告警中心、工单进度和当前筛选结果给出运维建议，优先保证高优先级告警闭环。',
-          id: `assistant-${Date.now()}`,
+          content: answer.text,
+          followUps: answer.followUps,
+          id: assistantId,
           role: 'assistant',
           typing: true,
         },
       ])
       window.setTimeout(() => setActivePrompt(null), 520)
-    }, 2000)
+    }, 5000)
   }
-
-  useIntervalTick(() => {
-    const insight = PROACTIVE_INSIGHTS[randomInt(0, PROACTIVE_INSIGHTS.length - 1)]!
-    setMessages((current) => [
-      ...current,
-      {
-        content: insight,
-        id: `assistant-push-${Date.now()}`,
-        proactive: true,
-        role: 'assistant',
-        typing: true,
-      },
-    ])
-  }, 32_000)
 
   return (
     <OperationsPanel
@@ -1008,15 +948,15 @@ function AgentChat({
           className="operations-agent-online"
           {...tooltipAttrs({
             rows: [
-              { label: '模型版本', value: 'Operations-Agent v1.0' },
-              { label: '今日响应次数', value: '128 次' },
-              { label: '平均响应时长', value: '1.8 秒' },
+              { label: '平均响应', value: '1.2s' },
+              { label: '版本', value: 'v2.4.1' },
+              { label: '数据范围', value: '公寓楼全部设备' },
             ],
             title: '智能体状态',
           })}
         >
           <span />
-          AGENT ONLINE
+          已接入
         </span>
       }
       title="智能体问答"
@@ -1032,8 +972,8 @@ function AgentChat({
               onClick={() => submitPrompt(prompt)}
               type="button"
               {...tooltipAttrs({
-                body: AGENT_REPLIES[prompt]?.slice(0, 54),
-                title: `样例回复：${prompt}`,
+                body: ANSWER_BANK[prompt]?.text.slice(0, 54),
+                title: `推荐问题:${prompt}`,
               })}
             >
               {prompt}
@@ -1046,33 +986,52 @@ function AgentChat({
           ref={messageAreaRef}
         >
           {messages.map((message) => (
-            <div
-              className={cn(
-                'operations-chat-row flex',
-                message.role === 'user' ? 'justify-end' : 'justify-start',
-              )}
-              data-proactive={message.proactive ? 'true' : undefined}
-              key={message.id}
-            >
-              {message.role === 'assistant' ? (
-                <span className="operations-agent-avatar">AI</span>
-              ) : null}
+            <div className="operations-chat-message" key={message.id}>
               <div
                 className={cn(
-                  'operations-chat-bubble max-w-[86%] whitespace-pre-line px-3 py-2 text-[13px] leading-6',
-                  message.role === 'assistant' ? 'assistant' : 'user',
+                  'operations-chat-row flex',
+                  message.role === 'user' ? 'justify-end' : 'justify-start',
                 )}
               >
-                <TypingText active={message.typing} content={message.content} />
+                {message.role === 'assistant' ? (
+                  <span className="operations-agent-avatar">AI</span>
+                ) : null}
+                <div
+                  className={cn(
+                    'operations-chat-bubble max-w-[88%] whitespace-pre-line px-3 py-2 text-[13px] leading-6',
+                    message.role === 'assistant' ? 'assistant' : 'user',
+                  )}
+                >
+                  <TypingText
+                    active={message.typing}
+                    content={message.content}
+                    onDone={() => completeTyping(message.id)}
+                  />
+                </div>
               </div>
+              {message.role === 'assistant' && !message.typing && message.followUps?.length ? (
+                <div className="operations-chat-followups">
+                  {message.followUps.map((followUp) => (
+                    <button
+                      className="operations-followup-btn"
+                      disabled={thinking}
+                      key={followUp}
+                      onClick={() => submitPrompt(followUp)}
+                      type="button"
+                    >
+                      {followUp}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ))}
           {thinking ? (
             <div className="operations-chat-row flex justify-start">
               <span className="operations-agent-avatar">AI</span>
-              <div className="operations-chat-bubble assistant">
-                AI 思考中
+              <div className="operations-chat-bubble assistant operations-thinking-bubble">
                 <span className="operations-thinking-dots" />
+                <span className="operations-thinking-label">正在分析能耗数据...</span>
               </div>
             </div>
           ) : null}
@@ -1096,7 +1055,7 @@ function AgentChat({
                   submitPrompt(draft)
                 }
               }}
-              placeholder="例如：帮我解释这个构件为什么峰值偏高..."
+              placeholder="例如:3F 新风机组为什么负荷偏高?"
               value={draft}
             />
           </label>
@@ -1106,7 +1065,7 @@ function AgentChat({
             disabled={thinking}
             type="submit"
             {...tooltipAttrs({
-              rows: [{ label: '快捷键', value: 'Enter 发送，Shift+Enter 换行' }],
+              rows: [{ label: '快捷键', value: 'Enter 发送,Shift+Enter 换行' }],
               title: '发送问题',
             })}
           >
@@ -1151,7 +1110,15 @@ function OperationsStatusBar({
         <div>
           今日已处理工单 <span className="text-cyan-50">{doneTasks}</span> 件
         </div>
-        <div>
+        <div
+          {...tooltipAttrs({
+            rows: [
+              { label: '累计口径', value: '今日 00:00 至当前全部新增告警' },
+              { label: '活跃口径', value: '当前未闭环告警 5 条' },
+            ],
+            title: '今日新增告警口径',
+          })}
+        >
           今日新增告警 <span className="text-cyan-50">{todayAlerts}</span> 条
         </div>
       </div>
@@ -1165,7 +1132,7 @@ function kpiTooltip(label: string): DashboardTooltipContent {
       rows: [
         { label: '设备完好率', value: '28 分' },
         { label: '告警响应率', value: '24 分' },
-        { label: '巡检完成率', value: '22 分' },
+        { label: '巡检完成率', value: '23 分' },
         { label: '能效达标率', value: '22 分' },
       ],
       title: '站点健康度构成',
@@ -1175,10 +1142,9 @@ function kpiTooltip(label: string): DashboardTooltipContent {
   if (label === '活跃告警') {
     return {
       rows: [
-        { label: '高 / 中 / 低', tone: 'rose', value: '1 / 1 / 1' },
-        { label: 'BLDG-APT', value: '3 条' },
-        { label: '今日预警口径', value: `${INITIAL_GLOBAL_STATS.warning} 条累计预警` },
-        { label: '本页口径', value: '正在处置的活跃告警' },
+        { label: '高 / 中 / 低', tone: 'rose', value: '1 / 3 / 1' },
+        { label: '本页口径', value: '当前未闭环告警' },
+        { label: '设备范围', value: '公寓楼全部设备' },
       ],
       title: '活跃告警分布',
     }
@@ -1187,9 +1153,10 @@ function kpiTooltip(label: string): DashboardTooltipContent {
   if (label === '待处理工单') {
     return {
       rows: [
-        { label: '处理中', value: '2 项' },
-        { label: '平均处理时长', value: '58 分钟' },
-        { label: '即将逾期', tone: 'amber', value: '1 项' },
+        { label: '待办', value: '2 条' },
+        { label: '处理中', value: '1 条' },
+        { label: '即将到期', tone: 'amber', value: '1 条' },
+        { label: '超期', value: '0 条' },
       ],
       title: '待处理工单分布',
     }
@@ -1198,9 +1165,9 @@ function kpiTooltip(label: string): DashboardTooltipContent {
   if (label === '巡检覆盖率') {
     return {
       rows: [
-        { label: '已巡检楼栋', value: '7 栋' },
-        { label: '未巡检楼栋', value: '2 栋' },
-        { label: '本周计划完成率', value: '82%' },
+        { label: '本月累计', value: '412 次' },
+        { label: '覆盖率', value: '99%' },
+        { label: '未覆盖', value: '屋面备用回路' },
       ],
       title: '巡检覆盖率',
     }
@@ -1208,9 +1175,9 @@ function kpiTooltip(label: string): DashboardTooltipContent {
 
   return {
     rows: [
-      { label: '模型版本', value: 'Operations-Agent v1.0' },
-      { label: '今日响应次数', value: '128 次' },
-      { label: '平均响应时长', value: '1.8 秒' },
+      { label: '平均响应', value: '1.2s' },
+      { label: '版本', value: 'v2.4.1' },
+      { label: '状态', value: '已接入' },
     ],
     title: '智能体状态',
   }
@@ -1230,7 +1197,6 @@ export interface SmartOperationsWorkspaceProps {
 export default function SmartOperationsWorkspace({
   energyResult,
   generatedTasks,
-  onCreateWorkOrder,
   projectId,
   queryResults,
   saveStatus,
@@ -1259,86 +1225,42 @@ export default function SmartOperationsWorkspace({
     ],
   )
 
-  const initialStats = useMemo(() => {
-    const health = dashboard.metrics.find((metric) => metric.label === '站点健康度')
-    const coverage = dashboard.metrics.find((metric) => metric.label === '巡检覆盖率')
-
-    return {
-      ...INITIAL_GLOBAL_STATS,
-      activeAlerts: dashboard.alerts.length,
-      healthScore: parseNumber(health?.value, INITIAL_GLOBAL_STATS.healthScore),
-      inspectionRate: parseNumber(coverage?.value, INITIAL_GLOBAL_STATS.inspectionRate),
-      pendingTasks: dashboard.tasks.length,
-    }
-  }, [dashboard.alerts.length, dashboard.metrics, dashboard.tasks.length])
-
-  const [toasts, setToasts] = useState<OperationsToast[]>([])
-  const [healthScore, setHealthScore] = useState(initialStats.healthScore)
-  const [inspectionRate, setInspectionRate] = useState(initialStats.inspectionRate)
+  const [scope, setScope] = useState('全部设备')
+  const [now, setNow] = useState<Date | null>(null)
   const [lastSyncSeconds, setLastSyncSeconds] = useState(0)
   const [operators, setOperators] = useState(7)
-  const [doneTasks, setDoneTasks] = useState(6)
-  const [todayAlerts, setTodayAlerts] = useState(INITIAL_GLOBAL_STATS.warning)
   const [pulseAlertId, setPulseAlertId] = useState<string | null>(null)
   const [highlightedAlertId, setHighlightedAlertId] = useState<string | null>(null)
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null)
   const [agentPulse, setAgentPulse] = useState(false)
-  const [progressById, setProgressById] = useState<Record<string, number>>({})
-  const [liveAlerts, setLiveAlerts] = useState<LiveAlert[]>(() =>
-    dashboard.alerts.map((alert, index) =>
-      createLiveAlert(alert, index, dashboard.tasks[index]?.id),
-    ),
-  )
 
   useEffect(() => {
-    setHealthScore(initialStats.healthScore)
-    setInspectionRate(initialStats.inspectionRate)
-  }, [initialStats.healthScore, initialStats.inspectionRate])
+    setNow(new Date())
+    const timer = window.setInterval(() => setNow(new Date()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
-  useEffect(() => {
-    setLiveAlerts(
-      dashboard.alerts.map((alert, index) =>
-        createLiveAlert(alert, index, dashboard.tasks[index]?.id),
-      ),
-    )
-  }, [dashboard.alerts, dashboard.tasks])
-
-  useEffect(() => {
-    setProgressById((current) => {
-      const next = { ...current }
-      dashboard.tasks.forEach((task, index) => {
-        if (typeof next[task.id] !== 'number') {
-          next[task.id] = clamp(46 + index * 17, 8, 88)
-        }
-      })
-      return next
-    })
-  }, [dashboard.tasks])
-
-  const liveTasks = useMemo(
+  const liveTasks = useMemo<LiveTask[]>(
     () =>
       dashboard.tasks.map((task, index) => ({
-        ...createLiveTask(task, index, projectId, liveAlerts[index]?.id),
-        progress: progressById[task.id] ?? clamp(46 + index * 17, 8, 88),
+        ...task,
+        code: taskCode(task, index),
+        linkedAlertId: dashboard.alerts[index]?.id,
+        progress: task.progress ?? (index === 0 ? 65 : 30),
+        status: task.status ?? (index === 0 ? '处理中' : '待复核'),
+        steps: taskSteps(task),
+        tools: taskTools(task),
       })),
-    [dashboard.tasks, liveAlerts, progressById, projectId],
+    [dashboard.alerts, dashboard.tasks],
   )
 
-  const strategies = useMemo<OperationsStrategy[]>(
+  const liveAlerts = useMemo<LiveAlert[]>(
     () =>
-      [
-        ...dashboard.strategies,
-        {
-          title: '统一 BLDG-APT 告警编码',
-          description:
-            '将公寓楼 3F / 2F / B1 统一映射为 BLDG-APT 楼栋体系，减少跨页排查时的口径差异。',
-        },
-        {
-          title: '补充智能体派单确认流',
-          description: '智能体给出处置建议后增加二次确认、责任组匹配和工单追踪，形成可审计闭环。',
-        },
-      ].slice(0, 4),
-    [dashboard.strategies],
+      dashboard.alerts.map((alert, index) => ({
+        ...alert,
+        linkedTaskId: index < 2 ? liveTasks[index]?.code : undefined,
+      })),
+    [dashboard.alerts, liveTasks],
   )
 
   useIntervalTick(() => {
@@ -1349,104 +1271,44 @@ export default function SmartOperationsWorkspace({
     setOperators(randomInt(6, 9))
   }, 5000)
 
-  useIntervalTick(() => {
-    setProgressById((current) => {
-      const next = { ...current }
-      let completedTask: string | null = null
-
-      for (const task of liveTasks) {
-        const progress = next[task.id] ?? task.progress
-        const updated = clamp(progress + randomInt(1, 3), 0, 100)
-        next[task.id] = updated
-
-        if (updated >= 100 && progress < 100) {
-          completedTask = task.code
-        }
-      }
-
-      if (completedTask) {
-        setDoneTasks((value) => value + 1)
-        pushToast(setToasts, {
-          body: `${completedTask} 已完成并回填闭环记录`,
-          title: '工单完成',
-          tone: 'emerald',
-        })
-      }
-
-      return next
-    })
-  }, 10_000)
-
-  useIntervalTick(() => {
-    const newAlert = createSyntheticAlert(projectId, liveTasks[0]?.id)
-    setLiveAlerts((current) => [newAlert, ...current].slice(0, 5))
-    setPulseAlertId(newAlert.id)
-    setTodayAlerts((value) => value + 1)
-    pushToast(setToasts, {
-      body: newAlert.title,
-      title: '新告警',
-      tone: 'rose',
-    })
-    window.setTimeout(() => setPulseAlertId(null), 2200)
-  }, 12_000)
-
-  useIntervalTick(() => {
-    setHealthScore((score) => clamp(score + randomInt(-1, 1), 88, 99))
-    setInspectionRate((rate) => clamp(rate + 1, 82, 99))
-  }, 30_000)
-
-  useIntervalTick(() => {
-    setAgentPulse(true)
-    pushToast(setToasts, {
-      body: '智能体已推送新的运维洞察',
-      title: '智能体推送',
-      tone: 'cyan',
-    })
-    window.setTimeout(() => setAgentPulse(false), 1800)
-  }, 32_000)
-
   const kpis = [
     {
-      detail: '综合评估',
+      detail: dashboard.metrics.find((metric) => metric.label === '站点健康度')?.detail ?? '较昨日 +2',
       icon: <ShieldCheck className="h-7 w-7" strokeWidth={1.7} />,
       label: '站点健康度',
-      numeric: healthScore,
-      seed: 'health',
+      numeric: metricValue(dashboard.metrics, '站点健康度', 97),
+      suffix: '分',
       tone: 'cyan' as const,
     },
     {
-      detail: '高优先级 1 项',
+      detail: dashboard.metrics.find((metric) => metric.label === '活跃告警')?.detail ?? '高优 1 · 中优 3 · 低优 1',
       icon: <AlertTriangle className="h-7 w-7" strokeWidth={1.7} />,
       label: '活跃告警',
       numeric: liveAlerts.length,
-      seed: 'alerts',
       suffix: '条',
       tone: 'rose' as const,
     },
     {
-      detail: `当前保存状态 ${saveStatus}`,
+      detail: dashboard.metrics.find((metric) => metric.label === '待处理工单')?.detail ?? '超期 0 · 即将到期 1',
       icon: <ClipboardList className="h-7 w-7" strokeWidth={1.7} />,
       label: '待处理工单',
       numeric: liveTasks.length,
-      seed: 'tasks',
       suffix: '条',
       tone: 'amber' as const,
     },
     {
-      detail: '基于筛选估算',
+      detail: dashboard.metrics.find((metric) => metric.label === '巡检覆盖率')?.detail ?? '本月累计 412 次',
       icon: <Radar className="h-7 w-7" strokeWidth={1.7} />,
       label: '巡检覆盖率',
-      numeric: inspectionRate,
-      seed: 'inspection',
+      numeric: metricValue(dashboard.metrics, '巡检覆盖率', 99),
       suffix: '%',
       tone: 'emerald' as const,
     },
     {
-      detail: '在线响应',
+      detail: '平均响应 1.2s · v2.4.1',
       icon: <Cpu className="h-7 w-7" strokeWidth={1.7} />,
       label: '智能体状态',
-      seed: 'agent',
-      textValue: initialStats.agentOnline ? '已接入' : '离线',
+      textValue: '已接入',
       tone: 'emerald' as const,
     },
   ]
@@ -1459,46 +1321,65 @@ export default function SmartOperationsWorkspace({
       <VideoBackground />
       <div className="cockpit-atmosphere" />
       <DashboardTooltipLayer />
-      <OperationsToastStack toasts={toasts} />
 
-      <div className="relative z-10 flex w-full flex-col gap-4 px-5 pb-6 pt-4">
+      <div className="relative z-10 flex w-full flex-col gap-6 px-5 pb-6 pt-4">
         <header className="operations-page-hero flex flex-wrap items-center justify-between gap-4 border border-cyan-300/24 bg-cyan-950/18 px-5 py-4">
           <div>
             <h1
-              className="operations-page-title text-[30px] leading-none text-cyan-50"
+              className="operations-page-title text-[46px] leading-none text-cyan-50"
               style={{ fontFamily: DASHBOARD_FONTS.title }}
             >
-              智慧运维协同大界面
+              智慧运维
             </h1>
             <div className="mt-2 text-[13px] font-semibold text-cyan-100/62">
-              公寓楼 = BLDG-APT · 项目 {projectId} · 当前构件 {selectedComponentName}
+              公寓楼(BLDG-APT) / 全部设备
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <StatusBadge
-              tooltip={{
+          <div className="operations-header-tools flex flex-wrap items-center gap-3">
+            <label className="operations-filter-wrap">
+              <Filter className="h-4 w-4" strokeWidth={1.8} />
+              <span className="sr-only">筛选范围</span>
+              <select
+                className="operations-filter-select"
+                onChange={(event) => setScope(event.target.value)}
+                value={scope}
+              >
+                <option>全部设备</option>
+                <option>暖通设备</option>
+                <option>电气回路</option>
+                <option>给排水设备</option>
+              </select>
+              <ChevronDown className="h-4 w-4" strokeWidth={1.8} />
+            </label>
+            <span
+              className="operations-health-pill"
+              {...tooltipAttrs({
                 rows: [
-                  { label: '项目 ID', value: projectId },
-                  { label: '活跃结果', value: `${queryResults.length} 条` },
+                  { label: 'API 延迟', value: '86ms' },
+                  { label: '最近一次心跳', value: '19:58:50' },
                 ],
-                title: '项目筛选',
-              }}
+                title: '健康运行',
+              })}
             >
-              项目 {projectId}
-            </StatusBadge>
-            <StatusBadge>当前构件 {selectedComponentName}</StatusBadge>
-            <StatusBadge>活跃结果 {queryResults.length} 条</StatusBadge>
+              <span className="data-status-dot" />
+              健康运行
+            </span>
+            <span className="operations-header-clock">{now ? formatClockWithSeconds(now) : '--:--:--'}</span>
+            <span className="operations-weather">
+              <CloudSun className="h-4 w-4" strokeWidth={1.8} />
+              多云 26°C
+            </span>
           </div>
         </header>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
           {kpis.map((kpi) => (
             <OperationsKpiCard key={kpi.label} {...kpi} tooltip={kpiTooltip(kpi.label)} />
           ))}
         </section>
 
         <div className="operations-main-grid">
-          <div className="operations-left-stack flex min-w-0 flex-col gap-4">
+          <div className="operations-left-stack flex min-w-0 flex-col gap-6">
             <FocusSummary
               alert={liveAlerts[0]}
               onFocusAlert={(id) => {
@@ -1518,28 +1399,24 @@ export default function SmartOperationsWorkspace({
               pulseAlertId={pulseAlertId}
             />
             <TaskList highlightedTaskId={highlightedTaskId} tasks={liveTasks} />
-            <StrategyList strategies={strategies} />
+            <StrategyList strategies={dashboard.strategies} />
           </div>
 
-          <div className="operations-right-stack flex min-w-0 flex-col gap-4">
+          <div className="operations-right-stack flex min-w-0 flex-col gap-6">
             <FocusOverview
               alerts={liveAlerts}
               highlightedAlertId={highlightedAlertId}
               onHighlight={setHighlightedAlertId}
             />
-            <AgentChat
-              agentPulse={agentPulse}
-              onCreateWorkOrder={onCreateWorkOrder}
-              projectId={projectId}
-            />
+            <AgentChat agentPulse={agentPulse} />
           </div>
         </div>
 
         <OperationsStatusBar
-          doneTasks={doneTasks}
+          doneTasks={8}
           lastSyncSeconds={lastSyncSeconds}
           operators={operators}
-          todayAlerts={todayAlerts}
+          todayAlerts={237}
         />
       </div>
     </div>
