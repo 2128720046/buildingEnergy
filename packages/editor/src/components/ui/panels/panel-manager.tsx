@@ -10,6 +10,7 @@ import { ItemPanel } from './item-panel'
 import { ReferencePanel } from './reference-panel'
 import { RoofPanel } from './roof-panel'
 import { RoofSegmentPanel } from './roof-segment-panel'
+import { ScanPanel } from './scan-panel'
 import { SlabPanel } from './slab-panel'
 import { StairPanel } from './stair-panel'
 import { StairSegmentPanel } from './stair-segment-panel'
@@ -79,6 +80,8 @@ export function PanelManager() {
           return <DoorPanel />
         case 'window':
           return <WindowPanel />
+        case 'scan':
+          return <ScanPanel />
       }
     }
   }

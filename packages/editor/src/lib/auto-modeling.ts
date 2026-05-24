@@ -5,6 +5,7 @@ import {
   GuideNode,
   LevelNode,
   ScanNode,
+  saveAsset,
   type SiteNode as SiteNodeType,
   SiteNode,
   SlabNode,
@@ -918,7 +919,8 @@ export async function buildScanSceneGraphFromModelFile(
   file: File,
   options: AutoModelImportOptions = {},
 ): Promise<SceneGraph> {
-  const url = URL.createObjectURL(file)
+  // 使用 IndexedDB 存储文件，返回稳定的 asset:// URL（可序列化、不会过期）
+  const url = await saveAsset(file)
   const scan = ScanNode.parse({
     name: file.name.replace(/\.[^.]+$/, ''),
     url,

@@ -471,6 +471,7 @@ export const SelectionManager = () => {
       'stair-segment',
       'window',
       'door',
+      'scan',
     ]
     allTypes.forEach((type) => {
       emitter.on(`${type}:click` as any, onClick as any)
@@ -621,6 +622,7 @@ export const SelectionManager = () => {
       'door',
       'zone',
       'site',
+      'scan',
     ]
     allTypes.forEach((type) => {
       emitter.on(`${type}:enter` as any, onEnter as any)
@@ -690,6 +692,7 @@ export const SelectionManager = () => {
       'window',
       'door',
       'zone',
+      'scan',
     ] as const
 
     for (const type of allTypes) {
@@ -713,6 +716,7 @@ export const SelectionManager = () => {
       <SelectionStateSync />
       <SelectionMaterialSync />
       <EditorOutlinerSync />
+      <ScanSelectionHandler />
     </>
   )
 }
@@ -918,6 +922,48 @@ const EditorOutlinerSync = () => {
       if (obj) outliner.hoveredObjects.push(obj)
     }
   }, [phase, previewSelectedIds, selection, hoveredId, outliner])
+
+  return null
+}
+
+/** Handles scan node selection independently of the phase system. */
+const ScanSelectionHandler = () => {
+  const mode = useEditor((s) => s.mode)
+
+  useEffect(() => {
+    if (mode !== 'select') return
+
+    const onClick = (event: NodeEvent) => {
+      const node = event.node
+      if (node.type !== 'scan') return
+
+      event.stopPropagation()
+      useViewer.getState().setSelection({ selectedIds: [node.id] })
+    }
+
+    const onEnter = (event: NodeEvent) => {
+      if (event.node.type !== 'scan') return
+      event.stopPropagation()
+      useViewer.setState({ hoveredId: event.node.id })
+    }
+
+    const onLeave = (event: NodeEvent) => {
+      const nodeId = event?.node?.id
+      if (nodeId && useViewer.getState().hoveredId === nodeId) {
+        useViewer.setState({ hoveredId: null })
+      }
+    }
+
+    emitter.on('scan:click', onClick as any)
+    emitter.on('scan:enter', onEnter as any)
+    emitter.on('scan:leave', onLeave as any)
+
+    return () => {
+      emitter.off('scan:click', onClick as any)
+      emitter.off('scan:enter', onEnter as any)
+      emitter.off('scan:leave', onLeave as any)
+    }
+  }, [mode])
 
   return null
 }

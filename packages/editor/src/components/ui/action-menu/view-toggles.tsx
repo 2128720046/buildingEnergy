@@ -9,7 +9,7 @@ import {
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { ChevronDown, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '../../../lib/utils'
 import { useUploadStore } from '../../../store/use-upload'
@@ -57,30 +57,48 @@ function useLevelScans(): ScanNode[] {
 function UploadButton() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const levelId = useViewer((s) => s.selection.levelId)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (uploadError) {
+      const t = setTimeout(() => setUploadError(null), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [uploadError])
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
-      if (!(file && levelId)) return
       e.target.value = ''
 
-      const { uploadHandler } = useUploadStore.getState()
-      if (!uploadHandler) return
+      if (!file) return
+      if (!levelId) {
+        setUploadError('请先选中一个楼层（在筛选栏中选择楼层）')
+        return
+      }
 
-      if (file.size > MAX_FILE_SIZE) return
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError(`文件过大（限制 200MB）`)
+        return
+      }
 
-      const isScan =
-        file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')
+      const isScan = file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')
       const isImage = file.type.startsWith('image/')
-      if (!(isScan || isImage)) return
+      if (!(isScan || isImage)) {
+        setUploadError('不支持的文件类型，请选择 .glb/.gltf 或图片')
+        return
+      }
+
+      const { uploadHandler } = useUploadStore.getState()
+      if (!uploadHandler) {
+        setUploadError('上传服务未就绪')
+        return
+      }
 
       const type = isScan ? 'scan' : 'guide'
-
-      const projectId = window.location.pathname.split('/editor/')[1]?.split('/')[0]
-      if (!projectId) return
-
       useUploadStore.getState().clearUpload(levelId)
-      uploadHandler(projectId, levelId, file, type)
+      uploadHandler('', levelId, file, type)
+      setUploadError(null)
     },
     [levelId],
   )
@@ -102,8 +120,8 @@ function UploadButton() {
         ref={fileInputRef}
         type="file"
       />
-    </>
-  )
+      {uploadError ? <p className="mt-1 text-[10px] text-red-300">{uploadError}</p> : null}
+    </>  )
 }
 
 // ── Guides toggle + dropdown ────────────────────────────────────────────────
@@ -251,6 +269,7 @@ function GuidesControl() {
 function ScansControl() {
   const showScans = useViewer((state) => state.showScans)
   const setShowScans = useViewer((state) => state.setShowScans)
+  const setSelection = useViewer((state) => state.setSelection)
   const updateNode = useScene((state) => state.updateNode)
   const deleteNode = useScene((state) => state.deleteNode)
   const [isOpen, setIsOpen] = useState(false)
@@ -263,6 +282,14 @@ function ScansControl() {
       updateNode(scanId, { opacity: Math.round(Math.min(100, Math.max(0, opacity))) })
     },
     [updateNode],
+  )
+
+  const handleEditScan = useCallback(
+    (scanId: ScanNode['id']) => {
+      setSelection({ selectedIds: [scanId] })
+      setIsOpen(false)
+    },
+    [setSelection],
   )
 
   return (
@@ -337,8 +364,17 @@ function ScansControl() {
             <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
               {scans.map((scan, index) => (
                 <div
-                  className="group/item space-y-2 rounded-xl border border-border/45 bg-background/75 p-2.5"
+                  className="group/item cursor-pointer space-y-2 rounded-xl border border-border/45 bg-background/75 p-2.5 transition-colors hover:bg-white/[0.07]"
                   key={scan.id}
+                  onClick={() => handleEditScan(scan.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleEditScan(scan.id)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <img
@@ -352,7 +388,10 @@ function ScansControl() {
                     <button
                       aria-label="删除扫描模型"
                       className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground/50 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover/item:opacity-100"
-                      onClick={() => deleteNode(scan.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteNode(scan.id)
+                      }}
                       type="button"
                     >
                       <Trash2 className="h-3 w-3" />

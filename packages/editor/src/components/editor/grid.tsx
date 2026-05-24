@@ -1,6 +1,6 @@
 'use client'
 
-import { emitter, type GridEvent, sceneRegistry, useScene } from '@pascal-app/core'
+import { emitter, type GridEvent, sceneRegistry } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -146,7 +146,6 @@ export const Grid = ({
   })
 
   const showGrid = useViewer((state) => state.showGrid)
-  const readOnly = useScene((state) => state.readOnly)
 
   return (
     <mesh
@@ -154,7 +153,7 @@ export const Grid = ({
       material={material}
       ref={gridRef}
       rotation-x={-Math.PI / 2}
-      visible={showGrid && !readOnly}
+      visible={showGrid}
     >
       <planeGeometry args={[fadeDistance * 2, fadeDistance * 2]} />
     </mesh>

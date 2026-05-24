@@ -134,27 +134,78 @@ export interface EditorProps {
 }
 
 function EditorSceneCrashFallback() {
+  const [cleared, setCleared] = useState(false)
+  const hasSnapshot =
+    typeof window !== 'undefined' && !!(window as any).__preImportSceneSnapshot
+
+  const handleRestore = useCallback(() => {
+    const snapshot =
+      typeof window !== 'undefined' ? (window as any).__preImportSceneSnapshot : null
+    const rootSnapshot =
+      typeof window !== 'undefined' ? (window as any).__preImportRootSnapshot : null
+    if (snapshot) {
+      useScene.setState({ nodes: snapshot, rootNodeIds: rootSnapshot ?? [] })
+      Object.keys(snapshot).forEach((id) => useScene.getState().markDirty(id as any))
+      useScene.temporal.getState().clear()
+    }
+    delete (window as any).__preImportSceneSnapshot
+    delete (window as any).__preImportRootSnapshot
+    setCleared(true)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    delete (window as any).__preImportSceneSnapshot
+    delete (window as any).__preImportRootSnapshot
+    try {
+      useScene.getState().unloadScene()
+      useScene.getState().loadScene()
+    } catch {
+      // fallback: full reload
+    }
+    useScene.temporal.getState().clear()
+    setCleared(true)
+  }, [])
+
+  if (cleared) {
+    return null
+  }
+
   return (
     <div className="fixed inset-0 z-80 flex items-center justify-center bg-background/95 p-4 text-foreground">
       <div className="w-full max-w-md rounded-2xl border border-border/60 bg-background p-6 shadow-xl">
-        <h2 className="font-semibold text-lg">The editor scene failed to render</h2>
-        <p className="mt-2 text-muted-foreground text-sm">
-          You can retry the scene or return home without reloading the whole app shell.
+        <h2 className="font-semibold text-lg text-red-400">场景渲染出错</h2>
+        <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
+          编辑器遇到了渲染错误，可能原因：
         </p>
-        <div className="mt-4 flex items-center gap-2">
+        <ul className="mt-1 space-y-1 text-muted-foreground text-xs leading-relaxed">
+          <li>• 导入的模型文件格式不支持或已损坏</li>
+          <li>• 场景数据异常（如节点类型不匹配）</li>
+          <li>• 浏览器 WebGL 资源耗尽</li>
+        </ul>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {hasSnapshot ? (
+            <button
+              className="rounded-md border border-[#00F5FF]/40 bg-[#00F5FF]/15 px-3 py-2 font-medium text-sm text-[#00F5FF] hover:bg-[#00F5FF]/25"
+              onClick={handleRestore}
+              type="button"
+            >
+              恢复导入前场景
+            </button>
+          ) : null}
           <button
             className="rounded-md border border-border bg-accent px-3 py-2 font-medium text-sm hover:bg-accent/80"
+            onClick={handleReset}
+            type="button"
+          >
+            重置为空场景
+          </button>
+          <button
+            className="rounded-md border border-border bg-background px-3 py-2 font-medium text-sm hover:bg-accent/40"
             onClick={() => window.location.reload()}
             type="button"
           >
-            Reload editor
+            刷新页面
           </button>
-          <a
-            className="rounded-md border border-border bg-background px-3 py-2 font-medium text-sm hover:bg-accent/40"
-            href="/"
-          >
-            Back to home
-          </a>
         </div>
       </div>
     </div>

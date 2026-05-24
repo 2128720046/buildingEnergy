@@ -15,6 +15,8 @@ import {
   type RoofNode,
   type RoofSegmentEvent,
   type RoofSegmentNode,
+  type ScanEvent,
+  type ScanNode,
   type SiteEvent,
   type SiteNode,
   type SlabEvent,
@@ -48,6 +50,7 @@ type NodeConfig = {
   'stair-segment': { node: StairSegmentNode; event: StairSegmentEvent }
   window: { node: WindowNode; event: WindowEvent }
   door: { node: DoorNode; event: DoorEvent }
+  scan: { node: ScanNode; event: ScanEvent }
 }
 
 type NodeType = keyof NodeConfig

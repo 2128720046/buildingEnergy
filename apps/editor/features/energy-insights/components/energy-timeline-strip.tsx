@@ -105,7 +105,7 @@ export default function EnergyTimelineStrip({ date, hour, hourlySamples, onChang
 
   return (
     <div className={cn('pointer-events-auto relative z-30 w-full select-none', className)}>
-      <div className="relative rounded border border-white/8 bg-[#030712]/90 backdrop-blur-xl" style={{ overflow: 'clip' }}>
+      <div className="relative rounded border border-white/6 bg-[#061522]/60 backdrop-blur-sm" style={{ overflow: 'clip' }}>
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="flex items-stretch">
           <div className="relative flex shrink-0 items-center gap-1.5 border-r border-white/6 px-3 py-2.5">

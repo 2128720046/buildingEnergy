@@ -52,7 +52,7 @@ export default function FloorHeatmapOverlay({ data, className }: FloorHeatmapOve
   if (!data) return null
 
   return (
-    <div className={cn('pointer-events-auto relative overflow-hidden rounded border border-white/8 bg-[#030712]/80 shadow-none backdrop-blur-md', className)} style={{ width: HEATMAP_WIDTH, height: HEATMAP_HEIGHT + 56 }}>
+    <div className={cn('pointer-events-auto relative overflow-hidden rounded border border-white/6 bg-[#061522]/60 backdrop-blur-sm', className)} style={{ width: HEATMAP_WIDTH, height: HEATMAP_HEIGHT + 56 }}>
       <div className="flex items-center gap-2 border-b border-white/6 px-3.5 py-2.5">
         <MapPin className="h-3.5 w-3.5 text-[#00F5FF]" strokeWidth={2} />
         <span className="font-semibold text-[11px] tracking-[0.14em] text-white/55 uppercase">楼层能耗热力图</span>

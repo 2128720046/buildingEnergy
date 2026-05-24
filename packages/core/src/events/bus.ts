@@ -8,6 +8,7 @@ import type {
   LevelNode,
   RoofNode,
   RoofSegmentNode,
+  ScanNode,
   SiteNode,
   SlabNode,
   StairNode,
@@ -47,6 +48,7 @@ export type StairEvent = NodeEvent<StairNode>
 export type StairSegmentEvent = NodeEvent<StairSegmentNode>
 export type WindowEvent = NodeEvent<WindowNode>
 export type DoorEvent = NodeEvent<DoorNode>
+export type ScanEvent = NodeEvent<ScanNode>
 
 // Event suffixes - exported for use in hooks
 export const eventSuffixes = [
@@ -112,6 +114,7 @@ type EditorEvents = GridEvents &
   NodeEvents<'stair-segment', StairSegmentEvent> &
   NodeEvents<'window', WindowEvent> &
   NodeEvents<'door', DoorEvent> &
+  NodeEvents<'scan', ScanEvent> &
   CameraControlEvents &
   ToolEvents &
   PresetEvents

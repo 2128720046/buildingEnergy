@@ -36,6 +36,7 @@ type SelectableNodeType =
   | 'ceiling'
   | 'roof'
   | 'roof-segment'
+  | 'scan'
 
 // Expand polygon outward by a small amount to include items on edges
 const expandPolygon = (polygon: [number, number][], tolerance: number): [number, number][] => {
@@ -286,6 +287,14 @@ export const SelectionManager = () => {
     }
 
     const onClick = (event: NodeEvent) => {
+      // Scan nodes: stop propagation to prevent deselection of current selection
+      if (event.node.type === 'scan') {
+        event.stopPropagation()
+        clickHandledRef.current = true
+        useViewer.setState({ hoveredId: null })
+        return
+      }
+
       const strategy = getStrategy()
       if (!strategy) return
       if (!strategy.isValid(event.node)) return
@@ -310,6 +319,7 @@ export const SelectionManager = () => {
       'roof-segment',
       'window',
       'door',
+      'scan',
     ]
     for (const type of allTypes) {
       emitter.on(`${type}:enter`, onEnter)

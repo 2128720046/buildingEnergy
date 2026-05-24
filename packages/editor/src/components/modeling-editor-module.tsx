@@ -1,9 +1,11 @@
 'use client'
 
-import { useScene } from '@pascal-app/core'
+import { saveAsset, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import { ScanNode } from '@pascal-app/core'
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useUploadStore } from '../store/use-upload'
 import type { EditorProps } from './editor'
 import Editor from './editor'
 import {
@@ -55,6 +57,22 @@ function SelectionBridge({
   return null
 }
 
+/**
+ * Upload a File to the backend asset store. Returns the backend URL.
+ */
+async function uploadAssetToBackend(file: File, assetUploadUrl: string): Promise<string> {
+  const response = await fetch(assetUploadUrl, {
+    method: 'POST',
+    body: file,
+    headers: { 'Content-Type': 'application/octet-stream' },
+  })
+  if (!response.ok) {
+    throw new Error(`Asset upload failed: ${response.status}`)
+  }
+  const result = await response.json() as { url: string }
+  return result.url
+}
+
 export interface ModelingEditorCoreModuleProps
   extends Omit<EditorProps, 'layoutVersion' | 'viewerToolbarLeft' | 'viewerToolbarRight' | 'sidebarTabs'> {
   className?: string
@@ -62,6 +80,8 @@ export interface ModelingEditorCoreModuleProps
   viewerToolbarRight?: ReactNode
   sidebarTabs?: EditorProps['sidebarTabs']
   onSelectionChange?: (snapshot: ModelingSelectionSnapshot) => void
+  /** Backend API base URL for asset uploads (e.g. http://localhost:3010) */
+  assetUploadBaseUrl?: string
 }
 
 /**
@@ -75,8 +95,54 @@ export function ModelingEditorCoreModule({
   viewerToolbarLeft,
   viewerToolbarRight,
   onSelectionChange,
+  assetUploadBaseUrl,
   ...props
 }: ModelingEditorCoreModuleProps) {
+  const assetUploadBaseUrlRef = useRef(assetUploadBaseUrl)
+  assetUploadBaseUrlRef.current = assetUploadBaseUrl
+
+  // 注册扫描模型上传 handler，使工具栏的上传按钮可用
+  useEffect(() => {
+    useUploadStore.getState().registerUploadHandler(async (_projectId, levelId, file, type) => {
+      if (type !== 'scan') return
+      try {
+        // 如果配置了后端，上传到后端；否则存 IndexedDB
+        const baseUrl = assetUploadBaseUrlRef.current
+        let url: string
+        if (baseUrl) {
+          const uploadUrl = `${baseUrl.replace(/\/+$/, '')}/projects/${encodeURIComponent(projectId)}/assets?filename=${encodeURIComponent(file.name)}`
+          url = await uploadAssetToBackend(file, uploadUrl)
+        } else {
+          url = await saveAsset(file)
+        }
+        const scan = ScanNode.parse({
+          name: file.name.replace(/\.[^.]+$/, ''),
+          url,
+          opacity: 100,
+          scale: 1,
+        })
+        if (levelId) {
+          // 直接修改 store state 绕过 readOnly 限制
+          useScene.setState((prev) => {
+            const nextNodes = { ...prev.nodes, [scan.id]: { ...scan, parentId: levelId } as any }
+            const level = nextNodes[levelId]
+            if (level && 'children' in level) {
+              nextNodes[levelId] = { ...level, children: [...(level as any).children, scan.id] } as any
+            }
+            return { nodes: nextNodes }
+          })
+          useScene.getState().markDirty(scan.id)
+          useScene.getState().markDirty(levelId)
+        }
+      } catch (error) {
+        console.error('[modeling-module] scan upload failed:', error)
+      }
+    })
+    return () => {
+      useUploadStore.getState().unregisterUploadHandler()
+    }
+  }, [projectId])
+
   return (
     <div className={cn('h-screen w-screen', className)}>
       <Editor
@@ -107,6 +173,7 @@ export function ModelingEditorModule({
   onSelectionChange,
   settingsPanelProps,
   sitePanelProps,
+  assetUploadBaseUrl,
   ...props
 }: ModelingEditorModuleProps) {
   const resolvedSidebarTabs =
@@ -119,6 +186,7 @@ export function ModelingEditorModule({
   return (
     <ModelingEditorCoreModule
       {...props}
+      assetUploadBaseUrl={assetUploadBaseUrl}
       className={className}
       onSelectionChange={onSelectionChange}
       projectId={projectId}

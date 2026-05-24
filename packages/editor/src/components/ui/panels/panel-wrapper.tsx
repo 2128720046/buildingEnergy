@@ -25,7 +25,7 @@ export function PanelWrapper({
   className,
   width = 320, // default width
 }: PanelWrapperProps) {
-  const panelTop = 'var(--host-editor-panel-top, 124px)'
+  const panelTop = 'var(--host-editor-panel-top, 380px)'
 
   return (
     <div
@@ -37,7 +37,7 @@ export function PanelWrapper({
         width,
         ['--host-editor-panel-width' as string]: typeof width === 'number' ? `${width}px` : String(width),
         top: panelTop,
-        height: `calc(100dvh - ${panelTop})`,
+        height: `calc((100dvh - ${panelTop}) / 1.7)`,
         right: 'calc(1rem + var(--host-editor-panel-avoid-right, 0px))',
       }}
     >

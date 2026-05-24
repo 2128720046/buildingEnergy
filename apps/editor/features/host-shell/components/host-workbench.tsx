@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
+import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import {
   loadComponentEnergy,
@@ -36,7 +37,7 @@ import SmartOperationsWorkspace from '@/features/operations/components/smart-ope
 import type { OperationsTask } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
 
-const DEFAULT_PROJECT_ID = 'local-editor'
+const DEFAULT_PROJECT_ID = 'building'
 const DEFAULT_FILTERS: HostQueryFilters = {
   keyword: '',
   levelId: '',
@@ -54,26 +55,56 @@ export interface HostWorkbenchProps {
 function HostViewerToolbarRight({
   editEnabled,
   onToggle,
+  apiBaseUrl,
+  projectId,
 }: {
   editEnabled: boolean
   onToggle: () => void
+  apiBaseUrl?: string
+  projectId: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   const handleImport = useCallback(async (file: File | null) => {
     if (!file) return
+    // 导入前拍照：保存当前场景，以便失败时恢复
+    if (typeof window !== 'undefined') {
+      ;(window as any).__preImportSceneSnapshot = JSON.parse(JSON.stringify(useScene.getState().nodes))
+      ;(window as any).__preImportRootSnapshot = [...useScene.getState().rootNodeIds]
+    }
     setIsImporting(true)
+    setImportError(null)
 
     try {
       const sceneGraph = await buildSceneGraphFromReferenceFile(file)
+
+      // 如果配置了后端，将 GLB 文件再上传到后端，替换 asset:// URL
+      if (apiBaseUrl) {
+        const isGlb = /\.(glb|gltf)$/i.test(file.name)
+        for (const node of Object.values(sceneGraph.nodes) as any[]) {
+          if (isGlb && node?.type === 'scan' && typeof node?.url === 'string' && node.url.startsWith('asset://')) {
+            // 重新上传原始文件到后端
+            const uploadUrl = `${apiBaseUrl.replace(/\/+$/, '')}/projects/${encodeURIComponent(projectId)}/assets?filename=${encodeURIComponent(file.name)}`
+            const uploadRes = await fetch(uploadUrl, { method: 'POST', body: file })
+            if (uploadRes.ok) {
+              const result = await uploadRes.json() as { url: string }
+              node.url = result.url.startsWith('http') ? result.url : `${apiBaseUrl}${result.url}`
+            }
+          }
+        }
+      }
+
       applySceneGraphToEditor(sceneGraph)
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+      setImportError(msg)
       console.error('[host] failed to import reference', error)
     } finally {
       setIsImporting(false)
     }
-  }, [])
+  }, [apiBaseUrl, projectId])
 
   return (
     <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
@@ -126,6 +157,61 @@ function HostViewerToolbarRight({
         ref={inputRef}
         type="file"
       />
+
+      {/* 导入失败对话框 */}
+      {importError ? (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60">
+          <div className="w-[360px] rounded-xl border border-white/8 bg-[#0C0E14] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.7)]">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/15 text-red-400 text-xs font-bold">!</span>
+              <h3 className="font-semibold text-white/90 text-sm">导入模型失败</h3>
+            </div>
+            <div className="mt-3 space-y-2 text-[12px] leading-relaxed text-white/60">
+              <p>未能成功导入所选文件。常见原因：</p>
+              <ul className="space-y-1 pl-3">
+                <li>• 文件格式不受支持（支持 .glb/.gltf/.svg/.json 或图片）</li>
+                <li>• 文件已损坏或不是有效的 3D 模型</li>
+                <li>• 文件中不包含可解析的场景数据</li>
+              </ul>
+              {importError ? (
+                <div className="mt-2 rounded-lg border border-red-500/20 bg-red-500/8 px-2.5 py-2 font-mono text-[11px] text-red-300/80 leading-relaxed">
+                  {importError}
+                </div>
+              ) : null}
+            </div>
+            <div className="mt-4 flex gap-3">
+              <button
+                className="flex-1 rounded-lg border border-white/8 bg-white/10 px-4 py-2 text-[12px] font-medium text-white/80 transition-colors hover:bg-white/15"
+                onClick={() => {
+                  // 恢复导入前的场景
+                  const snapshot =
+                    typeof window !== 'undefined' ? (window as any).__preImportSceneSnapshot : null
+                  const rootSnapshot =
+                    typeof window !== 'undefined' ? (window as any).__preImportRootSnapshot : null
+                  if (snapshot) {
+                    useScene.setState({ nodes: snapshot, rootNodeIds: rootSnapshot ?? [] })
+                    Object.keys(snapshot).forEach((id) => useScene.getState().markDirty(id as any))
+                    useScene.temporal.getState().clear()
+                  }
+                  delete (window as any).__preImportSceneSnapshot
+                  delete (window as any).__preImportRootSnapshot
+                  setImportError(null)
+                }}
+                type="button"
+              >
+                恢复导入前场景
+              </button>
+              <button
+                className="flex-1 rounded-lg border border-white/8 bg-white/10 px-4 py-2 text-[12px] font-medium text-white/80 transition-colors hover:bg-white/15"
+                onClick={() => setImportError(null)}
+                type="button"
+              >
+                仅关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -200,12 +286,67 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     setHasQueried(true)
   }, [draftFilters])
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editSnapshot, setEditSnapshot] = useState<Record<string, AnyNode> | null>(null)
+  const pendingEditToggleRef = useRef(false)
+
   const handleToggleEdit = useCallback(() => {
-    if (editEnabled && mode !== 'select') {
-      setMode('select')
+    if (!editEnabled) {
+      // 进入编辑：保存快照（改为 state，触发 React 重渲染传递 prop）
+      const clone = JSON.parse(JSON.stringify(nodes)) as Record<string, AnyNode>
+      setEditSnapshot(clone)
+      setEditEnabled(true)
+      return
     }
-    setEditEnabled((current) => !current)
-  }, [editEnabled, mode, setMode])
+    // 退出编辑：检测是否有修改（节点内容是否变化）
+    let hasChanges = false
+    if (editSnapshot) {
+      const cur = JSON.stringify(nodes)
+      const snap = JSON.stringify(editSnapshot)
+      hasChanges = cur !== snap
+    }
+
+    if (hasChanges) {
+      pendingEditToggleRef.current = true
+      setEditDialogOpen(true)
+    } else {
+      setEditSnapshot(null)
+      if (mode !== 'select') setMode('select')
+      setEditEnabled(false)
+    }
+  }, [editEnabled, mode, setMode, nodes, editSnapshot])
+
+  const handleSaveEdits = useCallback(() => {
+    useScene.temporal.getState().clear()
+    setEditSnapshot(null)
+    setEditDialogOpen(false)
+    if (pendingEditToggleRef.current) {
+      pendingEditToggleRef.current = false
+      if (mode !== 'select') setMode('select')
+      setEditEnabled(false)
+    }
+  }, [mode, setMode])
+
+  const handleDiscardEdits = useCallback(() => {
+    // 用 RAF 确保在 React 批处理外恢复状态
+    requestAnimationFrame(() => {
+      const stored = editSnapshot // 从闭包捕获当时的快照
+      if (stored) {
+        useScene.setState({ nodes: stored as any })
+        // 强制标记所有节点 dirty，确保 UI 刷新
+        const s = useScene.getState()
+        Object.keys(stored).forEach((id) => s.markDirty(id as any))
+        useScene.temporal.getState().clear()
+      }
+    })
+    setEditSnapshot(null)
+    setEditDialogOpen(false)
+    if (pendingEditToggleRef.current) {
+      pendingEditToggleRef.current = false
+      if (mode !== 'select') setMode('select')
+      setEditEnabled(false)
+    }
+  }, [mode, setMode, editSnapshot])
 
   const handleJumpToLevel3HighlightZones = useCallback(() => {
     const levelNodes = Object.values(nodes)
@@ -268,8 +409,10 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
 
   const cockpitToolbar = (
     <HostViewerToolbarRight
+      apiBaseUrl={apiBaseUrl}
       editEnabled={editEnabled}
       onToggle={handleToggleEdit}
+      projectId={projectId}
     />
   )
 
@@ -578,12 +721,35 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           : 'bg-[radial-gradient(circle_at_top,#f8fbff_0%,#edf3fb_40%,#dbe5f2_100%)]',
       )}
     >
-      <header className="relative z-40 border-b border-white/6 bg-transparent px-4 py-3 backdrop-blur-md">
-        <div className="flex w-full justify-start">
+      <header className="relative z-40 border-b border-white/6 bg-transparent px-4 py-2 backdrop-blur-md">
+        <div className="flex w-full items-center gap-3">
           <WorkspaceNavigation
             activeWorkspace={activeWorkspace}
             onChange={setActiveWorkspace}
           />
+          {activeWorkspace === 'energy-query' ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <HostFilterBar
+                  filters={draftFilters}
+                  hasQueried={hasQueried}
+                  levelOptions={draftQueryModel.levelOptions}
+                  onFiltersChange={setDraftFilters}
+                  onQuery={handleSubmitQuery}
+                  resultCount={queryResults.length}
+                  variant="cockpit"
+                  zoneOptions={draftQueryModel.zoneOptions}
+                />
+              </div>
+              <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
+                {cockpitToolbar ? <div className="glass-panel whitespace-nowrap rounded border border-white/6 px-2 py-0.5">{cockpitToolbar}</div> : null}
+                <div className="whitespace-nowrap text-right">
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-white/40">项目</div>
+                  <div className="text-sm text-white/70">{projectId}</div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </header>
 
@@ -599,6 +765,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
         >
           <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
             <ModelingEditorCoreModule
+              assetUploadBaseUrl={apiBaseUrl ?? undefined}
               className="h-full w-full"
               onLoad={apiClient.isConfigured ? handleLoad : undefined}
               onSave={apiClient.isConfigured ? handleSave : undefined}
@@ -633,8 +800,8 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 queryResults={queryResults}
                 selectedComponentId={selectedComponentId}
                 selectedComponentName={selectedComponentName}
-                topToolbar={cockpitToolbar}
                 zoneOptions={draftQueryModel.zoneOptions}
+                editSnapshot={editSnapshot}
               />
             ) : (
               <HostRightRail
@@ -698,6 +865,36 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           />
         </div>
       </div>
+
+      {/* 编辑保存确认对话框 */}
+      {editDialogOpen ? (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60">
+          <div className="w-[320px] rounded border border-white/8 bg-[#0C0E14] p-4 shadow-[0_24px_60px_rgba(0,0,0,0.7)]">
+            <div className="mb-4 text-center">
+              <div className="text-[15px] font-semibold text-white/90">保存模型修改？</div>
+              <div className="mt-2 text-[12px] leading-relaxed text-white/50">
+                您在编辑模式下对模型做了修改。<br />是否保存这些修改？
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                className="flex-1 rounded border border-white/8 bg-white/10 py-2 text-[12px] font-medium text-white/70 transition hover:bg-white/15"
+                onClick={handleDiscardEdits}
+                type="button"
+              >
+                放弃
+              </button>
+              <button
+                className="flex-1 rounded border border-[#00F5FF]/40 bg-[#00F5FF]/15 py-2 text-[12px] font-medium text-[#00F5FF] transition hover:bg-[#00F5FF]/25"
+                onClick={handleSaveEdits}
+                type="button"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }

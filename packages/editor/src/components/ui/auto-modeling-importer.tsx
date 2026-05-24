@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { applySceneGraphToEditor, type SceneGraph } from '../../lib/scene'
 import {
   buildSceneGraphFromReferenceFile,
   type AutoModelImportOptions,
 } from '../../lib/auto-modeling'
+import { useScene } from '@pascal-app/core'
+import { useViewer } from '@pascal-app/viewer'
 
 export interface AutoModelingImporterProps {
   onSceneGraphImported?: (sceneGraph: SceneGraph) => void
@@ -20,7 +22,7 @@ export function AutoModelingImporter({
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleImport = async (file: File | null) => {
+  const handleImport = useCallback(async (file: File | null) => {
     if (!file) return
 
     setIsImporting(true)
@@ -28,19 +30,54 @@ export function AutoModelingImporter({
     setMessage(null)
 
     try {
+      const isGlb = /\.(glb|gltf)$/i.test(file.name)
       const sceneGraph = await buildSceneGraphFromReferenceFile(file, options)
-      if (onSceneGraphImported) {
-        onSceneGraphImported(sceneGraph)
+
+      if (isGlb) {
+        // GLB 导入：追加扫描到已有场景的楼层，绝不替换整个场景
+        const state = useScene.getState()
+        const viewerState = useViewer.getState()
+        let targetLevelId = viewerState.selection.levelId
+
+        // 如果无选中楼层，寻找场景中第一个 Level
+        if (!targetLevelId) {
+          const firstLevel = Object.values(state.nodes).find((n): n is any => n.type === 'level')
+          targetLevelId = firstLevel?.id ?? null
+        }
+
+        const scanEntry = Object.values(sceneGraph.nodes).find((n) => ('type' in n ? n.type === 'scan' : false))
+        if (scanEntry && targetLevelId) {
+          useScene.setState((prev) => {
+            const nextNodes = { ...prev.nodes }
+            const scanId = (scanEntry as any).id
+            nextNodes[scanId] = { ...(scanEntry as any), parentId: targetLevelId }
+            const level = nextNodes[targetLevelId]
+            if (level && 'children' in level) {
+              nextNodes[targetLevelId] = { ...level, children: [...(level as any).children, scanId] } as any
+            }
+            return { nodes: nextNodes }
+          })
+          useScene.getState().markDirty((scanEntry as any).id)
+          useScene.getState().markDirty(targetLevelId)
+          setMessage(`已导入扫描模型 ${file.name}。`)
+        } else {
+          setError('无法导入：场景中无可用楼层，请先创建楼层。')
+        }
       } else {
-        applySceneGraphToEditor(sceneGraph)
+        // 其他格式：正常逻辑
+        if (onSceneGraphImported) {
+          onSceneGraphImported(sceneGraph)
+        } else {
+          applySceneGraphToEditor(sceneGraph)
+        }
+        setMessage(`Imported ${file.name}. Review the generated walls, slabs, and zones, then fine-tune as needed.`)
       }
-      setMessage(`Imported ${file.name}. Review the generated walls, slabs, and zones, then fine-tune as needed.`)
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : 'Failed to import reference file.')
     } finally {
       setIsImporting(false)
     }
-  }
+  }, [options, onSceneGraphImported])
 
   return (
     <section className="space-y-4 rounded-xl border border-border/50 bg-background/80 p-4">

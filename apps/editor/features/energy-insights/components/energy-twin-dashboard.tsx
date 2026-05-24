@@ -22,7 +22,6 @@ import type { CompositionData, RankingItem, WeeklyTrendData } from '@/features/e
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
 import FloorHeatmapOverlay from '@/features/energy-insights/components/floor-heatmap-overlay'
-import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
 import {
   buildFloorHeatmapData,
   buildFloorHourlyAggregate,
@@ -33,6 +32,7 @@ import {
 } from '@/features/energy-insights/lib/energy-zone-highlight'
 import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
 import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import { buildPrediction, type PredictionPoint, type EditImpact } from '@/features/energy-insights/lib/energy-prediction'
 import type {
   HostFilterOption,
   HostQueryFilters,
@@ -60,8 +60,8 @@ interface EnergyTwinDashboardProps {
   queryResults: HostQueryResult[]
   selectedComponentId: string | null
   selectedComponentName: string
-  topToolbar?: ReactNode
   zoneOptions: HostFilterOption[]
+  editSnapshot?: Record<string, AnyNode> | null
 }
 
 // ---- Cybernetic Chart Palette ----
@@ -81,18 +81,21 @@ function buildDualLineOption(
     backgroundColor: 'transparent',
     grid: { top: 16, right: 8, bottom: 20, left: 40 },
     tooltip: { trigger: 'axis' },
+    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
     xAxis: { type: 'category', data: labels, axisLabel: { color: LABEL, fontSize: 9, interval: 3 }, axisTick: { show: false }, axisLine: { lineStyle: { color: GRID } } },
     yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
     series: [
       {
         name: '今日', type: 'line', data: today, smooth: true, symbol: 'none',
-        lineStyle: { color: CYAN, width: 1.5 },
-        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.08)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
+        lineStyle: { color: CYAN, width: 2 },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.1)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
         markPoint: { data: [{ coord: [peak.hour, peak.value], value: peak.value.toFixed(1), symbol: 'pin', symbolSize: 18, itemStyle: { color: RED as any }, label: { show: true, fontSize: 9, color: '#fff' } }] },
       },
-      { name: '昨日', type: 'line', data: yesterday, smooth: true, symbol: 'none', lineStyle: { color: 'rgba(255,255,255,0.12)', width: 1, type: 'dashed' } },
+      {
+        name: '昨日', type: 'line', data: yesterday, smooth: true, symbol: 'none',
+        lineStyle: { color: AMBER, width: 1.5, type: 'dashed' },
+      },
     ],
-    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
   } as unknown as EChartsOption
 }
 
@@ -138,6 +141,65 @@ function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
     ],
     legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
   }
+}
+
+const PRED_COLORS = { actual: AMBER, base: CYAN, adjusted: '#FF6B9B' }
+
+function buildPredictionOption(
+  labels: string[],
+  actual: number[],
+  predicted: PredictionPoint[],
+  editImpact: EditImpact,
+): EChartsOption {
+  const series: any[] = [
+    {
+      name: '实际',
+      type: 'line',
+      data: actual,
+      smooth: true,
+      symbol: 'diamond',
+      symbolSize: 5,
+      itemStyle: { color: PRED_COLORS.actual },
+      lineStyle: { color: PRED_COLORS.actual, width: 1.5, type: 'dashed' },
+      z: 1,
+    },
+    {
+      name: '预测',
+      type: 'line',
+      data: predicted.map((p) => p.predicted),
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 4,
+      itemStyle: { color: PRED_COLORS.base },
+      lineStyle: { color: PRED_COLORS.base, width: 2 },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(0,245,255,0.08)' }, { offset: 1, color: 'rgba(0,245,255,0.0)' }] } },
+      z: 2,
+    },
+  ]
+
+  if (editImpact.hasEdits) {
+    series.push({
+      name: '编辑后预测',
+      type: 'line',
+      data: editImpact.adjusted.map((p: PredictionPoint) => p.predicted),
+      smooth: true,
+      symbol: 'rect',
+      symbolSize: 5,
+      itemStyle: { color: PRED_COLORS.adjusted },
+      lineStyle: { color: PRED_COLORS.adjusted, width: 2, type: 'dotted' },
+      z: 3,
+    })
+  }
+
+  return {
+    backgroundColor: 'transparent',
+    grid: { top: 22, right: 8, bottom: 22, left: 42 },
+    tooltip: { trigger: 'axis' },
+    legend: { right: 0, top: 0, textStyle: { color: LABEL, fontSize: 9 } },
+    xAxis: { type: 'category', data: labels, axisLabel: { color: LABEL, fontSize: 9, interval: 3 }, axisTick: { show: false } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: GRID } }, axisLabel: { color: LABEL, fontSize: 9 } },
+    series,
+  } as unknown as EChartsOption
 }
 
 /** 数字过渡动画包装 */
@@ -237,11 +299,12 @@ export default function EnergyTwinDashboard({
   queryResults,
   selectedComponentId,
   selectedComponentName,
-  topToolbar,
   zoneOptions,
+  editSnapshot,
 }: EnergyTwinDashboardProps) {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const sceneNodes = useScene((state) => state.nodes) as Record<string, AnyNode>
+  const readOnly = useScene((state) => state.readOnly)
 
   const todayStr = useMemo(() => {
     const d = new Date()
@@ -312,37 +375,18 @@ export default function EnergyTwinDashboard({
     [sceneNodes, filters.levelId, filters.zoneId, timelineDate, timelineHour, queryResults],
   )
 
+  const predictionData = useMemo(
+    () => buildPrediction(sceneNodes, filters.levelId || '', filters.zoneId || '', timelineDate, editSnapshot),
+    [sceneNodes, filters.levelId, filters.zoneId, timelineDate, editSnapshot],
+  )
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-slate-100">
       <div className="cockpit-atmosphere" />
-      <header className="absolute inset-x-0 top-0 z-30 h-[10vh] min-h-[84px] px-4 py-2">
-        <div className="glass-panel pointer-events-auto flex h-full items-center gap-3 px-4 py-2">
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <HostFilterBar
-              filters={filters}
-              hasQueried={hasQueried}
-              levelOptions={levelOptions}
-              onFiltersChange={onFiltersChange}
-              onQuery={onQuery}
-              resultCount={queryResults.length}
-              variant="cockpit"
-              zoneOptions={zoneOptions}
-            />
-          </div>
-          <div className="ml-auto flex shrink-0 items-center gap-2 whitespace-nowrap">
-            {topToolbar ? <div className="glass-panel rounded-xl px-2 py-0.5 whitespace-nowrap">{topToolbar}</div> : null}
-            <div className="text-right whitespace-nowrap">
-              <div className="text-[10px] tracking-[0.22em] text-white/40 uppercase">项目</div>
-              <div className="text-white/70 text-sm">{projectId}</div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div
         className="absolute z-30"
         style={{
-          top: 'calc(10vh + 8px)',
+          top: '8px',
           left: 'calc(clamp(280px, 22vw, 360px) + 12px)',
         }}
       >
@@ -350,7 +394,7 @@ export default function EnergyTwinDashboard({
       </div>
 
       <section
-        className="pointer-events-none absolute inset-x-0 top-[10vh] bottom-0 z-20 grid gap-4 px-4 py-4"
+        className="pointer-events-none absolute inset-0 z-20 grid gap-4 px-4 pt-3 pb-4"
         style={{
           gridTemplateColumns: 'clamp(280px, 22vw, 360px) minmax(0, 1fr) clamp(280px, 22vw, 360px)',
         }}
@@ -670,15 +714,40 @@ export default function EnergyTwinDashboard({
         </div>
       </section>
 
-      {/* 时间轴 —— 工具栏正下方，紧贴底部 */}
-      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[calc(100%-32px)] max-w-[1200px] -translate-x-1/2">
-        <EnergyTimelineStrip
-          date={timelineDate}
-          hour={timelineHour}
-          hourlySamples={hourlySamples}
-          onChange={handleTimelineChange}
-        />
+      {/* 能耗预测图（始终可见） */}
+      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[calc(100%-100px)] max-w-[1100px] -translate-x-1/2">
+          <div className="rounded border border-white/6 bg-[#061522]/60 p-2 backdrop-blur-sm">
+            <div className="mb-1 flex items-center gap-2">
+              <Clock3 className="h-3 w-3 text-[#00F5FF]" />
+              <span className="font-semibold text-[10px] uppercase tracking-[0.12em] text-white/55">
+                未来 24h 能耗预测
+              </span>
+              <span className="ml-auto text-[9px] text-white/30">
+                {filters.zoneId ? '房间级' : filters.levelId ? '楼层级' : '整栋级'}
+              </span>
+            </div>
+          <div className="h-[150px]">
+            <ReactECharts
+              key={`pred-${timelineDate}-${filters.levelId}-${filters.zoneId}`}
+              option={buildPredictionOption(predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact)}
+              opts={{ notMerge: true } as any}
+              style={{ height: '150px', width: '100%' }}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* 时间轴（只读模式下显示，编辑模式下隐藏） */}
+      {readOnly ? (
+        <div className="pointer-events-auto absolute bottom-[200px] left-1/2 z-40 w-[calc(100%-150px)] max-w-[1100px] -translate-x-1/2">
+          <EnergyTimelineStrip
+            date={timelineDate}
+            hour={timelineHour}
+            hourlySamples={hourlySamples}
+            onChange={handleTimelineChange}
+          />
+        </div>
+      ) : null}
 
       <div className="absolute left-1/2 top-[104px] z-30 w-72 -translate-x-1/2 space-y-2">
         {energyLoading ? (

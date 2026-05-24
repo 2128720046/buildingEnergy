@@ -18,7 +18,10 @@ export type {
   WindowEvent,
   ZoneEvent,
 } from './events/bus'
-export { emitter, eventSuffixes } from './events/bus'
+export {
+  emitter, eventSuffixes,
+  type ScanEvent,
+} from './events/bus'
 export {
   sceneRegistry,
   useRegistry,

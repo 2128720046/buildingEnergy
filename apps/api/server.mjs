@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -192,6 +192,84 @@ const server = createServer(async (request, response) => {
       }
 
       sendJson(response, 200, buildEnergyPayload(projectId, componentId))
+      return
+    }
+
+    const assetUploadMatch = requestUrl.pathname.match(
+      /^\/projects\/([a-zA-Z0-9_-]+)\/assets$/,
+    )
+
+    if (request.method === 'POST' && assetUploadMatch?.[1]) {
+      const projectId = assetUploadMatch[1]
+      if (!isValidProjectId(projectId)) {
+        sendJson(response, 400, { error: 'Invalid projectId' })
+        return
+      }
+
+      // Read raw body as binary
+      const chunks = []
+      for await (const chunk of request) {
+        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+      }
+      const fileBuffer = Buffer.concat(chunks)
+      if (fileBuffer.length === 0) {
+        sendJson(response, 400, { error: 'Empty file body' })
+        return
+      }
+
+      // Get filename from query param, default to scan.glb
+      const fileName = requestUrl.searchParams.get('filename') || 'scan.glb'
+      const ext = extname(fileName) || '.glb'
+      const assetId = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}${ext}`
+      const assetDir = join(dataRoot, '..', 'assets', projectId)
+      await mkdir(assetDir, { recursive: true })
+      await writeFile(join(assetDir, assetId), fileBuffer)
+
+      const assetUrl = `/projects/${projectId}/assets/${assetId}`
+      sendJson(response, 200, { assetId, url: assetUrl })
+      return
+    }
+
+    const assetDownloadMatch = requestUrl.pathname.match(
+      /^\/projects\/([a-zA-Z0-9_-]+)\/assets\/([a-zA-Z0-9_.-]+)$/,
+    )
+
+    if (request.method === 'GET' && assetDownloadMatch?.[1] && assetDownloadMatch?.[2]) {
+      const projectId = assetDownloadMatch[1]
+      const assetId = assetDownloadMatch[2]
+      if (!isValidProjectId(projectId)) {
+        sendJson(response, 400, { error: 'Invalid projectId' })
+        return
+      }
+
+      const assetPath = join(dataRoot, '..', 'assets', projectId, assetId)
+      try {
+        const fileBuffer = await readFile(assetPath)
+        const ext = extname(assetId).toLowerCase()
+        const mimeTypes = {
+          '.glb': 'model/gltf-binary',
+          '.gltf': 'model/gltf+json',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.webp': 'image/webp',
+          '.svg': 'image/svg+xml',
+        }
+        const mime = mimeTypes[ext] || 'application/octet-stream'
+        response.writeHead(200, {
+          'Access-Control-Allow-Origin': allowOrigin,
+          'Content-Type': mime,
+          'Content-Length': fileBuffer.length,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        })
+        response.end(fileBuffer)
+      } catch (error) {
+        if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+          sendJson(response, 404, { error: 'Asset not found' })
+          return
+        }
+        throw error
+      }
       return
     }
 
