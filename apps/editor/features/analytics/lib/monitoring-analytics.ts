@@ -663,7 +663,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
 
   const fieldGlossary: MonitoringFieldGlossaryItem[] = [
     { field: 'id', dataType: 'BIGINT', description: '监测记录主键，便于做明细追踪和数据回溯。' },
-    { field: 'building_id', dataType: 'VARCHAR', description: '楼栋标识，用于做楼栋能耗排行和分组分析。' },
+    { field: 'building_id', dataType: 'VARCHAR', description: '楼栋标识，用于做楼栋分组、风险分层和明细追踪。' },
     { field: 'building_type', dataType: 'VARCHAR', description: '楼栋类型，可区分办公、教学和实验等空间。' },
     { field: 'monitor_time', dataType: 'DATETIME', description: '监测时间，可拆成日期和小时做时序、热力和高峰分析。' },
     { field: 'electricity_kwh', dataType: 'DECIMAL', description: '当前监测时段总耗电量，是看板的核心分析指标。' },

@@ -1,0 +1,7 @@
+[    1423ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    1544ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    2445ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3010/projects/local-editor/scene:0
+[    2731ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    3062ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[   27305ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://api.unisvg.com/charm.json?icons=stack-push:0
+[   27305ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_TIMED_OUT @ https://api.unisvg.com/icon-park-outline.json?icons=perspective:0

@@ -285,6 +285,19 @@
     box-shadow: inset 0 0 0 1px rgba(0, 245, 255, 0.06);
   }
 
+  .data-analysis-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  @media (min-width: 1280px) {
+    .data-analysis-main-grid {
+      grid-template-columns: minmax(0, 24%) minmax(0, 50%) minmax(0, 26%);
+    }
+  }
+
   /* ---- 全局氛围光：深渊蓝径向渐变 + 暗角 ---- */
   .cockpit-atmosphere {
     position: absolute;
