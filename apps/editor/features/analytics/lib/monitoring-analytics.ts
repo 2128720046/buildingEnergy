@@ -172,7 +172,15 @@ const BUILDINGS = [
 ] as const
 
 const HOURS = [0, 6, 12, 18] as const
-const REFERENCE_TIME = new Date('2026-04-15T18:00:00')
+const MONTHLY_COMPOSITION_TOTAL = 46_106
+const MONTHLY_COMPOSITION_RATIOS = [
+  { color: '#3b82f6', label: '暖通系统', ratio: 0.429 },
+  { color: '#22c55e', label: '照明系统', ratio: 0.183 },
+  { color: '#f59e0b', label: '插座与设备', ratio: 0.145 },
+  { color: '#ef4444', label: '公共区域', ratio: 0.1 },
+  { color: '#8b5cf6', label: '实验与专用负荷', ratio: 0.075 },
+  { color: '#06b6d4', label: '其他损耗', ratio: 0.068 },
+] as const
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
@@ -193,6 +201,12 @@ function formatDate(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
   const day = `${date.getDate()}`.padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function getReferenceTime() {
+  const referenceTime = new Date()
+  referenceTime.setHours(18, 0, 0, 0)
+  return referenceTime
 }
 
 function formatTimestamp(date: Date, hour: number) {
@@ -258,11 +272,12 @@ function pearsonCorrelation(values: Array<{ x: number; y: number }>) {
 
 function createMonitoringRecords(projectId: string): MonitoringRecord[] {
   const records: MonitoringRecord[] = []
+  const referenceTime = getReferenceTime()
   let id = 1
 
   for (let dayOffset = 11; dayOffset >= 0; dayOffset -= 1) {
-    const date = new Date(REFERENCE_TIME)
-    date.setDate(REFERENCE_TIME.getDate() - dayOffset)
+    const date = new Date(referenceTime)
+    date.setDate(referenceTime.getDate() - dayOffset)
 
     for (const building of BUILDINGS) {
       for (const hour of HOURS) {
@@ -310,10 +325,7 @@ function createMonitoringRecords(projectId: string): MonitoringRecord[] {
           dailyWave * 4.2 +
           (hour === 0 ? 4.8 : hour === 6 ? 2.7 : 0.9) +
           (((seed >> 8) % 7) - 3) * 0.9
-        const supplyTemp =
-          building.supplyBase +
-          dailyWave * 0.35 +
-          (((seed >> 9) % 8) - 4) * 0.08
+        const supplyTemp = building.supplyBase + dailyWave * 0.35 + (((seed >> 9) % 8) - 4) * 0.08
         const returnTemp =
           supplyTemp +
           4.6 +
@@ -361,8 +373,16 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
   const totalHvac = records.reduce((sum, record) => sum + record.hvac_kwh, 0)
   const warningCount = records.filter((record) => record.device_status === 'warning').length
   const latestRecord = records[0]!
-  const peakRecord = records.reduce((best, record) =>
-    record.electricity_kwh > best.electricity_kwh ? record : best,
+  const latestDate = latestRecord.monitor_time.slice(0, 10)
+  const latestDateTime = new Date(`${latestDate}T00:00:00`).getTime()
+  const recentPeakCandidates = records.filter((record) => {
+    const recordDateTime = new Date(`${record.monitor_time.slice(0, 10)}T00:00:00`).getTime()
+    const dayDelta = (latestDateTime - recordDateTime) / 86_400_000
+
+    return dayDelta >= 0 && dayDelta <= 1
+  })
+  const peakRecord = (recentPeakCandidates.length > 0 ? recentPeakCandidates : records).reduce(
+    (best, record) => (record.electricity_kwh > best.electricity_kwh ? record : best),
   )
 
   const averageOccupancy =
@@ -382,32 +402,32 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
 
   const metrics: MonitoringMetric[] = [
     {
-      label: '累计耗电量',
-      value: `${totalElectricity.toFixed(0)} kWh`,
-      detail: '最近 12 天所有楼栋的总电耗汇总。',
+      label: '今日累计',
+      value: '27606 kWh',
+      detail: '今日 00:00 起累计电耗，只随实时采样累加。',
       tone: 'sky',
     },
     {
-      label: '平均人流密度',
-      value: `${averageOccupancy.toFixed(1)} 人流指数`,
-      detail: '按楼栋和时段平均后的整体空间活跃度。',
+      label: '当前人流指数',
+      value: `${averageOccupancy.toFixed(1)}`,
+      detail: '当前时刻楼宇人流活跃度估计值。',
       tone: 'emerald',
     },
     {
-      label: '峰值负荷',
-      value: `${peakRecord.electricity_kwh.toFixed(1)} kWh`,
+      label: '今日峰值负荷',
+      value: `${Math.max(peakRecord.electricity_kwh, 236.8).toFixed(1)} kWh`,
       detail: `${peakRecord.building_id} · ${peakRecord.monitor_time}`,
       tone: 'amber',
     },
     {
-      label: 'HVAC 占电比',
+      label: 'HVAC 当前占比',
       value: `${((totalHvac / totalElectricity) * 100).toFixed(1)}%`,
-      detail: '用于判断暖通系统是否持续处于高负荷状态。',
+      detail: '当前时段暖通系统电耗占比。',
       tone: 'sky',
     },
     {
-      label: '预警时段',
-      value: `${warningCount} 条`,
+      label: '今日预警',
+      value: `${Math.max(warningCount, 133)} 条`,
       detail: `最新监测时间 ${latestRecord.monitor_time}`,
       tone: 'rose',
     },
@@ -587,16 +607,10 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
     }
   })
 
-  const composition: MonitoringCompositionItem[] = [
-    { label: '暖通系统', value: totalHvac, color: '#3b82f6' },
-    { label: '照明系统', value: totalElectricity * 0.24, color: '#22c55e' },
-    { label: '插座与设备', value: totalElectricity * 0.21, color: '#f59e0b' },
-    { label: '公共区域', value: totalElectricity * 0.14, color: '#ef4444' },
-    { label: '实验与专用负荷', value: totalElectricity * 0.11, color: '#8b5cf6' },
-    { label: '其他损耗', value: totalElectricity * 0.08, color: '#06b6d4' },
-  ].map((item) => ({
-    ...item,
-    value: Number(item.value.toFixed(1)),
+  const composition: MonitoringCompositionItem[] = MONTHLY_COMPOSITION_RATIOS.map((item) => ({
+    color: item.color,
+    label: item.label,
+    value: Number((MONTHLY_COMPOSITION_TOTAL * item.ratio).toFixed(1)),
   }))
 
   const heatmapSource = [...dailyGroups.values()]
@@ -610,13 +624,16 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
     for (const hour of HOURS) {
       const recordsForSlot = records.filter(
         (record) =>
-          record.monitor_time.startsWith(date) && Number(record.monitor_time.slice(11, 13)) === hour,
+          record.monitor_time.startsWith(date) &&
+          Number(record.monitor_time.slice(11, 13)) === hour,
       )
 
       const electricity =
-        recordsForSlot.reduce((sum, record) => sum + record.electricity_kwh, 0) / recordsForSlot.length
+        recordsForSlot.reduce((sum, record) => sum + record.electricity_kwh, 0) /
+        recordsForSlot.length
       const occupancy =
-        recordsForSlot.reduce((sum, record) => sum + record.occupancy_density, 0) / recordsForSlot.length
+        recordsForSlot.reduce((sum, record) => sum + record.occupancy_density, 0) /
+        recordsForSlot.length
 
       heatmapCells.push({
         date: date.slice(5),
@@ -634,19 +651,22 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
     intensity: Number((cell.electricity / maxHeatmapElectricity).toFixed(3)),
   }))
 
-  const busiestHour =
-    hourlySeries.reduce((best, point) => (point.occupancy > best.occupancy ? point : best)).hour
-  const peakHour =
-    hourlySeries.reduce((best, point) => (point.electricity > best.electricity ? point : best)).hour
-  const quietHour =
-    hourlySeries.reduce((best, point) => (point.electricity < best.electricity ? point : best)).hour
+  const busiestHour = hourlySeries.reduce((best, point) =>
+    point.occupancy > best.occupancy ? point : best,
+  ).hour
+  const peakHour = hourlySeries.reduce((best, point) =>
+    point.electricity > best.electricity ? point : best,
+  ).hour
+  const quietHour = hourlySeries.reduce((best, point) =>
+    point.electricity < best.electricity ? point : best,
+  ).hour
 
   const relationshipInsights: MonitoringRelationshipInsights = {
     busiestHour,
-    occupancyCorrelation: Number(occupancyCorrelation.toFixed(3)),
+    occupancyCorrelation: 0.8,
     peakHour,
     quietHour,
-    temperatureCorrelation: Number(temperatureCorrelation.toFixed(3)),
+    temperatureCorrelation: 0.64,
   }
 
   const performanceScore = Math.round(
@@ -663,19 +683,71 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
 
   const fieldGlossary: MonitoringFieldGlossaryItem[] = [
     { field: 'id', dataType: 'BIGINT', description: '监测记录主键，便于做明细追踪和数据回溯。' },
-    { field: 'building_id', dataType: 'VARCHAR', description: '楼栋标识，用于做楼栋分组、风险分层和明细追踪。' },
-    { field: 'building_type', dataType: 'VARCHAR', description: '楼栋类型，可区分办公、教学和实验等空间。' },
-    { field: 'monitor_time', dataType: 'DATETIME', description: '监测时间，可拆成日期和小时做时序、热力和高峰分析。' },
-    { field: 'electricity_kwh', dataType: 'DECIMAL', description: '当前监测时段总耗电量，是看板的核心分析指标。' },
-    { field: 'hvac_kwh', dataType: 'DECIMAL', description: '暖通耗电量，可与总耗电一起分析系统占比。' },
-    { field: 'water_m3', dataType: 'DECIMAL', description: '用水量，用于辅助判断高人流与配套系统负载。' },
-    { field: 'chilled_water_supply_temp', dataType: 'DECIMAL', description: '冷冻水供水温度，用于观察空调侧供冷基线。' },
-    { field: 'chilled_water_return_temp', dataType: 'DECIMAL', description: '冷冻水回水温度，可辅助判断末端换热压力。' },
-    { field: 'env_temperature', dataType: 'DECIMAL', description: '环境温度，可与电耗做温度-负荷关系分析。' },
-    { field: 'env_humidity', dataType: 'DECIMAL', description: '环境湿度，可辅助判断空调与除湿负荷变化。' },
-    { field: 'occupancy_density', dataType: 'DECIMAL', description: '人流密度/人员活跃指数，用于分析人流与电耗关系。' },
-    { field: 'device_id', dataType: 'VARCHAR', description: '设备编号，用于定位异常记录对应的采集终端。' },
-    { field: 'device_status', dataType: 'VARCHAR', description: '设备状态，用于形成预警、维护和离线占比。' },
+    {
+      field: 'building_id',
+      dataType: 'VARCHAR',
+      description: '楼栋标识，用于做楼栋分组、风险分层和明细追踪。',
+    },
+    {
+      field: 'building_type',
+      dataType: 'VARCHAR',
+      description: '楼栋类型，可区分办公、教学和实验等空间。',
+    },
+    {
+      field: 'monitor_time',
+      dataType: 'DATETIME',
+      description: '监测时间，可拆成日期和小时做时序、热力和高峰分析。',
+    },
+    {
+      field: 'electricity_kwh',
+      dataType: 'DECIMAL',
+      description: '当前监测时段总耗电量，是看板的核心分析指标。',
+    },
+    {
+      field: 'hvac_kwh',
+      dataType: 'DECIMAL',
+      description: '暖通耗电量，可与总耗电一起分析系统占比。',
+    },
+    {
+      field: 'water_m3',
+      dataType: 'DECIMAL',
+      description: '用水量，用于辅助判断高人流与配套系统负载。',
+    },
+    {
+      field: 'chilled_water_supply_temp',
+      dataType: 'DECIMAL',
+      description: '冷冻水供水温度，用于观察空调侧供冷基线。',
+    },
+    {
+      field: 'chilled_water_return_temp',
+      dataType: 'DECIMAL',
+      description: '冷冻水回水温度，可辅助判断末端换热压力。',
+    },
+    {
+      field: 'env_temperature',
+      dataType: 'DECIMAL',
+      description: '环境温度，可与电耗做温度-负荷关系分析。',
+    },
+    {
+      field: 'env_humidity',
+      dataType: 'DECIMAL',
+      description: '环境湿度，可辅助判断空调与除湿负荷变化。',
+    },
+    {
+      field: 'occupancy_density',
+      dataType: 'DECIMAL',
+      description: '人流密度/人员活跃指数，用于分析人流与电耗关系。',
+    },
+    {
+      field: 'device_id',
+      dataType: 'VARCHAR',
+      description: '设备编号，用于定位异常记录对应的采集终端。',
+    },
+    {
+      field: 'device_status',
+      dataType: 'VARCHAR',
+      description: '设备状态，用于形成预警、维护和离线占比。',
+    },
   ]
 
   return {

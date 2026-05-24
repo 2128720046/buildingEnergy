@@ -66,3 +66,61 @@
 [ 2480312ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
 [ 2481795ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
 [ 2481893ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4556460ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4556639ms] [LOG] [Fast Refresh] done in 444ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4675970ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4677365ms] [LOG] [Fast Refresh] done in 1607ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4741510ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4741963ms] [LOG] [Fast Refresh] done in 477ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4763153ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4763508ms] [LOG] [Fast Refresh] done in 486ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4789378ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4790661ms] [LOG] [Fast Refresh] done in 954ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4825659ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4826486ms] [LOG] [Fast Refresh] done in 941ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4866791ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4867586ms] [LOG] [Fast Refresh] done in 797ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4900476ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4901139ms] [LOG] [Fast Refresh] done in 698ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4927006ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4927670ms] [LOG] [Fast Refresh] done in 733ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4980643ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 4981751ms] [LOG] [Fast Refresh] done in 937ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5026205ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5027168ms] [LOG] [Fast Refresh] done in 1024ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5064371ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5065240ms] [LOG] [Fast Refresh] done in 962ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5084873ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5085690ms] [LOG] [Fast Refresh] done in 719ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5128778ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5129634ms] [LOG] [Fast Refresh] done in 668ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5141063ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5142386ms] [LOG] [Fast Refresh] done in 1063ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5150335ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5150455ms] [LOG] [Fast Refresh] done in 237ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5168049ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5169244ms] [LOG] [Fast Refresh] done in 557ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5235108ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5235988ms] [LOG] [Fast Refresh] done in 670ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5256893ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5257277ms] [LOG] [Fast Refresh] done in 490ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5311726ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5311937ms] [LOG] [Fast Refresh] done in 409ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5360154ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5360979ms] [ERROR] The final argument passed to %s changed size between renders. The order and size of this array must remain constant.
+
+Previous: %s
+Incoming: %s useLayoutEffect [[object Object], ] [[object Object]] @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 5362288ms] [LOG] [Fast Refresh] done in 375ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5367510ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5370391ms] [LOG] [Fast Refresh] done in 2686ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5393651ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5395122ms] [LOG] [Fast Refresh] done in 769ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5412805ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5412954ms] [LOG] [Fast Refresh] done in 310ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5438321ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5438847ms] [LOG] [Fast Refresh] done in 441ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5491346ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5491452ms] [LOG] [Fast Refresh] done in 232ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5574131ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 5574131ms] [LOG] [Fast Refresh] done in 348ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
