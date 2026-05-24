@@ -18,7 +18,6 @@ import {
 } from '@pascal-app/editor/modeling'
 import { useViewer } from '@pascal-app/viewer'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { DASHBOARD_ASSETS } from '@/features/analytics/components/dashboard-theme'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
@@ -111,44 +110,54 @@ function HostViewerToolbarRight({
   const [isImporting, setIsImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
 
-  const handleImport = useCallback(async (file: File | null) => {
-    if (!file) return
-    // 导入前拍照：保存当前场景，以便失败时恢复
-    if (typeof window !== 'undefined') {
-      ;(window as any).__preImportSceneSnapshot = JSON.parse(JSON.stringify(useScene.getState().nodes))
-      ;(window as any).__preImportRootSnapshot = [...useScene.getState().rootNodeIds]
-    }
-    setIsImporting(true)
-    setImportError(null)
+  const handleImport = useCallback(
+    async (file: File | null) => {
+      if (!file) return
+      // 导入前拍照：保存当前场景，以便失败时恢复
+      if (typeof window !== 'undefined') {
+        ;(window as any).__preImportSceneSnapshot = JSON.parse(
+          JSON.stringify(useScene.getState().nodes),
+        )
+        ;(window as any).__preImportRootSnapshot = [...useScene.getState().rootNodeIds]
+      }
+      setIsImporting(true)
+      setImportError(null)
 
-    try {
-      const sceneGraph = await buildSceneGraphFromReferenceFile(file)
+      try {
+        const sceneGraph = await buildSceneGraphFromReferenceFile(file)
 
-      // 如果配置了后端，先 GLB 文件再上传到后端，替换 asset:// URL
-      if (apiBaseUrl) {
-        const isGlb = /\.(glb|gltf)$/i.test(file.name)
-        for (const node of Object.values(sceneGraph.nodes) as any[]) {
-          if (isGlb && node?.type === 'scan' && typeof node?.url === 'string' && node.url.startsWith('asset://')) {
-            // 重新上传原始文件到后端
-            const uploadUrl = `${apiBaseUrl.replace(/\/+$/, '')}/projects/${encodeURIComponent(projectId)}/assets?filename=${encodeURIComponent(file.name)}`
-            const uploadRes = await fetch(uploadUrl, { method: 'POST', body: file })
-            if (uploadRes.ok) {
-              const result = await uploadRes.json() as { url: string }
-              node.url = result.url.startsWith('http') ? result.url : `${apiBaseUrl}${result.url}`
+        // 如果配置了后端，先 GLB 文件再上传到后端，替换 asset:// URL
+        if (apiBaseUrl) {
+          const isGlb = /\.(glb|gltf)$/i.test(file.name)
+          for (const node of Object.values(sceneGraph.nodes) as any[]) {
+            if (
+              isGlb &&
+              node?.type === 'scan' &&
+              typeof node?.url === 'string' &&
+              node.url.startsWith('asset://')
+            ) {
+              // 重新上传原始文件到后端
+              const uploadUrl = `${apiBaseUrl.replace(/\/+$/, '')}/projects/${encodeURIComponent(projectId)}/assets?filename=${encodeURIComponent(file.name)}`
+              const uploadRes = await fetch(uploadUrl, { method: 'POST', body: file })
+              if (uploadRes.ok) {
+                const result = (await uploadRes.json()) as { url: string }
+                node.url = result.url.startsWith('http') ? result.url : `${apiBaseUrl}${result.url}`
+              }
             }
           }
         }
-      }
 
-      applySceneGraphToEditor(sceneGraph)
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error)
-      setImportError(msg)
-      console.error('[host] failed to import reference', error)
-    } finally {
-      setIsImporting(false)
-    }
-  }, [apiBaseUrl, projectId])
+        applySceneGraphToEditor(sceneGraph)
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error)
+        setImportError(msg)
+        console.error('[host] failed to import reference', error)
+      } finally {
+        setIsImporting(false)
+      }
+    },
+    [apiBaseUrl, projectId],
+  )
 
   return (
     <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
@@ -207,7 +216,9 @@ function HostViewerToolbarRight({
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60">
           <div className="w-[360px] rounded-xl border border-white/8 bg-[#0C0E14] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.7)]">
             <div className="mb-1 flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/15 text-red-400 text-xs font-bold">!</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/15 text-red-400 text-xs font-bold">
+                !
+              </span>
               <h3 className="font-semibold text-white/90 text-sm">导入模型失败</h3>
             </div>
             <div className="mt-3 space-y-2 text-[12px] leading-relaxed text-white/60">
@@ -234,7 +245,9 @@ function HostViewerToolbarRight({
                     typeof window !== 'undefined' ? (window as any).__preImportRootSnapshot : null
                   if (snapshot) {
                     useScene.setState({ nodes: snapshot, rootNodeIds: rootSnapshot ?? [] })
-                    Object.keys(snapshot).forEach((id) => useScene.getState().markDirty(id as any))
+                    Object.keys(snapshot).forEach((id) => {
+                      useScene.getState().markDirty(id as any)
+                    })
                     useScene.temporal.getState().clear()
                   }
                   delete (window as any).__preImportSceneSnapshot
@@ -256,6 +269,147 @@ function HostViewerToolbarRight({
           </div>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+function DataAnalysisTitlePlate() {
+  return (
+    <div
+      className="relative flex h-[58px] w-full items-center justify-center overflow-hidden"
+      style={{ fontFamily: 'var(--font-douyu)' }}
+    >
+      <svg
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full"
+        preserveAspectRatio="none"
+        viewBox="0 0 620 58"
+      >
+        <defs>
+          <linearGradient id="dataTitleStroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#034D7A" stopOpacity="0" />
+            <stop offset="16%" stopColor="#00D4FF" stopOpacity="0.76" />
+            <stop offset="50%" stopColor="#7AF7FF" stopOpacity="0.95" />
+            <stop offset="84%" stopColor="#00D4FF" stopOpacity="0.76" />
+            <stop offset="100%" stopColor="#034D7A" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="dataTitleFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#0A2540" stopOpacity="0.68" />
+            <stop offset="100%" stopColor="#020817" stopOpacity="0.08" />
+          </linearGradient>
+          <filter id="dataTitleGlow" x="-20%" y="-60%" width="140%" height="220%">
+            <feGaussianBlur result="blur" stdDeviation="3" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <path
+          d="M48 6H572L606 29L572 52H48L14 29L48 6Z"
+          fill="url(#dataTitleFill)"
+          stroke="url(#dataTitleStroke)"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M118 14H502M118 44H502"
+          filter="url(#dataTitleGlow)"
+          stroke="url(#dataTitleStroke)"
+          strokeLinecap="round"
+          strokeWidth="1.4"
+        />
+        <path
+          d="M54 14H96M524 14H566M54 44H96M524 44H566"
+          filter="url(#dataTitleGlow)"
+          stroke="#7AF7FF"
+          strokeLinecap="round"
+          strokeWidth="2.2"
+        />
+        <path
+          d="M78 7L52 29L78 51M542 7L568 29L542 51"
+          fill="none"
+          opacity="0.55"
+          stroke="#00D4FF"
+          strokeWidth="1.2"
+        />
+      </svg>
+      <div className="data-analysis-title-text relative leading-none tracking-[0.08em] text-cyan-50 [text-shadow:0_0_8px_rgba(122,247,255,0.68),0_0_22px_rgba(0,212,255,0.34)]">
+        建筑能耗管理与运维系统
+      </div>
+    </div>
+  )
+}
+
+function DataAnalysisHeaderStatus() {
+  const [now, setNow] = useState<Date | null>(null)
+
+  useEffect(() => {
+    const tick = () => setNow(new Date())
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const dateText = now
+    ? new Intl.DateTimeFormat('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        weekday: 'short',
+      }).format(now)
+    : '--/--'
+  const timeText = now
+    ? new Intl.DateTimeFormat('zh-CN', {
+        hour: '2-digit',
+        hour12: false,
+        minute: '2-digit',
+        second: '2-digit',
+      }).format(now)
+    : '--:--:--'
+
+  return (
+    <div
+      className="data-header-status ml-auto hidden shrink-0 items-center justify-between gap-3 xl:flex"
+      style={{ fontFamily: 'var(--font-alimama-shuhei)' }}
+    >
+      <div className="data-status-cell">
+        <span className="data-status-dot" />
+        <div>
+          <div className="data-status-kicker">系统在线</div>
+          <div className="data-status-value text-[#22D3A0]">健康运行</div>
+        </div>
+      </div>
+      <span className="data-status-divider" />
+      <div className="data-status-cell text-right">
+        <div>
+          <div className="data-status-kicker">{dateText}</div>
+          <div
+            className="mt-1 text-[20px] font-bold leading-none text-[#7AF7FF]"
+            style={{ fontFamily: 'var(--font-rajdhani)' }}
+          >
+            {timeText}
+          </div>
+        </div>
+      </div>
+      <span className="data-status-divider" />
+      <div className="flex items-center gap-2">
+        <button aria-label="消息提醒" className="data-status-icon-btn" type="button">
+          <svg aria-hidden="true" className="h-4.5 w-4.5" viewBox="0 0 24 24">
+            <path
+              d="M12 21a2.5 2.5 0 0 0 2.35-1.65h-4.7A2.5 2.5 0 0 0 12 21Zm6-6.35V10a6 6 0 1 0-12 0v4.65l-1.55 2.1A.8.8 0 0 0 5.1 18h13.8a.8.8 0 0 0 .65-1.25L18 14.65Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#FF4D6D] shadow-[0_0_8px_rgba(255,77,109,0.85)]" />
+        </button>
+        <button aria-label="系统设置" className="data-status-icon-btn" type="button">
+          <svg aria-hidden="true" className="h-4.5 w-4.5" viewBox="0 0 24 24">
+            <path
+              d="M12 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm8.2 3.75c0-.48-.04-.95-.13-1.4l-2.05-.53a6.88 6.88 0 0 0-.62-1.08l.6-2.03a8.3 8.3 0 0 0-2.42-1.4l-1.55 1.44c-.37-.08-.75-.12-1.14-.12s-.77.04-1.14.12L10.2 5.56a8.3 8.3 0 0 0-2.42 1.4l.6 2.03c-.24.34-.45.7-.62 1.08l-2.05.53A8 8 0 0 0 5.58 12c0 .48.04.95.13 1.4l2.05.53c.17.38.38.74.62 1.08l-.6 2.03a8.3 8.3 0 0 0 2.42 1.4L11.75 17c.37.08.75.12 1.14.12s.77-.04 1.14-.12l1.55 1.44a8.3 8.3 0 0 0 2.42-1.4l-.6-2.03c.24-.34.45-.7.62-1.08l2.05-.53c.09-.45.13-.92.13-1.4Z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
@@ -415,7 +569,9 @@ export default function HostWorkbench({
         useScene.setState({ nodes: stored as any })
         // 强制标记所有节点 dirty，确保 UI 刷新
         const s = useScene.getState()
-        Object.keys(stored).forEach((id) => s.markDirty(id as any))
+        Object.keys(stored).forEach((id) => {
+          s.markDirty(id as any)
+        })
         useScene.temporal.getState().clear()
       }
     })
@@ -848,15 +1004,11 @@ export default function HostWorkbench({
               </div>
             </div>
           ) : activeWorkspace === 'data-analysis' ? (
-            <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[min(46vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center">
-              <img
-                alt="数据分析标题"
-                className="h-auto w-full max-w-full object-contain"
-                draggable={false}
-                src={DASHBOARD_ASSETS.pageTitle}
-              />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 flex w-[min(34vw,620px)] -translate-x-1/2 -translate-y-1/2 justify-center 2xl:w-[min(42vw,620px)]">
+              <DataAnalysisTitlePlate />
             </div>
           ) : null}
+          {activeWorkspace === 'data-analysis' ? <DataAnalysisHeaderStatus /> : null}
         </div>
       </header>
 
@@ -986,7 +1138,9 @@ export default function HostWorkbench({
             <div className="mb-4 text-center">
               <div className="text-[15px] font-semibold text-white/90">保存模型修改？</div>
               <div className="mt-2 text-[12px] leading-relaxed text-white/50">
-                您在编辑模式下对模型做了修改。<br />是否保存这些修改？
+                您在编辑模式下对模型做了修改。
+                <br />
+                是否保存这些修改？
               </div>
             </div>
             <div className="flex gap-3">

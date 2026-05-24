@@ -1,0 +1,994 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - navigation "Workspace navigation" [ref=e5]:
+        - button "能耗查询" [ref=e6] [cursor=pointer]:
+          - img [ref=e7]
+          - generic [ref=e9]: 能耗查询
+        - button "数据分析" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+          - generic [ref=e13]: 数据分析
+        - button "智慧运维" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e17]: 智慧运维
+      - generic:
+        - generic:
+          - img
+          - generic: 建筑能耗管理与运维系统
+      - generic [ref=e18]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: 系统在线
+          - generic [ref=e23]: 健康运行
+        - generic [ref=e26]:
+          - generic [ref=e27]: 05/24周日
+          - generic [ref=e28]: 15:53:42
+        - generic [ref=e30]:
+          - button "消息提醒" [ref=e31] [cursor=pointer]:
+            - img [ref=e32]
+          - button "系统设置" [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+    - generic [ref=e38]:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic [ref=e39]:
+                      - button "收起侧边栏" [ref=e41] [cursor=pointer]:
+                        - img [ref=e42]
+                      - generic [ref=e45]:
+                        - button "三维" [ref=e46] [cursor=pointer]:
+                          - generic [ref=e47]: 三维
+                        - button "二维" [ref=e48] [cursor=pointer]:
+                          - generic [ref=e49]: 二维
+                        - button "分屏" [ref=e50] [cursor=pointer]:
+                          - img [ref=e51]
+                          - generic [ref=e53]: 分屏
+                    - generic [ref=e55]:
+                      - generic [ref=e56]:
+                        - button "堆叠" [ref=e57] [cursor=pointer]:
+                          - generic [ref=e58]: 堆叠
+                        - button "完整墙体 完整墙体" [ref=e59] [cursor=pointer]:
+                          - img "完整墙体" [ref=e60]
+                          - generic [ref=e61]: 完整墙体
+                        - button "m" [ref=e63] [cursor=pointer]:
+                          - generic [ref=e64]: m
+                        - button [ref=e65] [cursor=pointer]:
+                          - img [ref=e66]
+                        - button [ref=e72] [cursor=pointer]
+                      - button "导入" [ref=e73] [cursor=pointer]
+                      - button "编辑中" [ref=e74] [cursor=pointer]:
+                        - img [ref=e76]
+                        - text: 编辑中
+                  - generic [ref=e82]:
+                    - generic [ref=e83]:
+                      - button "选择 V" [ref=e84] [cursor=pointer]:
+                        - img "选择" [ref=e86]
+                        - generic [ref=e88]: V
+                      - button [ref=e89] [cursor=pointer]
+                      - button "编辑场地" [ref=e91] [cursor=pointer]:
+                        - img "编辑场地" [ref=e93]
+                      - button "建模 B" [ref=e94] [cursor=pointer]:
+                        - img "建模" [ref=e96]
+                        - generic [ref=e98]: B
+                      - button "布置 F" [ref=e99] [cursor=pointer]:
+                        - img "布置" [ref=e101]
+                        - generic [ref=e103]: F
+                      - button "区域 Z" [ref=e104] [cursor=pointer]:
+                        - img "区域" [ref=e106]
+                        - generic [ref=e108]: Z
+                      - button "D" [ref=e109] [cursor=pointer]:
+                        - generic [ref=e110]:
+                          - img
+                        - generic [ref=e112]: D
+                    - generic [ref=e114]:
+                      - generic [ref=e115]:
+                        - button "扫描模型 0" [ref=e116] [cursor=pointer]:
+                          - generic [ref=e118]:
+                            - img "扫描模型" [ref=e119]
+                            - generic [ref=e120]: "0"
+                        - button "扫描模型设置" [ref=e121] [cursor=pointer]:
+                          - img [ref=e122]
+                      - generic [ref=e124]:
+                        - button "参考图 0" [ref=e125] [cursor=pointer]:
+                          - generic [ref=e127]:
+                            - img "参考图" [ref=e128]
+                            - generic [ref=e129]: "0"
+                        - button "参考图设置" [ref=e130] [cursor=pointer]:
+                          - img [ref=e131]
+                    - generic [ref=e134]:
+                      - button "向左旋转" [ref=e135] [cursor=pointer]:
+                        - img "向左旋转" [ref=e137]
+                      - button "向右旋转" [ref=e138] [cursor=pointer]:
+                        - img "向右旋转" [ref=e140]
+                      - button "顶视图" [ref=e141] [cursor=pointer]:
+                        - img "顶视图" [ref=e143]
+          - generic:
+            - generic [ref=e144]:
+              - button "三维" [ref=e145] [cursor=pointer]
+              - button "平面图" [ref=e146] [cursor=pointer]
+              - button "分屏" [ref=e147] [cursor=pointer]
+            - generic:
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - generic [ref=e153]:
+                    - img [ref=e155]
+                    - heading "告警状态" [level=3] [ref=e157]
+                  - generic [ref=e158]: ✓ 当前无告警，系统运行正常
+                - generic [ref=e159]:
+                  - generic [ref=e161]:
+                    - img [ref=e163]
+                    - heading "实时功率" [level=3] [ref=e165]
+                  - generic [ref=e166]:
+                    - generic [ref=e168]:
+                      - generic [ref=e175]: "0"
+                      - generic [ref=e176]: kW
+                    - generic [ref=e191]:
+                      - generic [ref=e192]: →0%
+                      - generic [ref=e193]: vs 昨日同时刻
+                - generic [ref=e194]:
+                  - generic [ref=e196]:
+                    - img [ref=e198]
+                    - heading "能耗强度" [level=3] [ref=e201]
+                  - generic [ref=e202]:
+                    - generic [ref=e203]:
+                      - generic [ref=e204]: 总电耗
+                      - generic [ref=e205]: "0"
+                      - generic [ref=e206]: kWh
+                    - generic [ref=e207]:
+                      - generic [ref=e208]: 能耗强度
+                      - generic [ref=e209]: "0.00"
+                      - generic [ref=e210]: kWh/m²
+                  - generic [ref=e212]: 0% vs 昨日
+                - generic [ref=e215]:
+                  - img [ref=e217]
+                  - heading "24h 负荷曲线" [level=3] [ref=e220]
+                - generic [ref=e227]:
+                  - img [ref=e229]
+                  - heading "分项占比" [level=3] [ref=e233]
+              - generic [ref=e240]:
+                - generic [ref=e243]:
+                  - img [ref=e245]
+                  - heading "楼层能耗排行" [level=3] [ref=e249]
+                - generic [ref=e254]:
+                  - generic [ref=e256]:
+                    - img [ref=e258]
+                    - heading "今日峰值" [level=3] [ref=e263]
+                  - generic [ref=e264]:
+                    - generic [ref=e265]:
+                      - generic [ref=e267]:
+                        - generic [ref=e274]: "0"
+                        - generic [ref=e275]: kW
+                      - generic [ref=e277]: 00:00
+                    - generic [ref=e279]:
+                      - generic [ref=e280]: 当前 0.0 kW
+                      - generic [ref=e281]: 峰值 0.0 kW
+                - generic [ref=e282]:
+                  - generic [ref=e284]:
+                    - img [ref=e286]
+                    - heading "室内外环境" [level=3] [ref=e288]
+                  - generic [ref=e289]:
+                    - generic [ref=e290]:
+                      - generic [ref=e293]: 0°
+                      - generic [ref=e294]: 室内温度
+                    - generic [ref=e295]:
+                      - generic [ref=e298]: 0%
+                      - generic [ref=e299]: 室内湿度
+                    - generic [ref=e300]:
+                      - generic [ref=e303]: "0"
+                      - generic [ref=e304]: CO₂
+                    - generic [ref=e305]:
+                      - generic [ref=e308]: 30°
+                      - generic [ref=e309]: 室外温度
+                    - generic [ref=e310]:
+                      - generic [ref=e313]: 55%
+                      - generic [ref=e314]: 室外湿度
+                    - generic [ref=e315]:
+                      - generic [ref=e318]: "0"
+                      - generic [ref=e319]: PM2.5
+                - generic [ref=e320]:
+                  - generic [ref=e322]:
+                    - img [ref=e324]
+                    - heading "电费估算" [level=3] [ref=e327]
+                  - generic [ref=e328]:
+                    - generic [ref=e329]:
+                      - generic [ref=e330]: 今日
+                      - generic [ref=e332]:
+                        - text: ¥
+                        - generic [ref=e338]: "0"
+                    - generic [ref=e339]:
+                      - generic [ref=e340]: 本月
+                      - generic [ref=e342]:
+                        - text: ¥
+                        - generic [ref=e348]: "0"
+                  - generic [ref=e349]: 按 0.82 元/kWh 综合电价估算
+                - generic [ref=e352]:
+                  - img [ref=e354]
+                  - heading "本周趋势" [level=3] [ref=e357]
+            - generic [ref=e364]:
+              - img [ref=e365]
+              - generic [ref=e368]: 未来 24h 能耗预测
+              - generic [ref=e369]: 整栋级
+            - button [ref=e374] [cursor=pointer]:
+              - img [ref=e375]
+      - generic [ref=e379]:
+        - generic [ref=e380]:
+          - generic [ref=e383]:
+            - img [ref=e386]
+            - generic [ref=e391]:
+              - generic [ref=e392]: 35420 kWh
+              - generic [ref=e393]: 累计耗电量
+          - generic [ref=e396]:
+            - img [ref=e399]
+            - generic [ref=e405]:
+              - generic [ref=e406]: 76.3 人流指数
+              - generic [ref=e407]: 平均人流密度
+          - generic [ref=e410]:
+            - img [ref=e413]
+            - generic [ref=e417]:
+              - generic [ref=e418]: 236.8 kWh
+              - generic [ref=e419]: 峰值负荷
+          - generic [ref=e422]:
+            - img [ref=e425]
+            - generic [ref=e430]:
+              - generic [ref=e431]: 52.6%
+              - generic [ref=e432]: HVAC 占电比
+          - generic [ref=e435]:
+            - img [ref=e438]
+            - generic [ref=e442]:
+              - generic [ref=e443]: 119 条
+              - generic [ref=e444]: 预警时段
+        - generic [ref=e445]:
+          - generic [ref=e446]:
+            - generic [ref=e448]:
+              - generic [ref=e450]:
+                - img [ref=e453]
+                - heading "运行健康评分" [level=2] [ref=e459]
+              - generic [ref=e464]:
+                - generic [ref=e469]: "72"
+                - generic [ref=e470]:
+                  - generic [ref=e472]:
+                    - generic [ref=e473]: 正常
+                    - generic [ref=e475]: 71 / 37.0%
+                  - generic [ref=e479]:
+                    - generic [ref=e480]: 预警
+                    - generic [ref=e482]: 119 / 62.0%
+                  - generic [ref=e486]:
+                    - generic [ref=e487]: 维护中
+                    - generic [ref=e489]: 2 / 1.0%
+                  - generic [ref=e493]:
+                    - generic [ref=e494]: 离线
+                    - generic [ref=e496]: 0 / 0.0%
+              - generic [ref=e498]:
+                - generic [ref=e499]:
+                  - generic [ref=e500]: 正常记录
+                  - generic [ref=e501]: "71"
+                - generic [ref=e502]:
+                  - generic [ref=e503]: 预警记录
+                  - generic [ref=e504]: "119"
+                - generic [ref=e505]:
+                  - generic [ref=e506]: 监测总量
+                  - generic [ref=e507]: "14"
+              - generic [ref=e508]:
+                - generic [ref=e509]:
+                  - generic [ref=e510]: 风险占比
+                  - generic [ref=e511]: 62.0%
+                - generic [ref=e512]:
+                  - generic [ref=e513]: 稳定占比
+                  - generic [ref=e514]: 37.0%
+            - generic [ref=e516]:
+              - generic [ref=e518]:
+                - img [ref=e521]
+                - heading "峰值设备" [level=2] [ref=e526]
+              - generic [ref=e531]:
+                - generic [ref=e532]: BLDG-C-07
+                - generic [ref=e533]: BLDG-C-07-DEV-15
+                - generic [ref=e534]:
+                  - generic [ref=e535]:
+                    - generic [ref=e536]: 峰值电耗
+                    - generic [ref=e537]: 236.8 kWh
+                  - generic [ref=e538]:
+                    - generic [ref=e539]: 监测时间
+                    - generic [ref=e540]: 04-07 12:00
+                  - generic [ref=e541]:
+                    - generic [ref=e542]: 温度
+                    - generic [ref=e543]: 28.6°C
+                  - generic [ref=e544]:
+                    - generic [ref=e545]: 人流
+                    - generic [ref=e546]: "95.8"
+              - generic [ref=e547]:
+                - generic [ref=e549]:
+                  - generic [ref=e550]:
+                    - generic [ref=e551]: BLDG-A-03-DEV-21
+                    - generic [ref=e552]: BLDG-A-03 / 04-15 18:00
+                  - generic [ref=e553]: "183"
+                - generic [ref=e557]:
+                  - generic [ref=e558]:
+                    - generic [ref=e559]: BLDG-B-01-DEV-05
+                    - generic [ref=e560]: BLDG-B-01 / 04-15 18:00
+                  - generic [ref=e561]: "162"
+            - generic [ref=e565]:
+              - generic [ref=e567]:
+                - img [ref=e570]
+                - heading "风险分层" [level=2] [ref=e575]
+              - generic [ref=e580]:
+                - generic [ref=e581]:
+                  - generic [ref=e582]: 预警记录
+                  - generic [ref=e583]: "119"
+                - generic [ref=e584]:
+                  - generic [ref=e585]: 维护中
+                  - generic [ref=e586]: "2"
+              - generic [ref=e587]:
+                - generic [ref=e589]:
+                  - generic [ref=e590]:
+                    - generic [ref=e591]: "1"
+                    - generic [ref=e592]:
+                      - generic [ref=e593]: BLDG-A-03
+                      - generic [ref=e594]: 效率 61
+                  - generic [ref=e595]: "34"
+                - generic [ref=e599]:
+                  - generic [ref=e600]:
+                    - generic [ref=e601]: "2"
+                    - generic [ref=e602]:
+                      - generic [ref=e603]: BLDG-D-02
+                      - generic [ref=e604]: 效率 61
+                  - generic [ref=e605]: "32"
+                - generic [ref=e609]:
+                  - generic [ref=e610]:
+                    - generic [ref=e611]: "3"
+                    - generic [ref=e612]:
+                      - generic [ref=e613]: BLDG-B-01
+                      - generic [ref=e614]: 效率 61
+                  - generic [ref=e615]: "29"
+          - generic [ref=e618]:
+            - generic [ref=e620]:
+              - generic [ref=e622]:
+                - img [ref=e625]
+                - heading "每日能耗与人流走势" [level=2] [ref=e631]
+              - generic [ref=e636]:
+                - generic [ref=e637]: 电耗柱状
+                - generic [ref=e638]: 人流折线
+                - generic [ref=e639]: 12 天窗口
+              - img [ref=e641]
+              - generic [ref=e668]:
+                - generic [ref=e669]:
+                  - generic [ref=e670]: 04-04
+                  - generic [ref=e671]: 2658.3 kWh
+                - generic [ref=e672]:
+                  - generic [ref=e673]: 04-05
+                  - generic [ref=e674]: 2790.0 kWh
+                - generic [ref=e675]:
+                  - generic [ref=e676]: 04-06
+                  - generic [ref=e677]: 2930.7 kWh
+                - generic [ref=e678]:
+                  - generic [ref=e679]: 04-07
+                  - generic [ref=e680]: 3088.4 kWh
+                - generic [ref=e681]:
+                  - generic [ref=e682]: 04-08
+                  - generic [ref=e683]: 3108.4 kWh
+                - generic [ref=e684]:
+                  - generic [ref=e685]: 04-09
+                  - generic [ref=e686]: 3155.3 kWh
+                - generic [ref=e687]:
+                  - generic [ref=e688]: 04-10
+                  - generic [ref=e689]: 3092.5 kWh
+                - generic [ref=e690]:
+                  - generic [ref=e691]: 04-11
+                  - generic [ref=e692]: 3082.4 kWh
+                - generic [ref=e693]:
+                  - generic [ref=e694]: 04-12
+                  - generic [ref=e695]: 2998.9 kWh
+                - generic [ref=e696]:
+                  - generic [ref=e697]: 04-13
+                  - generic [ref=e698]: 2934.2 kWh
+                - generic [ref=e699]:
+                  - generic [ref=e700]: 04-14
+                  - generic [ref=e701]: 2827.1 kWh
+                - generic [ref=e702]:
+                  - generic [ref=e703]: 04-15
+                  - generic [ref=e704]: 2753.7 kWh
+            - generic [ref=e706]:
+              - generic [ref=e708]:
+                - img [ref=e711]
+                - heading "时段热力矩阵" [level=2] [ref=e724]
+              - generic [ref=e729]:
+                - generic [ref=e730]:
+                  - generic [ref=e731]:
+                    - generic [ref=e732]: 峰值时段
+                    - generic [ref=e733]: 04-09 12:00
+                  - generic [ref=e734]:
+                    - generic [ref=e735]: 峰值电耗
+                    - generic [ref=e736]: 225 kWh
+                  - generic [ref=e737]:
+                    - generic [ref=e738]: 均值电耗
+                    - generic [ref=e739]: 186 kWh
+                - generic [ref=e741]:
+                  - generic [ref=e743]:
+                    - generic [ref=e744]: 00:00
+                    - generic [ref=e745]: 06:00
+                    - generic [ref=e746]: 12:00
+                    - generic [ref=e747]: 18:00
+                  - generic [ref=e748]:
+                    - generic [ref=e749]: 04-09
+                    - generic [ref=e750]: 04-10
+                    - generic [ref=e751]: 04-11
+                    - generic [ref=e752]: 04-12
+                    - generic [ref=e753]: 04-13
+                    - generic [ref=e754]: 04-14
+                    - generic [ref=e755]: 04-15
+                  - generic [ref=e756]:
+                    - generic "04-09 00:00 电耗 162.2 kWh，人流 60.6" [ref=e757]:
+                      - generic [ref=e760]:
+                        - generic [ref=e761]: "72"
+                        - generic [ref=e762]: "162"
+                    - generic "04-09 06:00 电耗 194.8 kWh，人流 80.2" [ref=e763]:
+                      - generic [ref=e766]:
+                        - generic [ref=e767]: "87"
+                        - generic [ref=e768]: "195"
+                    - generic "04-09 12:00 电耗 225.0 kWh，人流 93.2" [ref=e769]:
+                      - generic [ref=e772]:
+                        - generic [ref=e773]: "100"
+                        - generic [ref=e774]: "225"
+                    - generic "04-09 18:00 电耗 206.9 kWh，人流 84.7" [ref=e775]:
+                      - generic [ref=e778]:
+                        - generic [ref=e779]: "92"
+                        - generic [ref=e780]: "207"
+                    - generic "04-10 00:00 电耗 156.0 kWh，人流 56.9" [ref=e781]:
+                      - generic [ref=e784]:
+                        - generic [ref=e785]: "69"
+                        - generic [ref=e786]: "156"
+                    - generic "04-10 06:00 电耗 192.9 kWh，人流 83.9" [ref=e787]:
+                      - generic [ref=e790]:
+                        - generic [ref=e791]: "86"
+                        - generic [ref=e792]: "193"
+                    - generic "04-10 12:00 电耗 222.3 kWh，人流 90.9" [ref=e793]:
+                      - generic [ref=e796]:
+                        - generic [ref=e797]: "99"
+                        - generic [ref=e798]: "222"
+                    - generic "04-10 18:00 电耗 201.8 kWh，人流 80.9" [ref=e799]:
+                      - generic [ref=e802]:
+                        - generic [ref=e803]: "90"
+                        - generic [ref=e804]: "202"
+                    - generic "04-11 00:00 电耗 159.2 kWh，人流 53.5" [ref=e805]:
+                      - generic [ref=e808]:
+                        - generic [ref=e809]: "71"
+                        - generic [ref=e810]: "159"
+                    - generic "04-11 06:00 电耗 191.9 kWh，人流 79.8" [ref=e811]:
+                      - generic [ref=e814]:
+                        - generic [ref=e815]: "85"
+                        - generic [ref=e816]: "192"
+                    - generic "04-11 12:00 电耗 222.2 kWh，人流 92.3" [ref=e817]:
+                      - generic [ref=e820]:
+                        - generic [ref=e821]: "99"
+                        - generic [ref=e822]: "222"
+                    - generic "04-11 18:00 电耗 197.3 kWh，人流 76.0" [ref=e823]:
+                      - generic [ref=e826]:
+                        - generic [ref=e827]: "88"
+                        - generic [ref=e828]: "197"
+                    - generic "04-12 00:00 电耗 152.8 kWh，人流 49.8" [ref=e829]:
+                      - generic [ref=e832]:
+                        - generic [ref=e833]: "68"
+                        - generic [ref=e834]: "153"
+                    - generic "04-12 06:00 电耗 188.6 kWh，人流 75.3" [ref=e835]:
+                      - generic [ref=e838]:
+                        - generic [ref=e839]: "84"
+                        - generic [ref=e840]: "189"
+                    - generic "04-12 12:00 电耗 216.8 kWh，人流 92.2" [ref=e841]:
+                      - generic [ref=e844]:
+                        - generic [ref=e845]: "96"
+                        - generic [ref=e846]: "217"
+                    - generic "04-12 18:00 电耗 191.6 kWh，人流 81.9" [ref=e847]:
+                      - generic [ref=e850]:
+                        - generic [ref=e851]: "85"
+                        - generic [ref=e852]: "192"
+                    - generic "04-13 00:00 电耗 144.3 kWh，人流 51.7" [ref=e853]:
+                      - generic [ref=e856]:
+                        - generic [ref=e857]: "64"
+                        - generic [ref=e858]: "144"
+                    - generic "04-13 06:00 电耗 180.5 kWh，人流 77.3" [ref=e859]:
+                      - generic [ref=e862]:
+                        - generic [ref=e863]: "80"
+                        - generic [ref=e864]: "181"
+                    - generic "04-13 12:00 电耗 216.6 kWh，人流 97.3" [ref=e865]:
+                      - generic [ref=e868]:
+                        - generic [ref=e869]: "96"
+                        - generic [ref=e870]: "217"
+                    - generic "04-13 18:00 电耗 192.2 kWh，人流 85.1" [ref=e871]:
+                      - generic [ref=e874]:
+                        - generic [ref=e875]: "85"
+                        - generic [ref=e876]: "192"
+                    - generic "04-14 00:00 电耗 135.7 kWh，人流 53.4" [ref=e877]:
+                      - generic [ref=e880]:
+                        - generic [ref=e881]: "60"
+                        - generic [ref=e882]: "136"
+                    - generic "04-14 06:00 电耗 166.6 kWh，人流 72.9" [ref=e883]:
+                      - generic [ref=e886]:
+                        - generic [ref=e887]: "74"
+                        - generic [ref=e888]: "167"
+                    - generic "04-14 12:00 电耗 214.3 kWh，人流 94.5" [ref=e889]:
+                      - generic [ref=e892]:
+                        - generic [ref=e893]: "95"
+                        - generic [ref=e894]: "214"
+                    - generic "04-14 18:00 电耗 190.1 kWh，人流 87.9" [ref=e895]:
+                      - generic [ref=e898]:
+                        - generic [ref=e899]: "85"
+                        - generic [ref=e900]: "190"
+                    - generic "04-15 00:00 电耗 134.3 kWh，人流 49.0" [ref=e901]:
+                      - generic [ref=e904]:
+                        - generic [ref=e905]: "60"
+                        - generic [ref=e906]: "134"
+                    - generic "04-15 06:00 电耗 167.9 kWh，人流 75.3" [ref=e907]:
+                      - generic [ref=e910]:
+                        - generic [ref=e911]: "75"
+                        - generic [ref=e912]: "168"
+                    - generic "04-15 12:00 电耗 205.4 kWh，人流 92.3" [ref=e913]:
+                      - generic [ref=e916]:
+                        - generic [ref=e917]: "91"
+                        - generic [ref=e918]: "205"
+                    - generic "04-15 18:00 电耗 180.8 kWh，人流 82.0" [ref=e919]:
+                      - generic [ref=e922]:
+                        - generic [ref=e923]: "80"
+                        - generic [ref=e924]: "181"
+                  - generic [ref=e926]:
+                    - generic [ref=e927]: 低负荷
+                    - generic [ref=e929]: 高负荷
+          - generic [ref=e930]:
+            - generic [ref=e932]:
+              - generic [ref=e934]:
+                - img [ref=e937]
+                - heading "时段负荷关系" [level=2] [ref=e942]
+              - generic [ref=e947]:
+                - generic [ref=e948]:
+                  - generic [ref=e949]: 电耗高峰
+                  - generic [ref=e950]: 12:00
+                - generic [ref=e951]:
+                  - generic [ref=e952]: 低谷时段
+                  - generic [ref=e953]: 00:00
+                - generic [ref=e954]:
+                  - generic [ref=e955]: 峰谷差值
+                  - generic [ref=e956]: "69"
+                - generic [ref=e957]:
+                  - generic [ref=e958]: 人流峰值
+                  - generic [ref=e959]: "93"
+              - img [ref=e961]
+              - generic [ref=e971]:
+                - generic [ref=e972]:
+                  - generic [ref=e973]: 00:00
+                  - generic [ref=e974]: "147"
+                  - generic [ref=e975]: kWh
+                - generic [ref=e976]:
+                  - generic [ref=e977]: 06:00
+                  - generic [ref=e978]: "181"
+                  - generic [ref=e979]: kWh
+                - generic [ref=e980]:
+                  - generic [ref=e981]: 12:00
+                  - generic [ref=e982]: "216"
+                  - generic [ref=e983]: kWh
+                - generic [ref=e984]:
+                  - generic [ref=e985]: 18:00
+                  - generic [ref=e986]: "194"
+                  - generic [ref=e987]: kWh
+              - generic [ref=e988]:
+                - generic [ref=e989]:
+                  - generic [ref=e990]: 峰值负荷
+                  - generic [ref=e991]: 216 kWh
+                - generic [ref=e994]:
+                  - generic [ref=e995]: 低谷负荷
+                  - generic [ref=e996]: 147 kWh
+                - generic [ref=e999]:
+                  - generic [ref=e1000]: 人流高峰
+                  - generic [ref=e1001]: 12:00
+            - generic [ref=e1005]:
+              - generic [ref=e1007]:
+                - img [ref=e1010]
+                - heading "能耗构成占比" [level=2] [ref=e1017]
+              - generic [ref=e1022]:
+                - generic [ref=e1024]:
+                  - img [ref=e1025]:
+                    - generic "暖通系统：18627 / 40.3%" [ref=e1028]
+                    - generic "照明系统：8501 / 18.4%" [ref=e1032]
+                    - generic "插座与设备：7438 / 16.1%" [ref=e1036]
+                    - generic "公共区域：4959 / 10.7%" [ref=e1040]
+                    - generic "实验与专用负荷：3896 / 8.4%" [ref=e1044]
+                    - generic "其他损耗：2834 / 6.1%" [ref=e1048]
+                  - generic:
+                    - generic:
+                      - generic: "46255"
+                      - generic: 总量基准
+                - generic [ref=e1054]:
+                  - generic [ref=e1055]:
+                    - generic [ref=e1056]:
+                      - generic [ref=e1059]: 暖通系统
+                      - generic [ref=e1060]: "18627"
+                    - generic [ref=e1064]: 40.3%
+                  - generic [ref=e1065]:
+                    - generic [ref=e1066]:
+                      - generic [ref=e1069]: 照明系统
+                      - generic [ref=e1070]: "8501"
+                    - generic [ref=e1074]: 18.4%
+                  - generic [ref=e1075]:
+                    - generic [ref=e1076]:
+                      - generic [ref=e1079]: 插座与设备
+                      - generic [ref=e1080]: "7438"
+                    - generic [ref=e1084]: 16.1%
+                  - generic [ref=e1085]:
+                    - generic [ref=e1086]:
+                      - generic [ref=e1089]: 公共区域
+                      - generic [ref=e1090]: "4959"
+                    - generic [ref=e1094]: 10.7%
+                  - generic [ref=e1095]:
+                    - generic [ref=e1096]:
+                      - generic [ref=e1099]: 实验与专用负荷
+                      - generic [ref=e1100]: "3896"
+                    - generic [ref=e1104]: 8.4%
+                  - generic [ref=e1105]:
+                    - generic [ref=e1106]:
+                      - generic [ref=e1109]: 其他损耗
+                      - generic [ref=e1110]: "2834"
+                    - generic [ref=e1114]: 6.1%
+                - generic [ref=e1115]:
+                  - generic [ref=e1116]:
+                    - generic [ref=e1117]: 正常
+                    - generic [ref=e1119]: "71"
+                  - generic [ref=e1120]:
+                    - generic [ref=e1121]: 预警
+                    - generic [ref=e1123]: "119"
+                  - generic [ref=e1124]:
+                    - generic [ref=e1125]: 维护中
+                    - generic [ref=e1127]: "2"
+                  - generic [ref=e1128]:
+                    - generic [ref=e1129]: 离线
+                    - generic [ref=e1131]: "0"
+        - generic [ref=e1132]:
+          - generic [ref=e1134]:
+            - generic [ref=e1136]:
+              - img [ref=e1139]
+              - heading "能耗与人流关系" [level=2] [ref=e1146]
+            - generic [ref=e1151]:
+              - generic [ref=e1152]:
+                - generic [ref=e1153]: 强正相关
+                - generic [ref=e1154]: 样本 48
+                - generic [ref=e1155]: 风险点 24
+              - generic [ref=e1157]: "0.80"
+            - generic [ref=e1158]:
+              - generic:
+                - generic: 办公
+                - generic: 教学
+                - generic: 实验
+                - generic: 预警
+              - img [ref=e1159]:
+                - generic [ref=e1311]: 能耗 kWh
+                - generic [ref=e1312]: 人流指数
+              - generic:
+                - generic:
+                  - generic: 样本数
+                  - generic: "48"
+                - generic:
+                  - generic: 风险点
+                  - generic: "24"
+          - generic [ref=e1314]:
+            - generic [ref=e1316]:
+              - img [ref=e1319]
+              - heading "能耗与温度关系" [level=2] [ref=e1326]
+            - generic [ref=e1331]:
+              - generic [ref=e1332]:
+                - generic [ref=e1333]: 中等正相关
+                - generic [ref=e1334]: 样本 48
+                - generic [ref=e1335]: 风险点 24
+              - generic [ref=e1337]: "0.68"
+            - generic [ref=e1338]:
+              - generic:
+                - generic: 办公
+                - generic: 教学
+                - generic: 实验
+                - generic: 预警
+              - img [ref=e1339]:
+                - generic [ref=e1491]: 能耗 kWh
+                - generic [ref=e1492]: 温度 °C
+              - generic:
+                - generic:
+                  - generic: 样本数
+                  - generic: "48"
+                - generic:
+                  - generic: 风险点
+                  - generic: "24"
+        - generic [ref=e1494]:
+          - generic [ref=e1496]:
+            - img [ref=e1499]
+            - heading "近期监测明细" [level=2] [ref=e1505]
+          - table [ref=e1511]:
+            - rowgroup [ref=e1523]:
+              - row "楼栋 时间 电耗 暖通 用水 温度 湿度 人流 设备 状态" [ref=e1524]:
+                - columnheader "楼栋" [ref=e1525]
+                - columnheader "时间" [ref=e1526]
+                - columnheader "电耗" [ref=e1527]
+                - columnheader "暖通" [ref=e1528]
+                - columnheader "用水" [ref=e1529]
+                - columnheader "温度" [ref=e1530]
+                - columnheader "湿度" [ref=e1531]
+                - columnheader "人流" [ref=e1532]
+                - columnheader "设备" [ref=e1533]
+                - columnheader "状态" [ref=e1534]
+            - rowgroup [ref=e1535]:
+              - row "BLDG-A-03 2026-04-15 18:00 182.5 81.9 23.2 26.4°C 48.1% 92.0 BLDG-A-03-DEV-21 预警" [ref=e1536]:
+                - cell "BLDG-A-03" [ref=e1537]
+                - cell "2026-04-15 18:00" [ref=e1538]
+                - cell "182.5" [ref=e1539]
+                - cell "81.9" [ref=e1540]
+                - cell "23.2" [ref=e1541]
+                - cell "26.4°C" [ref=e1542]
+                - cell "48.1%" [ref=e1543]
+                - cell "92.0" [ref=e1544]
+                - cell "BLDG-A-03-DEV-21" [ref=e1545]
+                - cell "预警" [ref=e1546]:
+                  - generic [ref=e1547]: 预警
+              - row "BLDG-B-01 2026-04-15 18:00 161.5 69.7 18.5 26.2°C 52.1% 73.0 BLDG-B-01-DEV-05 预警" [ref=e1548]:
+                - cell "BLDG-B-01" [ref=e1549]
+                - cell "2026-04-15 18:00" [ref=e1550]
+                - cell "161.5" [ref=e1551]
+                - cell "69.7" [ref=e1552]
+                - cell "18.5" [ref=e1553]
+                - cell "26.2°C" [ref=e1554]
+                - cell "52.1%" [ref=e1555]
+                - cell "73.0" [ref=e1556]
+                - cell "BLDG-B-01-DEV-05" [ref=e1557]
+                - cell "预警" [ref=e1558]:
+                  - generic [ref=e1559]: 预警
+              - row "BLDG-C-07 2026-04-15 18:00 193.8 91.8 24.0 25.8°C 46.9% 75.0 BLDG-C-07-DEV-06 预警" [ref=e1560]:
+                - cell "BLDG-C-07" [ref=e1561]
+                - cell "2026-04-15 18:00" [ref=e1562]
+                - cell "193.8" [ref=e1563]
+                - cell "91.8" [ref=e1564]
+                - cell "24.0" [ref=e1565]
+                - cell "25.8°C" [ref=e1566]
+                - cell "46.9%" [ref=e1567]
+                - cell "75.0" [ref=e1568]
+                - cell "BLDG-C-07-DEV-06" [ref=e1569]
+                - cell "预警" [ref=e1570]:
+                  - generic [ref=e1571]: 预警
+              - row "BLDG-D-02 2026-04-15 18:00 185.4 80.0 21.1 25.4°C 53.7% 88.0 BLDG-D-02-DEV-01 预警" [ref=e1572]:
+                - cell "BLDG-D-02" [ref=e1573]
+                - cell "2026-04-15 18:00" [ref=e1574]
+                - cell "185.4" [ref=e1575]
+                - cell "80.0" [ref=e1576]
+                - cell "21.1" [ref=e1577]
+                - cell "25.4°C" [ref=e1578]
+                - cell "53.7%" [ref=e1579]
+                - cell "88.0" [ref=e1580]
+                - cell "BLDG-D-02-DEV-01" [ref=e1581]
+                - cell "预警" [ref=e1582]:
+                  - generic [ref=e1583]: 预警
+              - row "BLDG-A-03 2026-04-15 12:00 208.2 100.8 24.4 28.4°C 48.1% 98.0 BLDG-A-03-DEV-15 预警" [ref=e1584]:
+                - cell "BLDG-A-03" [ref=e1585]
+                - cell "2026-04-15 12:00" [ref=e1586]
+                - cell "208.2" [ref=e1587]
+                - cell "100.8" [ref=e1588]
+                - cell "24.4" [ref=e1589]
+                - cell "28.4°C" [ref=e1590]
+                - cell "48.1%" [ref=e1591]
+                - cell "98.0" [ref=e1592]
+                - cell "BLDG-A-03-DEV-15" [ref=e1593]
+                - cell "预警" [ref=e1594]:
+                  - generic [ref=e1595]: 预警
+              - row "BLDG-B-01 2026-04-15 12:00 187.3 88.6 19.7 28.2°C 52.1% 87.0 BLDG-B-01-DEV-26 预警" [ref=e1596]:
+                - cell "BLDG-B-01" [ref=e1597]
+                - cell "2026-04-15 12:00" [ref=e1598]
+                - cell "187.3" [ref=e1599]
+                - cell "88.6" [ref=e1600]
+                - cell "19.7" [ref=e1601]
+                - cell "28.2°C" [ref=e1602]
+                - cell "52.1%" [ref=e1603]
+                - cell "87.0" [ref=e1604]
+                - cell "BLDG-B-01-DEV-26" [ref=e1605]
+                - cell "预警" [ref=e1606]:
+                  - generic [ref=e1607]: 预警
+              - row "BLDG-C-07 2026-04-15 12:00 216.8 109.2 25.0 27.8°C 46.0% 86.0 BLDG-C-07-DEV-27 预警" [ref=e1608]:
+                - cell "BLDG-C-07" [ref=e1609]
+                - cell "2026-04-15 12:00" [ref=e1610]
+                - cell "216.8" [ref=e1611]
+                - cell "109.2" [ref=e1612]
+                - cell "25.0" [ref=e1613]
+                - cell "27.8°C" [ref=e1614]
+                - cell "46.0%" [ref=e1615]
+                - cell "86.0" [ref=e1616]
+                - cell "BLDG-C-07-DEV-27" [ref=e1617]
+                - cell "预警" [ref=e1618]:
+                  - generic [ref=e1619]: 预警
+              - row "BLDG-D-02 2026-04-15 12:00 209.4 98.3 22.2 27.4°C 53.7% 98.0 BLDG-D-02-DEV-22 预警" [ref=e1620]:
+                - cell "BLDG-D-02" [ref=e1621]
+                - cell "2026-04-15 12:00" [ref=e1622]
+                - cell "209.4" [ref=e1623]
+                - cell "98.3" [ref=e1624]
+                - cell "22.2" [ref=e1625]
+                - cell "27.4°C" [ref=e1626]
+                - cell "53.7%" [ref=e1627]
+                - cell "98.0" [ref=e1628]
+                - cell "BLDG-D-02-DEV-22" [ref=e1629]
+                - cell "预警" [ref=e1630]:
+                  - generic [ref=e1631]: 预警
+              - row "BLDG-A-03 2026-04-15 06:00 171.9 91.9 22.4 26.9°C 50.8% 92.0 BLDG-A-03-DEV-16 预警" [ref=e1632]:
+                - cell "BLDG-A-03" [ref=e1633]
+                - cell "2026-04-15 06:00" [ref=e1634]
+                - cell "171.9" [ref=e1635]
+                - cell "91.9" [ref=e1636]
+                - cell "22.4" [ref=e1637]
+                - cell "26.9°C" [ref=e1638]
+                - cell "50.8%" [ref=e1639]
+                - cell "92.0" [ref=e1640]
+                - cell "BLDG-A-03-DEV-16" [ref=e1641]
+                - cell "预警" [ref=e1642]:
+                  - generic [ref=e1643]: 预警
+              - row "BLDG-B-01 2026-04-15 06:00 147.7 58.2 17.1 25.8°C 53.9% 61.0 BLDG-B-01-DEV-24 正常" [ref=e1644]:
+                - cell "BLDG-B-01" [ref=e1645]
+                - cell "2026-04-15 06:00" [ref=e1646]
+                - cell "147.7" [ref=e1647]
+                - cell "58.2" [ref=e1648]
+                - cell "17.1" [ref=e1649]
+                - cell "25.8°C" [ref=e1650]
+                - cell "53.9%" [ref=e1651]
+                - cell "61.0" [ref=e1652]
+                - cell "BLDG-B-01-DEV-24" [ref=e1653]
+                - cell "正常" [ref=e1654]:
+                  - generic [ref=e1655]: 正常
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic: Smart Operations Workspace
+                  - heading "智慧运维协同大界面" [level=1]
+                - generic:
+                  - generic: 项目 building
+                  - generic: 当前构件 未选中构件
+                  - generic: 活跃结果 0 条
+              - generic:
+                - generic:
+                  - generic: 站点健康度
+                  - generic: "96"
+                  - generic: 项目 building 的综合评估
+                - generic:
+                  - generic: 活跃告警
+                  - generic: "3"
+                  - generic: 高优先级 1 项
+                - generic:
+                  - generic: 待处理工单
+                  - generic: "2"
+                  - generic: 当前保存状态 saved
+                - generic:
+                  - generic: 巡检覆盖率
+                  - generic: 82%
+                  - generic: 基于当前筛选结果估算
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Operations
+                      - heading "智慧运维模块" [level=3]
+                  - generic: 当前最值得优先处理的是 公寓楼 3F 新风机组，建议把它作为智慧运维的首个告警闭环样板。
+                - generic:
+                  - generic:
+                    - generic: 站点健康度
+                    - generic: "96"
+                    - generic: 项目 building 的综合评估
+                  - generic:
+                    - generic: 活跃告警
+                    - generic: "3"
+                    - generic: 高优先级 1 项
+                  - generic:
+                    - generic: 待处理工单
+                    - generic: "2"
+                    - generic: 当前保存状态 saved
+                  - generic:
+                    - generic: 巡检覆盖率
+                    - generic: 82%
+                    - generic: 基于当前筛选结果估算
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Alerts
+                      - heading "告警中心" [level=3]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 3F 新风机组 负荷偏高
+                          - generic: Level 3 / 东侧走廊 · 当前负荷 108.0 kWh（较基线 +34.6%）
+                        - generic: 高优先级
+                      - generic: 建议立即派发巡检工单，核查电流、送风温度与过滤器压差是否超阈值。
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 2F 公区照明回路 夜间未闭锁
+                          - generic: Level 2 / 电梯前室 · 当前负荷 86.0 kWh（较基线 +18.2%）
+                        - generic: 中优先级
+                      - generic: 建议当班复核时控策略与人体感应器阈值，并核对节假日策略模板。
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 B1 车库排风机 运行时长偏长
+                          - generic: Level B1 / 车道西区 · 当前负荷 64.0 kWh（较基线 +9.4%）
+                        - generic: 低优先级
+                      - generic: 建议纳入低优先级观察清单，在下次巡检复核联动启停时序。
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Tasks
+                      - heading "巡检与工单" [level=3]
+                    - generic: 待推进 2 项
+                  - generic:
+                    - generic:
+                      - generic: 工单 WO-BUILDING-031：处置 公寓楼 3F 新风机组
+                      - generic:
+                        - generic: 负责人 暖通运维一组
+                        - generic: 截止 今天 16:30
+                    - generic:
+                      - generic: 工单 WO-BUILDING-032：复核 公寓楼 2F 公区照明回路 夜间未闭锁
+                      - generic:
+                        - generic: 负责人 电气运维二组
+                        - generic: 截止 明天 10:00
+                - generic:
+                  - generic:
+                    - generic: Strategy
+                    - heading "下一步建设建议" [level=3]
+                  - generic:
+                    - generic:
+                      - generic: 建立峰值时段巡检策略
+                      - generic: 优先围绕 公寓楼 3F 新风机组 所在区域建立定时巡检策略。
+                    - generic:
+                      - generic: 把查询结果直接联动成工单
+                      - generic: 建议下一步把能耗查询中的高能耗结果一键转换成运维工单，提高从分析到处置的闭环效率。
+              - generic:
+                - generic:
+                  - generic: Dispatch Focus
+                  - heading "当前运维焦点" [level=2]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 3F 新风机组 负荷偏高
+                          - generic: Level 3 / 东侧走廊 · 当前负荷 108.0 kWh（较基线 +34.6%）
+                        - generic: 高优先
+                      - generic: 建议立即派发巡检工单，核查电流、送风温度与过滤器压差是否超阈值。
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 2F 公区照明回路 夜间未闭锁
+                          - generic: Level 2 / 电梯前室 · 当前负荷 86.0 kWh（较基线 +18.2%）
+                        - generic: 中优先
+                      - generic: 建议当班复核时控策略与人体感应器阈值，并核对节假日策略模板。
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 公寓楼 B1 车库排风机 运行时长偏长
+                          - generic: Level B1 / 车道西区 · 当前负荷 64.0 kWh（较基线 +9.4%）
+                        - generic: 低优先
+                      - generic: 建议纳入低优先级观察清单，在下次巡检复核联动启停时序。
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Agent
+                      - heading "智能体问答" [level=3]
+                    - generic: 已接入智能体
+                  - generic:
+                    - button "总结当前能耗情况"
+                    - button "峰值出现在什么时间段？"
+                    - button "给我三条优化建议"
+                    - button "列出当前高能耗对象"
+                  - generic:
+                    - generic:
+                      - generic: 我已经接入智能体。你可以直接问我当前构件的能耗趋势、峰值成因、节能建议，或者让我结合筛选结果做分析。
+                  - generic:
+                    - generic:
+                      - generic: 输入问题
+                      - textbox "输入问题":
+                        - /placeholder: 例如：帮我解释这个构件为什么峰值偏高，或者给我三条节能建议。
+                    - button "发送":
+                      - img
+                      - text: 发送
+  - button "Open Next.js Dev Tools" [ref=e1661] [cursor=pointer]:
+    - img [ref=e1662]
+  - alert [ref=e1665]
