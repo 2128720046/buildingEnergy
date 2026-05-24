@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageRoot = resolve(__dirname, '..')
 const sourceRoot = resolve(packageRoot, 'public')
+const workspaceRoot = resolve(packageRoot, '..', '..')
+const dashboardSourceRoot = resolve(workspaceRoot, 'assets')
 
 function parseArgs(argv) {
   const result = {
@@ -66,6 +68,14 @@ async function syncAssets(targetDirectory, clean) {
     force: true,
     recursive: true,
   })
+
+  const dashboardSourceStats = await stat(dashboardSourceRoot).catch(() => null)
+  if (dashboardSourceStats?.isDirectory()) {
+    await cp(dashboardSourceRoot, targetDirectory, {
+      force: true,
+      recursive: true,
+    })
+  }
 
   console.log(`[pascal-editor-assets] synced assets to ${targetDirectory}`)
 }

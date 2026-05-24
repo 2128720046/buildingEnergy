@@ -1,21 +1,46 @@
 'use client'
 
-import type { CSSProperties } from 'react'
+import Image from 'next/image'
+import type { CSSProperties, ReactNode } from 'react'
 import { useMemo } from 'react'
+import {
+  BevelCard,
+  Pill,
+  VideoBackground,
+} from '@/features/analytics/components/dashboard-primitives'
+import {
+  DASHBOARD_ASSETS,
+  DASHBOARD_COLORS,
+  DASHBOARD_FONTS,
+} from '@/features/analytics/components/dashboard-theme'
 import type {
   MonitoringAnalyticsModel,
   MonitoringBuildingSummary,
   MonitoringCompositionItem,
-  MonitoringFieldGlossaryItem,
   MonitoringHeatmapCell,
   MonitoringMetric,
-  MonitoringPeakSnapshot,
   MonitoringScatterPoint,
   MonitoringStatusBucket,
 } from '@/features/analytics/lib/monitoring-analytics'
 import { buildMonitoringAnalyticsModel } from '@/features/analytics/lib/monitoring-analytics'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import { cn } from '@/lib/utils'
+
+const PANEL_DIVIDERS = [
+  DASHBOARD_ASSETS.divider1,
+  DASHBOARD_ASSETS.divider2,
+  DASHBOARD_ASSETS.divider3,
+  DASHBOARD_ASSETS.divider4,
+  DASHBOARD_ASSETS.divider5,
+  DASHBOARD_ASSETS.divider6,
+] as const
+
+const METRIC_ICONS: Record<MonitoringMetric['tone'], string> = {
+  amber: '/icons/environment.png',
+  emerald: '/icons/room.png',
+  rose: '/icons/settings.png',
+  sky: '/icons/building.png',
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
@@ -98,61 +123,178 @@ function buildScatterPoints<T>(
   })
 }
 
-function toneClassName(tone: MonitoringMetric['tone']) {
-  switch (tone) {
-    case 'amber':
-      return 'border-amber-200/80 bg-amber-50 text-amber-950'
-    case 'emerald':
-      return 'border-emerald-200/80 bg-emerald-50 text-emerald-950'
-    case 'rose':
-      return 'border-rose-200/80 bg-rose-50 text-rose-950'
-    default:
-      return 'border-sky-200/80 bg-sky-50 text-sky-950'
+function buildTrendLine(
+  points: Array<{ x: number; y: number }>,
+  padding: number,
+  width: number,
+  height: number,
+) {
+  if (points.length < 2) return null
+
+  const count = points.length
+  const sumX = points.reduce((sum, point) => sum + point.x, 0)
+  const sumY = points.reduce((sum, point) => sum + point.y, 0)
+  const sumXY = points.reduce((sum, point) => sum + point.x * point.y, 0)
+  const sumXX = points.reduce((sum, point) => sum + point.x * point.x, 0)
+  const denominator = count * sumXX - sumX * sumX
+
+  if (Math.abs(denominator) < 0.001) return null
+
+  const slope = (count * sumXY - sumX * sumY) / denominator
+  const intercept = (sumY - slope * sumX) / count
+  const x1 = padding
+  const x2 = width - padding
+
+  return {
+    x1,
+    x2,
+    y1: clamp(slope * x1 + intercept, padding, height - padding),
+    y2: clamp(slope * x2 + intercept, padding, height - padding),
   }
 }
 
 function statusToneClassName(tone: MonitoringStatusBucket['tone']) {
   switch (tone) {
     case 'amber':
-      return 'bg-amber-500'
+      return 'bg-[#FFB800]'
     case 'emerald':
-      return 'bg-emerald-500'
+      return 'bg-[#22D3A0]'
     case 'rose':
-      return 'bg-rose-500'
+      return 'bg-[#FF4D6D]'
     default:
-      return 'bg-slate-500'
+      return 'bg-[#8DA8C5]'
+  }
+}
+
+function metricToneColor(tone: MonitoringMetric['tone']) {
+  switch (tone) {
+    case 'amber':
+      return DASHBOARD_COLORS.amber
+    case 'emerald':
+      return DASHBOARD_COLORS.emerald
+    case 'rose':
+      return DASHBOARD_COLORS.rose
+    default:
+      return DASHBOARD_COLORS.primary
   }
 }
 
 function scatterToneFill(tone: MonitoringScatterPoint['tone']) {
   switch (tone) {
     case 'amber':
-      return '#f59e0b'
+      return DASHBOARD_COLORS.amber
     case 'emerald':
-      return '#10b981'
+      return DASHBOARD_COLORS.emerald
     case 'rose':
-      return '#f43f5e'
+      return DASHBOARD_COLORS.rose
     default:
-      return '#0ea5e9'
+      return DASHBOARD_COLORS.primary
   }
 }
 
 function describeCorrelation(value: number) {
   const absolute = Math.abs(value)
 
-  if (absolute >= 0.75) {
-    return value >= 0 ? '强正相关' : '强负相关'
-  }
-
-  if (absolute >= 0.45) {
-    return value >= 0 ? '中等正相关' : '中等负相关'
-  }
-
-  if (absolute >= 0.2) {
-    return value >= 0 ? '弱正相关' : '弱负相关'
-  }
+  if (absolute >= 0.75) return value >= 0 ? '强正相关' : '强负相关'
+  if (absolute >= 0.45) return value >= 0 ? '中等正相关' : '中等负相关'
+  if (absolute >= 0.2) return value >= 0 ? '弱正相关' : '弱负相关'
 
   return '相关性较弱'
+}
+
+function PanelHeader({
+  divider = 1,
+  eyebrow,
+  icon,
+  title,
+}: {
+  divider?: 1 | 2 | 3 | 4 | 5 | 6
+  eyebrow?: string
+  icon?: string
+  title: string
+}) {
+  return (
+    <div className="relative mb-5 min-h-11">
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-11 opacity-70"
+        style={{
+          backgroundImage: `url(${PANEL_DIVIDERS[divider - 1]})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '100% 100%',
+        }}
+      />
+      <div className="relative flex items-center gap-2.5 px-4 pt-2">
+        <span className="h-6 w-1.5 bg-[linear-gradient(180deg,#7AF7FF_0%,#00D4FF_50%,#034D7A_100%)] shadow-[0_0_14px_rgba(0,212,255,0.75)]" />
+        {icon ? (
+          <Image
+            alt=""
+            aria-hidden
+            className="h-6 w-6 object-contain opacity-90 drop-shadow-[0_0_10px_rgba(0,212,255,0.65)]"
+            height={24}
+            src={icon}
+            width={24}
+          />
+        ) : null}
+        <div>
+          {eyebrow ? (
+            <div
+              className="text-[10px] font-semibold not-italic uppercase tracking-[0.26em] text-cyan-100/50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {eyebrow}
+            </div>
+          ) : null}
+          <h2
+            className="text-[21px] font-black not-italic leading-none text-cyan-50 tracking-[0.03em]"
+            style={{
+              fontFamily: '"Microsoft YaHei", "PingFang SC", sans-serif',
+              fontStyle: 'normal',
+              textShadow: '0 0 12px rgba(0,212,255,0.45)',
+            }}
+          >
+            {title}
+          </h2>
+        </div>
+        <span className="ml-auto flex gap-1 pr-1">
+          <i className="h-3 w-1.5 skew-x-[-22deg] bg-cyan-300/70" />
+          <i className="h-3 w-1.5 skew-x-[-22deg] bg-cyan-400/45" />
+          <i className="h-3 w-1.5 skew-x-[-22deg] bg-cyan-500/25" />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function HudPanel({
+  children,
+  className,
+  contentClassName,
+  divider,
+  eyebrow,
+  icon,
+  size = 'medium',
+  title,
+}: {
+  children: ReactNode
+  className?: string
+  contentClassName?: string
+  divider?: 1 | 2 | 3 | 4 | 5 | 6
+  eyebrow?: string
+  icon?: string
+  size?: 'small' | 'medium' | 'large' | 'kpi'
+  title: string
+}) {
+  return (
+    <BevelCard
+      className={cn('min-h-0 p-4', className)}
+      contentClassName={contentClassName}
+      size={size}
+    >
+      <PanelHeader divider={divider} eyebrow={eyebrow} icon={icon} title={title} />
+      {children}
+    </BevelCard>
+  )
 }
 
 export interface DataAnalysisWorkspaceProps {
@@ -161,253 +303,151 @@ export interface DataAnalysisWorkspaceProps {
   selectedComponentName: string
 }
 
-function MetricCard({ metric }: { metric: MonitoringMetric }) {
-  return (
-    <div
-      className={cn(
-        'rounded-[28px] border p-5 shadow-[0_18px_36px_rgba(15,23,42,0.06)]',
-        toneClassName(metric.tone),
-      )}
-    >
-      <div className="text-[11px] font-semibold tracking-[0.22em] uppercase opacity-70">
-        Overview
-      </div>
-      <div className="mt-3 text-3xl font-semibold">{metric.value}</div>
-      <div className="mt-2 text-sm font-medium opacity-85">{metric.label}</div>
-      <div className="mt-2 text-xs leading-5 opacity-70">{metric.detail}</div>
-    </div>
-  )
-}
-
-function PeakSnapshotPanel({ peakSnapshot }: { peakSnapshot: MonitoringPeakSnapshot }) {
-  const snapshotMetrics = [
-    {
-      label: '峰值能耗',
-      value: `${peakSnapshot.electricity.toFixed(1)} kWh`,
-    },
-    {
-      label: '环境温度',
-      value: `${peakSnapshot.temperature.toFixed(1)}°C`,
-    },
-    {
-      label: '环境湿度',
-      value: `${peakSnapshot.humidity.toFixed(1)}%RH`,
-    },
-    {
-      label: '人流指数',
-      value: peakSnapshot.occupancy.toFixed(1),
-    },
-  ]
+function MetricCard({ index, metric }: { index: number; metric: MonitoringMetric }) {
+  const accent = metricToneColor(metric.tone)
 
   return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-[linear-gradient(180deg,#fdfefe_0%,#f4f8ff_100%)] p-5 shadow-[0_18px_36px_rgba(15,23,42,0.06)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Peak Snapshot
-          </div>
-          <h3 className="mt-2 text-xl font-semibold text-slate-950">峰值时段快照</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            把最高能耗记录单独拎出来，快速看到楼栋、设备和环境条件。
-          </p>
+    <BevelCard className="min-h-[112px] px-4 py-3" size="kpi">
+      <div className="flex items-center gap-3">
+        <div
+          className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: `radial-gradient(circle, ${accent} 0%, rgba(0,0,0,0) 62%)`,
+            boxShadow: `0 0 22px ${accent}55`,
+          }}
+        >
+          <Image
+            alt=""
+            aria-hidden
+            className="h-7 w-7 object-contain brightness-125"
+            height={28}
+            src={METRIC_ICONS[metric.tone]}
+            width={28}
+          />
         </div>
-        <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
-          {peakSnapshot.monitorTime}
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
-        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1">
-          楼栋 {peakSnapshot.buildingId}
-        </span>
-        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1">
-          设备 {peakSnapshot.deviceId}
-        </span>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        {snapshotMetrics.map((metric) => (
+        <div className="min-w-0">
           <div
-            className="rounded-[22px] border border-white/80 bg-white/92 px-4 py-3 shadow-[0_12px_24px_rgba(15,23,42,0.04)]"
-            key={metric.label}
+            className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100/45"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
           >
-            <div className="text-xs text-slate-400">{metric.label}</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">{metric.value}</div>
+            DATA 0{index + 1}
           </div>
-        ))}
-      </div>
-
-      <div className="mt-4 rounded-[22px] border border-slate-200 bg-white/80 px-4 py-3 text-sm leading-6 text-slate-600">
-        这个时段建议优先核查 <span className="font-semibold text-slate-950">{peakSnapshot.buildingId}</span>{' '}
-        的空调主机、新风联动和现场采集设备状态。
-      </div>
-    </section>
-  )
-}
-
-function FieldGlossaryPreviewPanel({
-  fieldGlossary,
-}: {
-  fieldGlossary: MonitoringFieldGlossaryItem[]
-}) {
-  const previewFields = [
-    'electricity_kwh',
-    'occupancy_density',
-    'env_temperature',
-    'chilled_water_return_temp',
-  ]
-    .map((field) => fieldGlossary.find((item) => item.field === field))
-    .filter((item): item is MonitoringFieldGlossaryItem => item !== undefined)
-
-  return (
-    <section className="rounded-[30px] border border-slate-200/80 bg-[linear-gradient(180deg,#fffcf7_0%,#f8fbff_100%)] p-5 shadow-[0_18px_36px_rgba(15,23,42,0.06)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Field Preview
-          </div>
-          <h3 className="mt-2 text-xl font-semibold text-slate-950">关键字段速览</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            先展示几列最常用的监测字段，后面做接口联调时可以直接对照这组含义。
-          </p>
-        </div>
-        <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
-          共 {fieldGlossary.length} 个字段
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {previewFields.map((item) => (
           <div
-            className="rounded-[22px] border border-slate-200/80 bg-white/92 px-4 py-3"
-            key={item.field}
+            className="mt-1 truncate text-[26px] font-bold leading-none text-cyan-50 drop-shadow-[0_0_12px_rgba(0,212,255,0.35)]"
+            style={{ color: accent, fontFamily: DASHBOARD_FONTS.numHeavy }}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-semibold text-slate-950">{item.field}</div>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500">
-                {item.dataType}
-              </span>
-            </div>
-            <div className="mt-2 text-sm leading-6 text-slate-500">{item.description}</div>
+            {metric.value}
           </div>
-        ))}
+          <div
+            className="mt-1 truncate text-[12px] text-cyan-50/70"
+            style={{ fontFamily: DASHBOARD_FONTS.cn }}
+          >
+            {metric.label}
+          </div>
+        </div>
       </div>
-
-      <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1">water_m3</span>
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1">hvac_kwh</span>
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1">device_status</span>
-        <span className="rounded-full border border-slate-200 bg-white px-3 py-1">device_id</span>
-      </div>
-    </section>
+    </BevelCard>
   )
 }
 
-function ScorePanel({
-  model,
-  queryResults,
-  selectedComponentName,
-}: {
-  model: MonitoringAnalyticsModel
-  queryResults: HostQueryResult[]
-  selectedComponentName: string
-}) {
+function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
+  const angle = (model.performanceScore / 100) * 360
+  const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
+  const normalBucket = model.statusDistribution.find((bucket) => bucket.tone === 'emerald')
   const gaugeStyle = {
-    backgroundImage: `conic-gradient(#2563eb 0deg ${(model.performanceScore / 100) * 360}deg, rgba(226,232,240,0.9) ${(model.performanceScore / 100) * 360}deg 360deg)`,
+    backgroundImage: `conic-gradient(${DASHBOARD_COLORS.primary} 0deg ${angle}deg, rgba(0,212,255,0.08) ${angle}deg 360deg)`,
   } satisfies CSSProperties
 
   return (
-    <section className="rounded-[36px] border border-white/80 bg-white/88 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.24em] text-slate-400 uppercase">
-            Operation Health
-          </div>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-950">运行健康评分</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            结合人流-电耗相关性、暖通占比和预警时段，给出这一版分析看板的综合评分。
-          </p>
-        </div>
-
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-          最近 12 天
-        </div>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+    <HudPanel
+      className="min-h-[300px]"
+      divider={1}
+      eyebrow="HEALTH"
+      icon="/icons/settings.png"
+      title="运行健康评分"
+    >
+      <div className="grid grid-cols-[150px_1fr] gap-4 max-sm:grid-cols-1">
         <div className="flex items-center justify-center">
-          <div className="relative flex h-48 w-48 items-center justify-center rounded-full" style={gaugeStyle}>
-            <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-              <div className="text-4xl font-semibold text-slate-950">{model.performanceScore}</div>
-              <div className="mt-1 text-xs tracking-[0.16em] text-slate-400 uppercase">Score</div>
+          <div
+            className="relative flex h-36 w-36 items-center justify-center rounded-full border border-cyan-300/20 shadow-[0_0_32px_rgba(0,212,255,0.2)]"
+            style={gaugeStyle}
+          >
+            <div className="absolute inset-3 rounded-full border border-cyan-200/10 bg-[#061829]/85" />
+            <div className="relative text-center">
+              <div
+                className="text-5xl font-bold leading-none text-cyan-50"
+                style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
+              >
+                {model.performanceScore}
+              </div>
+              <div className="mt-1 text-[11px] tracking-[0.2em] text-cyan-100/45">SCORE</div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-slate-400">高峰时段</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">
-              {model.relationshipInsights.peakHour}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">能耗最集中的时间窗口</div>
-          </div>
+        <div className="space-y-3">
+          {model.statusDistribution.map((bucket) => {
+            const total = model.statusDistribution.reduce((sum, item) => sum + item.count, 0)
+            const ratio = total === 0 ? 0 : (bucket.count / total) * 100
 
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-slate-400">人流高峰</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">
-              {model.relationshipInsights.busiestHour}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">人员活动最密集的时间段</div>
-          </div>
-
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-slate-400">电耗-人流关系</div>
-            <div className="mt-2 text-xl font-semibold text-slate-950">
-              {describeCorrelation(model.relationshipInsights.occupancyCorrelation)}
-            </div>
-            <div className="mt-2 text-sm text-slate-500">
-              系数 {model.relationshipInsights.occupancyCorrelation.toFixed(2)}
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-slate-400">当前关注</div>
-            <div className="mt-2 truncate text-xl font-semibold text-slate-950">
-              空调
-            </div>
-            <div className="mt-2 text-sm text-slate-500">关联高耗能构件 3 个</div>
-          </div>
+            return (
+              <div key={bucket.label}>
+                <div className="mb-1 flex items-center justify-between text-[13px] text-cyan-50/70">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'h-2 w-2 rounded-full shadow-[0_0_10px_currentColor]',
+                        statusToneClassName(bucket.tone),
+                      )}
+                    />
+                    {bucket.label}
+                  </span>
+                  <span style={{ fontFamily: DASHBOARD_FONTS.num }}>
+                    {bucket.count} / {ratio.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-cyan-950/70">
+                  <div
+                    className={cn('h-full rounded-full', statusToneClassName(bucket.tone))}
+                    style={{ width: `${ratio}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      <div className="mt-6 space-y-3">
-        {model.statusDistribution.map((bucket) => {
-          const total = model.statusDistribution.reduce((sum, item) => sum + item.count, 0)
-          const ratio = total === 0 ? 0 : (bucket.count / total) * 100
-
-          return (
-            <div key={bucket.label}>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <div className="flex items-center gap-2 text-slate-700">
-                  <span className={cn('h-2.5 w-2.5 rounded-full', statusToneClassName(bucket.tone))} />
-                  {bucket.label}
-                </div>
-                <div className="font-medium text-slate-950">
-                  {bucket.count} 条 · {ratio.toFixed(1)}%
-                </div>
-              </div>
-              <div className="mt-2 h-2.5 rounded-full bg-slate-100">
-                <div
-                  className={cn('h-2.5 rounded-full', statusToneClassName(bucket.tone))}
-                  style={{ width: `${ratio}%` }}
-                />
-              </div>
-            </div>
-          )
-        })}
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">正常记录</div>
+          <div
+            className="mt-1 text-2xl font-bold text-[#22D3A0]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {normalBucket?.count ?? 0}
+          </div>
+        </div>
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">预警记录</div>
+          <div
+            className="mt-1 text-2xl font-bold text-[#FF4D6D]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {warningBucket?.count ?? 0}
+          </div>
+        </div>
+        <div className="border border-cyan-300/15 bg-cyan-950/25 px-2 py-2.5">
+          <div className="text-[13px] text-cyan-100/55">监测总量</div>
+          <div
+            className="mt-1 text-2xl font-bold text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {model.recentRecords.length}
+          </div>
+        </div>
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
@@ -429,36 +469,43 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
   )
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Daily Analysis
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">每日能耗与人流走势</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            用柱状图看每天的总能耗，再叠加人流趋势线，直接判断人流上升是否同步推高整体负荷。
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1">电耗柱状</span>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1">人流折线</span>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">12 天窗口</span>
-        </div>
+    <HudPanel
+      className="min-h-[430px]"
+      divider={2}
+      eyebrow="TREND"
+      icon="/icons/environment.png"
+      size="large"
+      title="每日能耗与人流走势"
+    >
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Pill tone="primary">电耗柱状</Pill>
+        <Pill tone="emerald">人流折线</Pill>
+        <Pill tone="neutral">12 天窗口</Pill>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_100%)] p-4">
-        <svg className="block h-auto w-full" preserveAspectRatio="xMidYMid meet" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+      <div className="tech-chart-frame p-3">
+        <svg
+          className="block h-auto w-full"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        >
           <defs>
             <linearGradient id="dailyOccupancyFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+              <stop offset="0%" stopColor={DASHBOARD_COLORS.emerald} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={DASHBOARD_COLORS.emerald} stopOpacity="0" />
             </linearGradient>
             <linearGradient id="dailyBarFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#2563eb" />
+              <stop offset="0%" stopColor="#7AF7FF" />
+              <stop offset="48%" stopColor={DASHBOARD_COLORS.primary} />
+              <stop offset="100%" stopColor="#006CA8" />
             </linearGradient>
+            <filter id="cyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur result="blur" stdDeviation="3" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
           {[0, 1, 2, 3].map((index) => {
@@ -466,8 +513,8 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
             return (
               <line
                 key={y}
-                stroke="rgba(148,163,184,0.22)"
-                strokeDasharray="5 7"
+                stroke="rgba(141,168,197,0.22)"
+                strokeDasharray="5 8"
                 x1={padding}
                 x2={chartWidth - padding}
                 y1={y}
@@ -479,57 +526,76 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
           {electricityBars.map((bar) => (
             <rect
               fill="url(#dailyBarFill)"
+              filter="url(#cyanGlow)"
               height={bar.height}
               key={`${bar.x}-${bar.height}`}
-              rx="12"
-              ry="12"
+              opacity="0.88"
+              rx="6"
+              ry="6"
               width={bar.width}
               x={bar.x}
               y={bar.y}
             />
           ))}
 
-          <path d={buildAreaPath(occupancyPoints, chartHeight, padding)} fill="url(#dailyOccupancyFill)" />
+          <path
+            d={buildAreaPath(occupancyPoints, chartHeight, padding)}
+            fill="url(#dailyOccupancyFill)"
+          />
           <path
             d={buildLinePath(occupancyPoints)}
             fill="none"
-            stroke="#22c55e"
+            stroke={DASHBOARD_COLORS.emerald}
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth="3.5"
+            strokeWidth="3.2"
           />
 
           {occupancyPoints.map((point) => (
             <circle
               cx={point.x}
               cy={point.y}
-              fill="#ffffff"
+              fill="#061829"
               key={`${point.x}-${point.y}`}
-              r="5"
-              stroke="#22c55e"
-              strokeWidth="2.5"
+              r="4.5"
+              stroke={DASHBOARD_COLORS.emerald}
+              strokeWidth="2"
             />
           ))}
         </svg>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500 md:grid-cols-4 xl:grid-cols-6">
-          {model.dailySeries.map((point) => (
-            <div className="rounded-2xl border border-white/80 bg-white/88 px-3 py-2" key={point.date}>
-              <div>{point.date}</div>
-              <div className="mt-2 font-semibold text-slate-950">{point.electricity.toFixed(1)} kWh</div>
-              <div className="mt-1 text-slate-400">人流 {point.occupancy.toFixed(1)}</div>
-            </div>
-          ))}
-        </div>
       </div>
-    </section>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[14px] text-cyan-50/65 md:grid-cols-4 2xl:grid-cols-6">
+        {model.dailySeries.map((point) => (
+          <div className="border border-cyan-300/12 bg-cyan-950/24 px-3 py-3.5" key={point.date}>
+            <div className="whitespace-nowrap font-semibold tracking-[0.04em]">{point.date}</div>
+            <div
+              className="mt-1 text-lg font-semibold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {point.electricity.toFixed(1)} kWh
+            </div>
+          </div>
+        ))}
+      </div>
+    </HudPanel>
   )
 }
 
 function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const chartWidth = 460
-  const chartHeight = 280
-  const padding = 30
+  const chartHeight = 270
+  const padding = 28
+  const maxHourlyElectricity = Math.max(...model.hourlySeries.map((point) => point.electricity), 1)
+  const maxHourlyOccupancy = Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)
+  const minHourlyElectricity = Math.min(...model.hourlySeries.map((point) => point.electricity))
+  const swing = maxHourlyElectricity - minHourlyElectricity
+  const peakPoint = model.hourlySeries.reduce((best, point) =>
+    point.electricity > best.electricity ? point : best,
+  )
+  const quietPoint = model.hourlySeries.reduce((best, point) =>
+    point.electricity < best.electricity ? point : best,
+  )
   const electricityBars = buildBars(
     model.hourlySeries.map((point) => point.electricity),
     chartWidth,
@@ -544,40 +610,62 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   )
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Time Relationship
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">能耗与时间关系</h2>
-        </div>
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-          典型时段
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-          <div className="text-xs text-slate-400">电耗高峰</div>
-          <div className="mt-2 text-xl font-semibold text-slate-950">
+    <HudPanel
+      className="min-h-[300px]"
+      divider={3}
+      eyebrow="HOURLY"
+      icon="/icons/settings.png"
+      title="时段负荷关系"
+    >
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">电耗高峰</div>
+          <div
+            className="mt-1 text-xl font-bold text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
             {model.relationshipInsights.peakHour}
           </div>
         </div>
-        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-          <div className="text-xs text-slate-400">低谷时段</div>
-          <div className="mt-2 text-xl font-semibold text-slate-950">
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">低谷时段</div>
+          <div
+            className="mt-1 text-xl font-bold text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
             {model.relationshipInsights.quietHour}
+          </div>
+        </div>
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">峰谷差值</div>
+          <div
+            className="mt-1 text-xl font-bold text-[#FFB800]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {swing.toFixed(0)}
+          </div>
+        </div>
+        <div className="bg-cyan-950/25 p-3 ring-1 ring-cyan-300/10">
+          <div className="text-[13px] text-cyan-100/55">人流峰值</div>
+          <div
+            className="mt-1 text-xl font-bold text-[#7AF7FF]"
+            style={{ fontFamily: DASHBOARD_FONTS.num }}
+          >
+            {maxHourlyOccupancy.toFixed(0)}
           </div>
         </div>
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-[28px] border border-slate-200/80 bg-[linear-gradient(180deg,#fbfdff_0%,#f4f8ff_100%)] p-4">
-        <svg className="block h-auto w-full" preserveAspectRatio="xMidYMid meet" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+      <div className="tech-chart-frame mt-4 p-3">
+        <svg
+          className="block h-auto w-full"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        >
           <defs>
             <linearGradient id="hourlyBarFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#1d4ed8" />
+              <stop offset="0%" stopColor="#7AF7FF" />
+              <stop offset="100%" stopColor="#0070AE" />
             </linearGradient>
           </defs>
 
@@ -586,8 +674,8 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
             return (
               <line
                 key={y}
-                stroke="rgba(148,163,184,0.24)"
-                strokeDasharray="5 7"
+                stroke="rgba(141,168,197,0.2)"
+                strokeDasharray="5 8"
                 x1={padding}
                 x2={chartWidth - padding}
                 y1={y}
@@ -601,8 +689,9 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
               fill="url(#hourlyBarFill)"
               height={bar.height}
               key={`${bar.x}-${bar.height}`}
-              rx="14"
-              ry="14"
+              opacity="0.9"
+              rx="10"
+              ry="10"
               width={bar.width}
               x={bar.x}
               y={bar.y}
@@ -612,7 +701,7 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
           <path
             d={buildLinePath(occupancyPoints)}
             fill="none"
-            stroke="#f59e0b"
+            stroke={DASHBOARD_COLORS.amber}
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="3"
@@ -622,32 +711,146 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
             <circle
               cx={point.x}
               cy={point.y}
-              fill="#fff7ed"
+              fill="#061829"
               key={`${point.x}-${point.y}`}
               r="4.5"
-              stroke="#f59e0b"
-              strokeWidth="2.5"
+              stroke={DASHBOARD_COLORS.amber}
+              strokeWidth="2"
             />
           ))}
         </svg>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500 sm:grid-cols-4">
-          {model.hourlySeries.map((point) => (
-            <div className="rounded-2xl border border-white/90 bg-white/88 px-3 py-2" key={point.hour}>
-              <div>{point.hour}</div>
-              <div className="mt-2 font-semibold text-slate-950">{point.electricity.toFixed(1)} kWh</div>
-              <div className="mt-1 text-slate-400">人流 {point.occupancy.toFixed(1)}</div>
-            </div>
-          ))}
-        </div>
       </div>
-    </section>
+
+      <div className="mt-4 grid grid-cols-4 gap-2">
+        {model.hourlySeries.map((point) => (
+          <div className="border border-cyan-300/12 bg-cyan-950/20 px-3 py-2" key={point.hour}>
+            <div className="text-[13px] text-cyan-100/60">{point.hour}</div>
+            <div
+              className="mt-1 text-xl font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {point.electricity.toFixed(0)}
+            </div>
+            <div className="text-[12px] text-cyan-100/45">kWh</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {[
+          {
+            label: '峰值负荷',
+            value: `${peakPoint.electricity.toFixed(0)} kWh`,
+            width: (peakPoint.electricity / maxHourlyElectricity) * 100,
+            color: '#FFB800',
+          },
+          {
+            label: '低谷负荷',
+            value: `${quietPoint.electricity.toFixed(0)} kWh`,
+            width: (quietPoint.electricity / maxHourlyElectricity) * 100,
+            color: '#22D3A0',
+          },
+          {
+            label: '人流高峰',
+            value: model.relationshipInsights.busiestHour,
+            width: 100,
+            color: '#00D4FF',
+          },
+        ].map((item) => (
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-2.5 py-2" key={item.label}>
+            <div className="text-[13px] font-semibold text-cyan-100/62">{item.label}</div>
+            <div
+              className="mt-1 truncate text-[15px] font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {item.value}
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden bg-cyan-950/80">
+              <div
+                className="h-full shadow-[0_0_16px_currentColor]"
+                style={{ backgroundColor: item.color, color: item.color, width: `${item.width}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </HudPanel>
+  )
+}
+
+function LoadFocusPanel({ model }: { model: MonitoringAnalyticsModel }) {
+  const totalElectricity = model.dailySeries.reduce((sum, point) => sum + point.electricity, 0)
+  const totalHvac = model.dailySeries.reduce((sum, point) => sum + point.hvac, 0)
+  const hvacRatio = totalElectricity === 0 ? 0 : (totalHvac / totalElectricity) * 100
+  const latestDay = model.dailySeries.at(-1)
+  const previousDay = model.dailySeries.at(-2)
+  const dailyDelta =
+    latestDay && previousDay
+      ? ((latestDay.electricity - previousDay.electricity) / previousDay.electricity) * 100
+      : 0
+  const peakBuilding = model.buildingSummaries[0]
+  const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
+
+  const cards = [
+    {
+      label: '暖通占比',
+      value: `${hvacRatio.toFixed(1)}%`,
+      tone: DASHBOARD_COLORS.primary,
+      width: hvacRatio,
+    },
+    {
+      label: '日环比',
+      value: `${dailyDelta >= 0 ? '+' : ''}${dailyDelta.toFixed(1)}%`,
+      tone: dailyDelta >= 0 ? DASHBOARD_COLORS.amber : DASHBOARD_COLORS.emerald,
+      width: clamp(Math.abs(dailyDelta) * 8, 18, 100),
+    },
+    {
+      label: '高负荷楼栋',
+      value: peakBuilding?.buildingId ?? '-',
+      tone: DASHBOARD_COLORS.amber,
+      width: 82,
+    },
+    {
+      label: '预警记录',
+      value: `${warningBucket?.count ?? 0}`,
+      tone: DASHBOARD_COLORS.rose,
+      width: clamp(
+        ((warningBucket?.count ?? 0) / Math.max(model.recentRecords.length, 1)) * 100,
+        24,
+        100,
+      ),
+    },
+  ]
+
+  return (
+    <HudPanel divider={6} eyebrow="FOCUS" icon="/icons/environment.png" title="负荷策略摘要">
+      <div className="grid grid-cols-2 gap-2">
+        {cards.map((card) => (
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2.5" key={card.label}>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-[14px] font-semibold text-cyan-100/65">{card.label}</span>
+              <span
+                className="whitespace-nowrap text-xl font-bold text-cyan-50"
+                style={{ color: card.tone, fontFamily: DASHBOARD_FONTS.num }}
+              >
+                {card.value}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden bg-cyan-950/80">
+              <div
+                className="h-full shadow-[0_0_16px_currentColor]"
+                style={{ backgroundColor: card.tone, color: card.tone, width: `${card.width}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </HudPanel>
   )
 }
 
 function RelationshipScatterPanel({
   correlation,
-  description,
   points,
   title,
   xAccessor,
@@ -656,7 +859,6 @@ function RelationshipScatterPanel({
   yLabel,
 }: {
   correlation: number
-  description: string
   points: MonitoringScatterPoint[]
   title: string
   xAccessor: (point: MonitoringScatterPoint) => number
@@ -664,36 +866,111 @@ function RelationshipScatterPanel({
   yAccessor: (point: MonitoringScatterPoint) => number
   yLabel: string
 }) {
-  const chartWidth = 520
-  const chartHeight = 290
-  const padding = 36
-  const scatterPoints = buildScatterPoints(points, chartWidth, chartHeight, padding, xAccessor, yAccessor)
-  const buildingLabels = [...new Set(points.map((point) => point.buildingId))]
+  const chartWidth = 620
+  const chartHeight = 260
+  const padding = 34
+  const scatterPoints = buildScatterPoints(
+    points,
+    chartWidth,
+    chartHeight,
+    padding,
+    xAccessor,
+    yAccessor,
+  )
+  const chartId = xLabel.includes('温度') || xLabel.includes('度') ? 'temperature' : 'occupancy'
+  const trendId = `scatterTrend-${chartId}`
+  const pointGlowId = `scatterPointGlow-${chartId}`
+  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth, chartHeight)
+  const warningCount = points.filter(
+    (point) => point.tone === 'amber' || point.tone === 'rose',
+  ).length
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Relationship
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+    <HudPanel
+      className="min-h-[318px]"
+      contentClassName="[&>div:first-child]:mb-2"
+      divider={4}
+      eyebrow="RELATION"
+      icon="/icons/zone.png"
+      title={title}
+    >
+      <div className="mb-2 grid grid-cols-[1fr_auto] items-center gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Pill tone="primary">{describeCorrelation(correlation)}</Pill>
+          <Pill tone="neutral">样本 {points.length}</Pill>
+          <Pill tone={warningCount > points.length * 0.35 ? 'amber' : 'emerald'}>
+            风险点 {warningCount}
+          </Pill>
         </div>
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-          {describeCorrelation(correlation)} · {correlation.toFixed(2)}
+        <div className="text-right">
+          <div className="text-[12px] tracking-[0.18em] text-cyan-100/45">CORR</div>
+          <div
+            className="text-[30px] font-bold leading-none text-cyan-50"
+            style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
+          >
+            {correlation.toFixed(2)}
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 rounded-[28px] border border-slate-200/80 bg-[linear-gradient(180deg,#fbfdff_0%,#f4f8ff_100%)] p-4">
-        <svg className="block h-auto w-full" preserveAspectRatio="xMidYMid meet" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+      <div className="tech-chart-frame relative p-2">
+        <svg
+          className="block h-auto w-full"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        >
+          <defs>
+            <linearGradient id={trendId} x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#00D4FF" stopOpacity="0.15" />
+              <stop offset="48%" stopColor="#7AF7FF" />
+              <stop offset="100%" stopColor="#FFB800" />
+            </linearGradient>
+            <filter id={pointGlowId} x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur result="blur" stdDeviation="2.2" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect
+            fill="rgba(2, 8, 23, 0.32)"
+            height={chartHeight - padding * 2}
+            rx="10"
+            width={chartWidth - padding * 2}
+            x={padding}
+            y={padding}
+          />
+          <rect
+            fill="rgba(0, 212, 255, 0.04)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding}
+            y={padding}
+          />
+          <rect
+            fill="rgba(255, 184, 0, 0.055)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding + (chartWidth - padding * 2) / 2}
+            y={padding}
+          />
+          <rect
+            fill="rgba(34, 211, 160, 0.045)"
+            height={(chartHeight - padding * 2) / 2}
+            width={(chartWidth - padding * 2) / 2}
+            x={padding}
+            y={padding + (chartHeight - padding * 2) / 2}
+          />
+
           {[0, 1, 2, 3].map((index) => {
             const y = padding + ((chartHeight - padding * 2) / 3) * index
             return (
               <line
                 key={`y-${y}`}
-                stroke="rgba(148,163,184,0.2)"
-                strokeDasharray="5 7"
+                stroke="rgba(122,247,255,0.16)"
+                strokeDasharray="8 10"
                 x1={padding}
                 x2={chartWidth - padding}
                 y1={y}
@@ -707,8 +984,8 @@ function RelationshipScatterPanel({
             return (
               <line
                 key={`x-${x}`}
-                stroke="rgba(148,163,184,0.16)"
-                strokeDasharray="5 7"
+                stroke="rgba(122,247,255,0.12)"
+                strokeDasharray="8 10"
                 x1={x}
                 x2={x}
                 y1={padding}
@@ -717,46 +994,79 @@ function RelationshipScatterPanel({
             )
           })}
 
+          {trendLine ? (
+            <>
+              <line
+                stroke="rgba(0,212,255,0.18)"
+                strokeLinecap="round"
+                strokeWidth="12"
+                x1={trendLine.x1}
+                x2={trendLine.x2}
+                y1={trendLine.y1}
+                y2={trendLine.y2}
+              />
+              <line
+                stroke={`url(#${trendId})`}
+                strokeLinecap="round"
+                strokeWidth="4"
+                x1={trendLine.x1}
+                x2={trendLine.x2}
+                y1={trendLine.y1}
+                y2={trendLine.y2}
+              />
+            </>
+          ) : null}
+
           {scatterPoints.map(({ item, x, y }) => (
             <circle
               cx={x}
               cy={y}
               fill={scatterToneFill(item.tone)}
+              filter={`url(#${pointGlowId})`}
               key={item.id}
-              opacity="0.82"
-              r="6"
-              stroke="#ffffff"
-              strokeWidth="2"
+              opacity="0.78"
+              r={item.tone === 'rose' ? 5.5 : 4.8}
+              stroke="rgba(221,251,255,0.82)"
+              strokeWidth="1.2"
             />
           ))}
 
-          <text className="fill-slate-400 text-[11px]" x={padding} y={chartHeight - 8}>
-            {xLabel}
-          </text>
-          <text className="fill-slate-400 text-[11px]" transform={`translate(14 ${padding}) rotate(-90)`}>
+          <text className="fill-cyan-100/62 text-[13px] font-semibold" x={padding} y={padding - 10}>
             {yLabel}
           </text>
+          <text
+            className="fill-cyan-100/62 text-[13px] font-semibold"
+            x={padding}
+            y={chartHeight - 9}
+          >
+            {xLabel}
+          </text>
+          <text
+            className="fill-cyan-100/32 text-[11px]"
+            x={chartWidth - padding - 90}
+            y={padding - 10}
+          >
+            趋势线 / Trend
+          </text>
         </svg>
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
-        {buildingLabels.map((label) => {
-          const tone = points.find((point) => point.buildingId === label)?.tone ?? 'sky'
-          return (
+        <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-1.5 text-[12px] font-semibold text-cyan-100/70">
+          {[
+            { label: '办公', color: DASHBOARD_COLORS.primary },
+            { label: '教学', color: DASHBOARD_COLORS.emerald },
+            { label: '实验', color: DASHBOARD_COLORS.amber },
+            { label: '预警', color: DASHBOARD_COLORS.rose },
+          ].map((item) => (
             <span
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1"
-              key={label}
+              className="inline-flex items-center gap-1.5 border border-cyan-300/10 bg-[#041527]/72 px-2 py-1 backdrop-blur-md"
+              key={item.label}
             >
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: scatterToneFill(tone) }}
-              />
-              {label}
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
             </span>
-          )
-        })}
+          ))}
+        </div>
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
@@ -765,27 +1075,21 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
   const hours = [...new Set(heatmap.map((item) => item.hour))]
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Heatmap
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">时段热力图</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            把最近 7 天按日期和小时展开，一眼看清哪个时段最耗电、哪个时段人流最高。
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-slate-50/85">
-        <div className="grid grid-cols-[84px_repeat(4,minmax(0,1fr))] gap-px bg-slate-200/70">
-          <div className="bg-white px-3 py-3 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
+    <HudPanel
+      className="min-h-[360px]"
+      divider={5}
+      eyebrow="HEATMAP"
+      icon="/icons/floor.png"
+      title="时段热力矩阵"
+    >
+      <div className="overflow-hidden border border-cyan-300/15 bg-cyan-950/20">
+        <div className="grid grid-cols-[76px_repeat(4,minmax(0,1fr))] gap-px bg-cyan-300/10">
+          <div className="bg-[#061829]/90 px-3 py-2.5 text-[12px] font-semibold tracking-[0.16em] text-cyan-100/55">
             日期
           </div>
           {hours.map((hour) => (
             <div
-              className="bg-white px-3 py-3 text-center text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase"
+              className="bg-[#061829]/90 px-3 py-2.5 text-center text-[12px] font-semibold tracking-[0.16em] text-cyan-100/55"
               key={hour}
             >
               {hour}
@@ -796,24 +1100,31 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
             const cells = heatmap.filter((item) => item.date === date)
 
             return [
-              <div className="bg-white px-3 py-4 text-sm font-medium text-slate-700" key={`${date}-label`}>
+              <div
+                className="bg-[#061829]/90 px-3 py-3 text-[15px] font-semibold text-cyan-50/80"
+                key={`${date}-label`}
+              >
                 {date}
               </div>,
               ...cells.map((cell) => {
-                const background = `rgba(37,99,235,${clamp(0.14 + cell.intensity * 0.66, 0.14, 0.8)})`
+                const background = `rgba(0,212,255,${clamp(0.16 + cell.intensity * 0.72, 0.16, 0.88)})`
                 return (
                   <div
-                    className="min-h-[84px] bg-white px-3 py-3 text-slate-950"
+                    className="min-h-[72px] bg-[#061829]/90 p-2 text-cyan-50"
                     key={`${cell.date}-${cell.hour}`}
+                    title={`${cell.date} ${cell.hour} 电耗 ${cell.electricity.toFixed(1)} kWh`}
                   >
                     <div
-                      className="flex h-full flex-col justify-between rounded-[20px] p-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
+                      className="flex h-full flex-col justify-between px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_0_18px_rgba(0,212,255,0.12)]"
                       style={{ backgroundColor: background }}
-                      title={`${cell.date} ${cell.hour} · 电耗 ${cell.electricity.toFixed(1)} kWh · 人流 ${cell.occupancy.toFixed(1)}`}
                     >
-                      <div className="text-[11px] opacity-80">电耗</div>
-                      <div className="text-lg font-semibold leading-none">{cell.electricity.toFixed(0)}</div>
-                      <div className="text-[11px] opacity-80">人流 {cell.occupancy.toFixed(0)}</div>
+                      <span className="text-[13px] opacity-75">kWh</span>
+                      <span
+                        className="text-2xl font-bold leading-none"
+                        style={{ fontFamily: DASHBOARD_FONTS.num }}
+                      >
+                        {cell.electricity.toFixed(0)}
+                      </span>
                     </div>
                   </div>
                 )
@@ -822,7 +1133,7 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
           })}
         </div>
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
@@ -835,185 +1146,189 @@ function CompositionPanel({
 }) {
   const total = composition.reduce((sum, item) => sum + item.value, 0)
   let current = 0
-  const stops = composition.map((item) => {
-    const start = (current / total) * 100
-    current += item.value
-    const end = (current / total) * 100
-    return `${item.color} ${start}% ${end}%`
-  }).join(', ')
+  const stops = composition
+    .map((item) => {
+      const start = (current / total) * 100
+      current += item.value
+      const end = (current / total) * 100
+      return `${item.color} ${start}% ${end}%`
+    })
+    .join(', ')
 
   const donutStyle = {
     backgroundImage: `conic-gradient(${stops})`,
   } satisfies CSSProperties
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-        Composition
-      </div>
-      <h2 className="mt-2 text-2xl font-semibold text-slate-950">能耗构成占比</h2>
-
-      <div className="mt-6 flex items-center justify-center">
-        <div className="relative flex h-52 w-52 items-center justify-center rounded-full" style={donutStyle}>
-          <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-            <div className="text-3xl font-semibold text-slate-950">{Math.round(total)}</div>
-            <div className="mt-1 text-xs text-slate-400">总量基准</div>
+    <HudPanel divider={6} eyebrow="RATIO" icon="/icons/appliance.png" title="能耗构成占比">
+      <div className="flex items-center justify-center py-2">
+        <div
+          className="relative flex h-44 w-44 items-center justify-center rounded-full shadow-[0_0_42px_rgba(0,212,255,0.18)]"
+          style={donutStyle}
+        >
+          <div className="absolute inset-5 rounded-full bg-[#061829]/95 ring-1 ring-cyan-300/15" />
+          <div className="relative text-center">
+            <div
+              className="text-3xl font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
+            >
+              {Math.round(total)}
+            </div>
+            <div className="text-[11px] text-cyan-100/45">总量基准</div>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-3 space-y-2">
         {composition.map((item) => (
           <div
-            className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3"
+            className="flex items-center justify-between border border-cyan-300/10 bg-cyan-950/20 px-3 py-3 text-[15px]"
             key={item.label}
           >
-            <div className="flex items-center gap-3">
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-sm text-slate-700">{item.label}</span>
-            </div>
-            <div className="text-sm font-medium text-slate-950">{item.value.toFixed(0)}</div>
+            <span className="flex items-center gap-2 text-cyan-50/70">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </span>
+            <span
+              className="text-lg font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {item.value.toFixed(0)}
+            </span>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50/85 p-4">
-        <div className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">状态概览</div>
-        <div className="mt-4 space-y-3">
-          {statusDistribution.map((bucket) => (
-            <div className="flex items-center justify-between text-sm" key={bucket.label}>
-              <div className="flex items-center gap-2 text-slate-700">
-                <span className={cn('h-2.5 w-2.5 rounded-full', statusToneClassName(bucket.tone))} />
-                {bucket.label}
-              </div>
-              <div className="font-medium text-slate-950">{bucket.count}</div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        {statusDistribution.map((bucket) => (
+          <div className="border border-cyan-300/10 bg-cyan-950/20 px-3 py-2" key={bucket.label}>
+            <div className="flex items-center gap-2 text-[14px] text-cyan-100/60">
+              <span className={cn('h-2 w-2 rounded-full', statusToneClassName(bucket.tone))} />
+              {bucket.label}
             </div>
-          ))}
-        </div>
+            <div
+              className="mt-1 text-2xl font-bold text-cyan-50"
+              style={{ fontFamily: DASHBOARD_FONTS.num }}
+            >
+              {bucket.count}
+            </div>
+          </div>
+        ))}
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
-function BuildingRankingPanel({ buildingSummaries }: { buildingSummaries: MonitoringBuildingSummary[] }) {
+function BuildingRankingPanel({
+  buildingSummaries,
+}: {
+  buildingSummaries: MonitoringBuildingSummary[]
+}) {
   const maxElectricity = Math.max(...buildingSummaries.map((summary) => summary.electricity), 1)
 
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-        Ranking
-      </div>
-      <h2 className="mt-2 text-2xl font-semibold text-slate-950">楼栋能耗排名</h2>
-
-      <div className="mt-6 space-y-4">
+    <HudPanel divider={1} eyebrow="RANKING" icon="/icons/building.png" title="楼栋能耗排行">
+      <div className="space-y-3">
         {buildingSummaries.map((summary, index) => (
-          <div
-            className="rounded-[26px] border border-slate-200/80 bg-slate-50/85 p-4"
-            key={summary.buildingId}
-          >
+          <div className="border border-cyan-300/10 bg-cyan-950/20 p-3" key={summary.buildingId}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-400/10 text-sm font-bold text-cyan-50 shadow-[0_0_16px_rgba(0,212,255,0.25)]"
+                  style={{ fontFamily: DASHBOARD_FONTS.numHeavy }}
+                >
                   {index + 1}
                 </div>
                 <div>
-                  <div className="font-semibold text-slate-950">{summary.buildingId}</div>
-                  <div className="mt-1 text-xs text-slate-500">
-                    {summary.buildingType} · 人流 {summary.averageOccupancy.toFixed(1)}
-                  </div>
+                  <div className="font-semibold text-cyan-50">{summary.buildingId}</div>
+                  <div className="mt-0.5 text-[11px] text-cyan-100/45">{summary.buildingType}</div>
                 </div>
               </div>
-              <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
-                效率 {summary.efficiencyScore}
+              <div className="text-right">
+                <div
+                  className="text-lg font-bold text-cyan-50"
+                  style={{ fontFamily: DASHBOARD_FONTS.num }}
+                >
+                  {summary.electricity.toFixed(0)}
+                </div>
+                <div className="text-[10px] text-cyan-100/45">kWh</div>
               </div>
             </div>
 
-            <div className="mt-4 h-3 rounded-full bg-white">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-cyan-950/80">
               <div
-                className="h-3 rounded-full bg-[linear-gradient(90deg,#0ea5e9_0%,#2563eb_100%)]"
+                className="h-full rounded-full bg-[linear-gradient(90deg,#00D4FF_0%,#FFB800_100%)] shadow-[0_0_14px_rgba(0,212,255,0.4)]"
                 style={{ width: `${(summary.electricity / maxElectricity) * 100}%` }}
               />
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-3 text-sm text-slate-600">
-              <div className="rounded-2xl border border-white bg-white px-3 py-3">
-                <div className="text-xs text-slate-400">电耗</div>
-                <div className="mt-2 font-semibold text-slate-950">{summary.electricity.toFixed(0)}</div>
-              </div>
-              <div className="rounded-2xl border border-white bg-white px-3 py-3">
-                <div className="text-xs text-slate-400">暖通</div>
-                <div className="mt-2 font-semibold text-slate-950">{summary.hvac.toFixed(0)}</div>
-              </div>
-              <div className="rounded-2xl border border-white bg-white px-3 py-3">
-                <div className="text-xs text-slate-400">预警</div>
-                <div className="mt-2 font-semibold text-slate-950">{summary.warningCount}</div>
-              </div>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
 function DetailTable({ model }: { model: MonitoringAnalyticsModel }) {
   return (
-    <section className="rounded-[34px] border border-white/80 bg-white/92 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Detail Records
-          </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">近期监测明细</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            前面的图表都基于这些监测记录聚合而来，下面保留一张表，方便继续核对数据来源和接口结构。
-          </p>
-        </div>
-
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-          最近 {model.recentRecords.length} 条
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-auto rounded-[28px] border border-slate-200/80 bg-white">
-        <table className="min-w-[1280px] text-sm text-slate-700">
-          <thead className="bg-slate-100 text-xs uppercase tracking-[0.16em] text-slate-500">
+    <HudPanel
+      className="min-h-[300px]"
+      divider={2}
+      eyebrow="RECORDS"
+      icon="/icons/floorplan.png"
+      size="large"
+      title="近期监测明细"
+    >
+      <div className="overflow-hidden border border-cyan-300/15 bg-cyan-950/20">
+        <table className="w-full table-fixed text-base text-cyan-50/78">
+          <colgroup>
+            <col className="w-[12%]" />
+            <col className="w-[15%]" />
+            <col className="w-[8%]" />
+            <col className="w-[8%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[7%]" />
+            <col className="w-[20%]" />
+            <col className="w-[9%]" />
+          </colgroup>
+          <thead className="bg-cyan-950/70 text-[13px] uppercase tracking-[0.14em] text-cyan-100/55">
             <tr>
-              <th className="px-4 py-3 text-left">楼栋</th>
-              <th className="px-4 py-3 text-left">时间</th>
-              <th className="px-4 py-3 text-right">电耗</th>
-              <th className="px-4 py-3 text-right">暖通</th>
-              <th className="px-4 py-3 text-right">用水</th>
-              <th className="px-4 py-3 text-right">温度</th>
-              <th className="px-4 py-3 text-right">湿度</th>
-              <th className="px-4 py-3 text-right">人流</th>
-              <th className="px-4 py-3 text-left">设备</th>
-              <th className="px-4 py-3 text-left">状态</th>
+              <th className="px-5 py-4 text-left">楼栋</th>
+              <th className="px-5 py-4 text-left">时间</th>
+              <th className="px-4 py-4 text-right">电耗</th>
+              <th className="px-4 py-4 text-right">暖通</th>
+              <th className="px-4 py-4 text-right">用水</th>
+              <th className="px-4 py-4 text-right">温度</th>
+              <th className="px-4 py-4 text-right">湿度</th>
+              <th className="px-4 py-4 text-right">人流</th>
+              <th className="px-5 py-4 text-left">设备</th>
+              <th className="px-5 py-4 text-center">状态</th>
             </tr>
           </thead>
           <tbody>
-            {model.recentRecords.map((record) => (
-              <tr className="border-t border-slate-100" key={record.id}>
-                <td className="px-4 py-3 font-medium text-slate-950">{record.building_id}</td>
-                <td className="px-4 py-3">{record.monitor_time}</td>
-                <td className="px-4 py-3 text-right">{record.electricity_kwh.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.hvac_kwh.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.water_m3.toFixed(1)}</td>
-                <td className="px-4 py-3 text-right">{record.env_temperature.toFixed(1)}°C</td>
-                <td className="px-4 py-3 text-right">{record.env_humidity.toFixed(1)}%</td>
-                <td className="px-4 py-3 text-right">{record.occupancy_density.toFixed(1)}</td>
-                <td className="px-4 py-3">{record.device_id}</td>
-                <td className="px-4 py-3">
+            {model.recentRecords.slice(0, 10).map((record) => (
+              <tr className="border-t border-cyan-300/10 hover:bg-cyan-300/5" key={record.id}>
+                <td className="px-5 py-4 font-semibold text-cyan-50">{record.building_id}</td>
+                <td className="truncate px-5 py-4">{record.monitor_time}</td>
+                <td className="px-4 py-4 text-right">{record.electricity_kwh.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.hvac_kwh.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.water_m3.toFixed(1)}</td>
+                <td className="px-4 py-4 text-right">{record.env_temperature.toFixed(1)}°C</td>
+                <td className="px-4 py-4 text-right">{record.env_humidity.toFixed(1)}%</td>
+                <td className="px-4 py-4 text-right">{record.occupancy_density.toFixed(1)}</td>
+                <td className="truncate px-5 py-4">{record.device_id}</td>
+                <td className="px-5 py-4 text-center">
                   <span
                     className={cn(
-                      'rounded-full px-2.5 py-1 text-xs font-medium text-white',
+                      'inline-flex min-w-16 justify-center rounded-full px-3 py-1.5 text-sm font-semibold text-[#020817]',
                       record.device_status === 'normal'
-                        ? 'bg-emerald-500'
+                        ? 'bg-[#22D3A0]'
                         : record.device_status === 'warning'
-                          ? 'bg-rose-500'
+                          ? 'bg-[#FF4D6D]'
                           : record.device_status === 'maintenance'
-                            ? 'bg-amber-500'
-                            : 'bg-slate-500',
+                            ? 'bg-[#FFB800]'
+                            : 'bg-cyan-100/50',
                     )}
                   >
                     {record.device_status === 'normal'
@@ -1030,95 +1345,65 @@ function DetailTable({ model }: { model: MonitoringAnalyticsModel }) {
           </tbody>
         </table>
       </div>
-    </section>
+    </HudPanel>
   )
 }
 
-export default function DataAnalysisWorkspace({
-  projectId,
-  queryResults,
-  selectedComponentName,
-}: DataAnalysisWorkspaceProps) {
+export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspaceProps) {
   const model = useMemo(() => buildMonitoringAnalyticsModel(projectId), [projectId])
 
   return (
-    <div className="h-full overflow-auto bg-[radial-gradient(circle_at_top_left,#fffdf4_0%,#eef4ff_38%,#dde8f8_100%)]">
-      <div className="mx-auto flex max-w-[1760px] flex-col gap-6 px-6 py-6">
-        <section className="rounded-[40px] border border-white/80 bg-white/76 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.9fr]">
-            <div>
-              <div className="text-[11px] font-semibold tracking-[0.28em] text-slate-400 uppercase">
-                Smart Energy Data Board
-              </div>
-              <h1 className="mt-3 text-4xl font-semibold text-slate-950">智慧园区能耗数据分析看板</h1>
-              <div className="mt-5 flex flex-wrap gap-2 text-sm text-slate-600">
-                <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1.5">
-                  项目 {projectId}
-                </span>
-                <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1.5">
-                  关联高耗能构件 {queryResults.length} 个
-                </span>
-                <span className="rounded-full border border-white/80 bg-white/90 px-3 py-1.5">
-                  当前关注 {selectedComponentName}
-                </span>
-              </div>
+    <div className="relative h-full overflow-auto bg-[#020817] text-cyan-50">
+      <VideoBackground />
+      <div className="cockpit-atmosphere" />
 
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-                {model.metrics.map((metric) => (
-                  <MetricCard key={metric.label} metric={metric} />
-                ))}
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-4 2xl:grid-cols-2">
-                <PeakSnapshotPanel peakSnapshot={model.peakSnapshot} />
-                <FieldGlossaryPreviewPanel fieldGlossary={model.fieldGlossary} />
-              </div>
-            </div>
-
-            <ScorePanel
-              model={model}
-              queryResults={queryResults}
-              selectedComponentName={selectedComponentName}
-            />
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.8fr]">
-          <DailyLoadPanel model={model} />
-          <HourlyPatternPanel model={model} />
+      <div className="relative z-10 mx-auto flex max-w-[1820px] flex-col gap-4 px-5 pb-6 pt-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {model.metrics.map((metric, index) => (
+            <MetricCard index={index} key={metric.label} metric={metric} />
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[360px_minmax(0,1fr)_380px]">
+          <div className="flex min-w-0 flex-col gap-4">
+            <HealthGaugePanel model={model} />
+            <HourlyPatternPanel model={model} />
+            <LoadFocusPanel model={model} />
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-4">
+            <DailyLoadPanel model={model} />
+            <HeatmapPanel heatmap={model.heatmap} />
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-4">
+            <BuildingRankingPanel buildingSummaries={model.buildingSummaries} />
+            <CompositionPanel
+              composition={model.composition}
+              statusDistribution={model.statusDistribution}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <RelationshipScatterPanel
             correlation={model.relationshipInsights.occupancyCorrelation}
-            description="每个点代表一个楼栋在某个时段的监测记录，横轴是人流指数，纵轴是能耗。点越往右上，说明该时段人流和负荷都在抬升。"
             points={model.occupancyScatter}
-            title="能耗与人流量关系图"
+            title="能耗与人流关系"
             xAccessor={(point) => point.occupancy}
             xLabel="人流指数"
             yAccessor={(point) => point.electricity}
             yLabel="能耗 kWh"
           />
-
           <RelationshipScatterPanel
             correlation={model.relationshipInsights.temperatureCorrelation}
-            description="用环境温度和能耗做第二组关系分析，方便对外解释高温时段为什么会带来更高的电耗和暖通压力。"
             points={model.occupancyScatter}
-            title="能耗与温度关系图"
+            title="能耗与温度关系"
             xAccessor={(point) => point.temperature}
             xLabel="温度 °C"
             yAccessor={(point) => point.electricity}
             yLabel="能耗 kWh"
           />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr_0.9fr]">
-          <HeatmapPanel heatmap={model.heatmap} />
-          <CompositionPanel
-            composition={model.composition}
-            statusDistribution={model.statusDistribution}
-          />
-          <BuildingRankingPanel buildingSummaries={model.buildingSummaries} />
         </div>
 
         <DetailTable model={model} />

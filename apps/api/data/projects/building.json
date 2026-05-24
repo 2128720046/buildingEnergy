@@ -59301,7 +59301,7 @@
       "id": "zone_4ksvvnh8k4i85tr3",
       "name": "Lanai",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -60705,7 +60705,7 @@
       "id": "zone_g3n9cravedqogu8i",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -60801,7 +60801,7 @@
       "id": "zone_gfx8fyun3ojk3cn5",
       "name": "Kicthen",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -61845,7 +61845,7 @@
       "id": "zone_pw69r8raou7cqvi4",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -62585,7 +62585,7 @@
       "id": "zone_xwvi4lsckpyb2nt9",
       "name": "Master bedroom",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -71802,7 +71802,8 @@
         "level_fpjwtwn0d64aephd",
         "level_zzs0wcq6u3s7u3qg",
         "level_doiabsebkwamfczy",
-        "level_nyon2r8dt6tgvybl"
+        "level_nyon2r8dt6tgvybl",
+        "level_5e6rjpmfksxal1ck"
       ],
       "metadata": {},
       "parentId": null,
@@ -71862,11 +71863,69 @@
       "parentId": "level_ndgi8zuyr8zfcbt6",
       "visible": true,
       "metadata": {},
-      "url": "asset://3398e925-95f6-4861-9b83-4f24ca8abb46",
+      "url": "http://localhost:3010/projects/building/assets/1779608484387-2fb42df9.glb",
       "position": [
         31.898749259893492,
         0,
         -1.7417818919116854
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 10,
+      "opacity": 100
+    },
+    "level_5e6rjpmfksxal1ck": {
+      "object": "node",
+      "id": "level_5e6rjpmfksxal1ck",
+      "type": "level",
+      "parentId": "building_vh1z9chps72913h9",
+      "visible": true,
+      "metadata": {},
+      "children": [
+        "scan_xox8kwnybbkeim7j",
+        "scan_y2ago4yqjkqosmva"
+      ],
+      "level": 8,
+      "name": "环境"
+    },
+    "scan_xox8kwnybbkeim7j": {
+      "object": "node",
+      "id": "scan_xox8kwnybbkeim7j",
+      "type": "scan",
+      "name": "game_ready_city_building",
+      "parentId": "level_5e6rjpmfksxal1ck",
+      "visible": true,
+      "metadata": {},
+      "url": "http://localhost:3010/projects/building/assets/1779616295563-4bda6117.glb",
+      "position": [
+        6.5112154954682175,
+        -8,
+        -11.654970246378031
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": 10,
+      "opacity": 100
+    },
+    "scan_y2ago4yqjkqosmva": {
+      "object": "node",
+      "id": "scan_y2ago4yqjkqosmva",
+      "type": "scan",
+      "name": "game_ready_city_buildings",
+      "parentId": "level_5e6rjpmfksxal1ck",
+      "visible": true,
+      "metadata": {},
+      "url": "http://localhost:3010/projects/building/assets/1779616305118-b0fa5c40.glb",
+      "position": [
+        -43.91529641959953,
+        0,
+        16.082169983452083
       ],
       "rotation": [
         0,

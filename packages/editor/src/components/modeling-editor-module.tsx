@@ -58,9 +58,13 @@ function SelectionBridge({
 }
 
 /**
- * Upload a File to the backend asset store. Returns the backend URL.
+ * Upload a File to the backend asset store. Returns the absolute backend URL.
  */
-async function uploadAssetToBackend(file: File, assetUploadUrl: string): Promise<string> {
+async function uploadAssetToBackend(
+  file: File,
+  assetUploadUrl: string,
+  baseUrl: string,
+): Promise<string> {
   const response = await fetch(assetUploadUrl, {
     method: 'POST',
     body: file,
@@ -70,7 +74,9 @@ async function uploadAssetToBackend(file: File, assetUploadUrl: string): Promise
     throw new Error(`Asset upload failed: ${response.status}`)
   }
   const result = await response.json() as { url: string }
-  return result.url
+  // Backend returns relative path like /projects/{id}/assets/{name}
+  // Prepend base URL to make it absolute so it works from any origin
+  return result.url.startsWith('http') ? result.url : `${baseUrl.replace(/\/+$/, '')}${result.url}`
 }
 
 export interface ModelingEditorCoreModuleProps
@@ -111,7 +117,7 @@ export function ModelingEditorCoreModule({
         let url: string
         if (baseUrl) {
           const uploadUrl = `${baseUrl.replace(/\/+$/, '')}/projects/${encodeURIComponent(projectId)}/assets?filename=${encodeURIComponent(file.name)}`
-          url = await uploadAssetToBackend(file, uploadUrl)
+          url = await uploadAssetToBackend(file, uploadUrl, baseUrl)
         } else {
           url = await saveAsset(file)
         }

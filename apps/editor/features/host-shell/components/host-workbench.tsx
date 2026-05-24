@@ -6,9 +6,11 @@ import {
   buildSceneGraphFromReferenceFile,
   useEditor,
 } from '@pascal-app/editor'
+import { useSidebarStore } from '@pascal-app/editor'
 import {
   DefaultModelingViewerToolbarLeft,
   DefaultModelingViewerToolbarRight,
+  createModelingSiteSidebarTab,
 } from '@pascal-app/editor/chrome'
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import {
@@ -17,6 +19,7 @@ import {
   type SceneGraph,
 } from '@pascal-app/editor/modeling'
 import { useViewer } from '@pascal-app/viewer'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DASHBOARD_ASSETS } from '@/features/analytics/components/dashboard-theme'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
@@ -55,6 +58,32 @@ const DEFAULT_FILTERS: HostQueryFilters = {
 }
 
 type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'paused' | 'error'
+
+/** 侧边栏折叠/展开切换按钮 */
+function SidebarToggleButton() {
+  const isCollapsed = useSidebarStore((s) => s.isCollapsed)
+  const setIsCollapsed = useSidebarStore((s) => s.setIsCollapsed)
+  const sidebarWidth = useSidebarStore((s) => s.width)
+
+  return (
+    <button
+      className="absolute top-2 z-50 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-[#0C0E14]/80 text-white/50 shadow-lg backdrop-blur-sm transition-all hover:border-white/20 hover:bg-[#0C0E14] hover:text-white/80"
+      onClick={() => setIsCollapsed(!isCollapsed)}
+      style={{
+        left: isCollapsed ? 4 : sidebarWidth - 4,
+        transform: isCollapsed ? 'none' : 'translateX(-100%)',
+      }}
+      title={isCollapsed ? '展开侧边栏' : '收起侧边栏'}
+      type="button"
+    >
+      {isCollapsed ? (
+        <PanelLeftOpen className="h-3.5 w-3.5" />
+      ) : (
+        <PanelLeftClose className="h-3.5 w-3.5" />
+      )}
+    </button>
+  )
+}
 
 export interface HostWorkbenchProps {
   apiBaseUrl?: string
@@ -427,6 +456,18 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
       onToggle={handleToggleEdit}
       projectId={projectId}
     />
+  )
+
+  // 读取侧边栏状态，用于为仪表盘留出左侧空间
+  const sidebarWidth = useSidebarStore((s) => s.width)
+  const sidebarCollapsed = useSidebarStore((s) => s.isCollapsed)
+  // 折叠时侧边栏仍有 8px 的 grab handle 需要留出空间
+  const dashboardLeftOffset = sidebarCollapsed ? 8 : sidebarWidth
+
+  // 侧边栏标签：场景树（含楼层管理、节点选择等）
+  const hostSidebarTabs = useMemo(
+    () => [createModelingSiteSidebarTab()],
+    [],
   )
 
   useEffect(() => {
@@ -809,6 +850,8 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
           )}
         >
           <div className="relative h-full min-h-0 min-w-0 overflow-hidden">
+            {/* 侧边栏折叠/展开按钮：位于左侧边缘，始终可点击 */}
+            <SidebarToggleButton />
             <ModelingEditorCoreModule
               assetUploadBaseUrl={apiBaseUrl ?? undefined}
               className="h-full w-full"
@@ -817,7 +860,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
               onSaveStatusChange={setSaveStatus}
               onSelectionChange={setSelection}
               projectId={projectId}
-              sidebarTabs={[]}
+              sidebarTabs={hostSidebarTabs}
               viewerOverlayOptions={{
                 showActionMenu: editEnabled,
                 showFloatingActionMenu: editEnabled,
@@ -832,7 +875,11 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
             />
 
             {useTwinCockpit ? (
-              <EnergyTwinDashboard
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 z-[5]"
+                style={{ left: dashboardLeftOffset > 0 ? `${dashboardLeftOffset}px` : 0 }}
+              >
+                <EnergyTwinDashboard
                 energyError={energyError}
                 energyLoading={energyLoading}
                 energyResult={energyResult}
@@ -850,6 +897,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
                 zoneOptions={draftQueryModel.zoneOptions}
                 editSnapshot={editSnapshot}
               />
+              </div>
             ) : (
               <HostRightRail
                 activeModule={activeRightRailModule}

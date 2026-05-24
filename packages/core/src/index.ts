@@ -32,7 +32,7 @@ export {
   resolveLevelId,
 } from './hooks/spatial-grid/spatial-grid-sync'
 export { useSpatialQuery } from './hooks/spatial-grid/use-spatial-query'
-export { loadAssetUrl, saveAsset } from './lib/asset-storage'
+export { collectAssetIds, getAssetFile, loadAssetUrl, saveAsset } from './lib/asset-storage'
 export {
   detectSpacesForLevel,
   initSpaceDetectionSync,

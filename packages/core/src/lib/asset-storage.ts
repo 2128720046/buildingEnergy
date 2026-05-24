@@ -53,3 +53,37 @@ export async function loadAssetUrl(url: string): Promise<string | null> {
   // Legacy data URLs are returned as is
   return url
 }
+
+/**
+ * Retrieve a raw file/blob from IndexedDB by asset URL or ID.
+ * Returns null if not found.
+ */
+export async function getAssetFile(assetUrlOrId: string): Promise<File | Blob | null> {
+  const id = assetUrlOrId.startsWith('asset://')
+    ? assetUrlOrId.replace('asset://', '')
+    : assetUrlOrId
+
+  try {
+    const file = await get<File | Blob>(`${ASSET_PREFIX}${id}`)
+    return file ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Collect all unique asset:// IDs referenced in a scene nodes record.
+ */
+export function collectAssetIds(nodes: Record<string, unknown>): string[] {
+  const ids = new Set<string>()
+
+  for (const node of Object.values(nodes)) {
+    if (!node || typeof node !== 'object') continue
+    const url = (node as Record<string, unknown>).url
+    if (typeof url === 'string' && url.startsWith('asset://')) {
+      ids.add(url.replace('asset://', ''))
+    }
+  }
+
+  return Array.from(ids)
+}
