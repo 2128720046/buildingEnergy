@@ -46,6 +46,13 @@ import type { OperationsTask } from '@/features/operations/lib/operations-dashbo
 import { cn } from '@/lib/utils'
 
 const DEFAULT_PROJECT_ID = 'building'
+const ACTIVE_WORKSPACE_STORAGE_KEY = 'building-energy:active-workspace'
+const HOST_WORKSPACE_VALUES = new Set<HostWorkspace>([
+  'energy-query',
+  'data-analysis',
+  'smart-operations',
+])
+const WORKSPACE_QUERY_KEY = 'workspace'
 const DEFAULT_FILTERS: HostQueryFilters = {
   keyword: '',
   levelId: '',
@@ -58,6 +65,35 @@ type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'paused' | 'error'
 
 export interface HostWorkbenchProps {
   apiBaseUrl?: string
+  initialWorkspace?: HostWorkspace
+}
+
+function isHostWorkspace(value: string | null): value is HostWorkspace {
+  return HOST_WORKSPACE_VALUES.has(value as HostWorkspace)
+}
+
+function readPreferredWorkspace(): HostWorkspace {
+  if (typeof window === 'undefined') {
+    return 'energy-query'
+  }
+
+  const urlWorkspace = new URLSearchParams(window.location.search).get(WORKSPACE_QUERY_KEY)
+  if (isHostWorkspace(urlWorkspace)) {
+    return urlWorkspace
+  }
+
+  const storedWorkspace = window.localStorage.getItem(ACTIVE_WORKSPACE_STORAGE_KEY)
+  return isHostWorkspace(storedWorkspace) ? storedWorkspace : 'energy-query'
+}
+
+function persistWorkspace(workspace: HostWorkspace) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(ACTIVE_WORKSPACE_STORAGE_KEY, workspace)
+
+  const url = new URL(window.location.href)
+  url.searchParams.set(WORKSPACE_QUERY_KEY, workspace)
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
 }
 
 function HostViewerToolbarRight({
@@ -224,7 +260,10 @@ function HostViewerToolbarRight({
   )
 }
 
-export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
+export default function HostWorkbench({
+  apiBaseUrl,
+  initialWorkspace = 'energy-query',
+}: HostWorkbenchProps) {
   const [projectId, setProjectId] = useState(DEFAULT_PROJECT_ID)
   const [projectOptions, setProjectOptions] = useState<ProjectSummary[]>([
     { projectId: DEFAULT_PROJECT_ID },
@@ -238,7 +277,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
   const [energyError, setEnergyError] = useState<string | null>(null)
   const [insightsCollapsed, setInsightsCollapsed] = useState(false)
   const [insightsWidth, setInsightsWidth] = useState(432)
-  const [activeWorkspace, setActiveWorkspace] = useState<HostWorkspace>('energy-query')
+  const [activeWorkspace, setActiveWorkspace] = useState<HostWorkspace>(initialWorkspace)
   const [activeRightRailModule, setActiveRightRailModule] = useState<'query' | 'operations'>(
     'query',
   )
@@ -299,6 +338,33 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     setAppliedFilters(draftFilters)
     setHasQueried(true)
   }, [draftFilters])
+
+  const handleWorkspaceChange = useCallback((workspace: HostWorkspace) => {
+    setActiveWorkspace(workspace)
+    persistWorkspace(workspace)
+  }, [])
+
+  useEffect(() => {
+    const syncWorkspace = () => {
+      const preferredWorkspace = readPreferredWorkspace()
+      setActiveWorkspace((current) =>
+        current === preferredWorkspace ? current : preferredWorkspace,
+      )
+    }
+    syncWorkspace()
+
+    const interval = window.setInterval(syncWorkspace, 1000)
+    window.addEventListener('focus', syncWorkspace)
+    window.addEventListener('pageshow', syncWorkspace)
+    window.addEventListener('storage', syncWorkspace)
+
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', syncWorkspace)
+      window.removeEventListener('pageshow', syncWorkspace)
+      window.removeEventListener('storage', syncWorkspace)
+    }
+  }, [])
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editSnapshot, setEditSnapshot] = useState<Record<string, AnyNode> | null>(null)
@@ -386,7 +452,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
       zoneIds,
     }
 
-    setActiveWorkspace('energy-query')
+    handleWorkspaceChange('energy-query')
     setDraftFilters((prev) => ({
       ...prev,
       levelId: targetLevelId as string,
@@ -407,7 +473,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
     })
     viewer.setHoveredId(null)
     viewer.setLevelMode('solo')
-  }, [nodes])
+  }, [handleWorkspaceChange, nodes])
 
   const handleCreateWorkOrder = useCallback((draft: AssistantWorkOrderDraft) => {
     const nextTask: OperationsTask = {
@@ -754,7 +820,7 @@ export default function HostWorkbench({ apiBaseUrl }: HostWorkbenchProps) {
               : 'grid grid-cols-1',
           )}
         >
-          <WorkspaceNavigation activeWorkspace={activeWorkspace} onChange={setActiveWorkspace} />
+          <WorkspaceNavigation activeWorkspace={activeWorkspace} onChange={handleWorkspaceChange} />
           {activeWorkspace === 'energy-query' ? (
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <div className="min-w-0 flex-1 overflow-hidden">
