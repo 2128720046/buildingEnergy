@@ -1,0 +1,62 @@
+[     525ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[     636ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    1147ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="relative h...">
+      <VideoBackground>
+      <div>
+      <DashboardTooltipLayer>
+      <div className="relative z...">
+        <div>
+        <div className="data-analy...">
+          <div>
+          <div>
+          <div className="data-analy...">
+            <HourlyPatternPanel>
+            <CompositionPanel composition={[...]} statusDistribution={[...]}>
+              <HudPanel className="data-analy..." contentClassName={"flex h-f..."} divider={6} icon="composition" ...>
+                <BevelCard className="data-analy..." contentClassName={"flex h-f..."} size="medium">
+                  <div className="hud-drawn-..." data-corners={undefined} style={undefined}>
+                    <div className={"relative..."}>
+                      <PanelHeader>
+                      <div className="flex min-h...">
+                        <div className="flex items...">
+                          <div className="relative h...">
+                            <svg className="h-full w-f..." viewBox="0 0 220 220">
+                              <defs>
+                              <circle>
+                              <circle>
+                              <g>
+                              <g>
+                              <g className="compositio..." data-dimmed={undefined} data-hovered={undefined} ...>
+                                <path>
+                                <path
+                                  className="opacity-45 transition-opacity duration-200 group-hover:opacity-95"
++                                 d="M 174.80021166420494 178.09502601713461 A 94 94 0 0 1 109.31020722033307 203.9974..."
+-                                 d="M 174.80021166420494 178.0950260171346 A 94 94 0 0 1 109.31020722033307 203.99746..."
+                                  fill="url(#compositionHighlight-2)"
+                                >
+                                ...
+                              ...
+                              ...
+                            ...
+                        ...
+        ...
+      ...
+ @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[    2947ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    3652ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[    3712ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[   34905ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[   35445ms] [LOG] [Fast Refresh] done in 597ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431

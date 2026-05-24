@@ -5,12 +5,12 @@ import {
   applySceneGraphToEditor,
   buildSceneGraphFromReferenceFile,
   useEditor,
+  useSidebarStore,
 } from '@pascal-app/editor'
-import { useSidebarStore } from '@pascal-app/editor'
 import {
+  createModelingSiteSidebarTab,
   DefaultModelingViewerToolbarLeft,
   DefaultModelingViewerToolbarRight,
-  createModelingSiteSidebarTab,
 } from '@pascal-app/editor/chrome'
 import { createEditorApiClient } from '@pascal-app/editor/host'
 import {
@@ -21,6 +21,7 @@ import {
 import { useViewer } from '@pascal-app/viewer'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { tooltipAttrs } from '@/features/analytics/components/dashboard-tooltip'
 import DataAnalysisWorkspace from '@/features/analytics/components/data-analysis-workspace'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTwinDashboard from '@/features/energy-insights/components/energy-twin-dashboard'
@@ -430,7 +431,18 @@ function DataAnalysisHeaderStatus() {
       className="data-header-status ml-auto hidden shrink-0 items-center justify-between gap-3 xl:flex"
       style={{ fontFamily: 'var(--font-alimama-shuhei)' }}
     >
-      <div className="data-status-cell">
+      <div
+        className="data-status-cell data-status-online"
+        {...tooltipAttrs({
+          rows: [
+            { label: '系统运行时长', value: '18 天 06:42' },
+            { label: '在线设备数', value: '286 / 292' },
+            { label: 'CPU / 内存', value: '38% / 61%' },
+            { label: '最近心跳', value: '刚刚' },
+          ],
+          title: '系统在线状态',
+        })}
+      >
         <span className="data-status-dot" />
         <div>
           <div className="data-status-kicker">系统在线</div>
@@ -438,7 +450,17 @@ function DataAnalysisHeaderStatus() {
         </div>
       </div>
       <span className="data-status-divider" />
-      <div className="data-status-cell text-right">
+      <div
+        className="data-status-cell text-right"
+        {...tooltipAttrs({
+          rows: [
+            { label: '服务器时间', value: timeText },
+            { label: '时区', value: 'Asia/Shanghai' },
+            { label: 'NTP 同步', value: '正常' },
+          ],
+          title: '时间同步状态',
+        })}
+      >
         <div>
           <div className="data-status-kicker">{dateText}</div>
           <div
@@ -450,8 +472,45 @@ function DataAnalysisHeaderStatus() {
         </div>
       </div>
       <span className="data-status-divider" />
+      <div
+        className="data-status-cell data-status-weather"
+        {...tooltipAttrs({
+          rows: [
+            { label: '天气', value: '多云' },
+            { label: '室外温度', value: '26°C' },
+            { label: '体感温度', value: '27°C' },
+            { label: '数据来源', value: '本地气象站' },
+          ],
+          title: '室外天气',
+        })}
+      >
+        <span className="weather-glyph" aria-hidden="true" />
+        <div>
+          <div className="data-status-kicker">多云</div>
+          <div
+            className="data-status-value text-[#7AF7FF]"
+            style={{ fontFamily: 'var(--font-rajdhani)' }}
+          >
+            26°C
+          </div>
+        </div>
+      </div>
+      <span className="data-status-divider" />
       <div className="flex items-center gap-2">
-        <button aria-label="消息提醒" className="data-status-icon-btn" type="button">
+        <button
+          aria-label="消息提醒"
+          className="data-status-icon-btn data-status-bell"
+          type="button"
+          {...tooltipAttrs({
+            rows: [
+              { label: '未读通知', value: '3 条' },
+              { label: '1', value: 'BLDG-C-07 暖通能耗异常' },
+              { label: '2', value: 'BLDG-A-03 采集器延迟恢复' },
+              { label: '3', value: '日报已生成' },
+            ],
+            title: '通知摘要',
+          })}
+        >
           <svg aria-hidden="true" className="h-4.5 w-4.5" viewBox="0 0 24 24">
             <path
               d="M12 21a2.5 2.5 0 0 0 2.35-1.65h-4.7A2.5 2.5 0 0 0 12 21Zm6-6.35V10a6 6 0 1 0-12 0v4.65l-1.55 2.1A.8.8 0 0 0 5.1 18h13.8a.8.8 0 0 0 .65-1.25L18 14.65Z"
@@ -460,7 +519,19 @@ function DataAnalysisHeaderStatus() {
           </svg>
           <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#FF4D6D] shadow-[0_0_8px_rgba(255,77,109,0.85)]" />
         </button>
-        <button aria-label="系统设置" className="data-status-icon-btn" type="button">
+        <button
+          aria-label="系统设置"
+          className="data-status-icon-btn data-status-gear"
+          type="button"
+          {...tooltipAttrs({
+            rows: [
+              { label: '主题', value: '深蓝科技风' },
+              { label: '语言', value: '简体中文' },
+              { label: '刷新频率', value: '4-10 秒' },
+            ],
+            title: '快捷设置入口',
+          })}
+        >
           <svg aria-hidden="true" className="h-4.5 w-4.5" viewBox="0 0 24 24">
             <path
               d="M12 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm8.2 3.75c0-.48-.04-.95-.13-1.4l-2.05-.53a6.88 6.88 0 0 0-.62-1.08l.6-2.03a8.3 8.3 0 0 0-2.42-1.4l-1.55 1.44c-.37-.08-.75-.12-1.14-.12s-.77.04-1.14.12L10.2 5.56a8.3 8.3 0 0 0-2.42 1.4l.6 2.03c-.24.34-.45.7-.62 1.08l-2.05.53A8 8 0 0 0 5.58 12c0 .48.04.95.13 1.4l2.05.53c.17.38.38.74.62 1.08l-.6 2.03a8.3 8.3 0 0 0 2.42 1.4L11.75 17c.37.08.75.12 1.14.12s.77-.04 1.14-.12l1.55 1.44a8.3 8.3 0 0 0 2.42-1.4l-.6-2.03c.24-.34.45-.7.62-1.08l2.05-.53c.09-.45.13-.92.13-1.4Z"
@@ -725,10 +796,7 @@ export default function HostWorkbench({
   const dashboardLeftOffset = sidebarCollapsed ? 8 : sidebarWidth
 
   // 侧边栏标签：场景树（含楼层管理、节点选择等）
-  const hostSidebarTabs = useMemo(
-    () => [createModelingSiteSidebarTab()],
-    [],
-  )
+  const hostSidebarTabs = useMemo(() => [createModelingSiteSidebarTab()], [])
 
   useEffect(() => {
     let cancelled = false
@@ -1136,23 +1204,23 @@ export default function HostWorkbench({
                 style={{ left: dashboardLeftOffset > 0 ? `${dashboardLeftOffset}px` : 0 }}
               >
                 <EnergyTwinDashboard
-                energyError={energyError}
-                energyLoading={energyLoading}
-                energyResult={energyResult}
-                energyResultZone={energyResultZone}
-                filters={draftFilters}
-                hasQueried={hasQueried}
-                levelOptions={draftQueryModel.levelOptions}
-                onFiltersChange={setDraftFilters}
-                onJumpToLevel3HighlightZones={handleJumpToLevel3HighlightZones}
-                onQuery={handleSubmitQuery}
-                projectId={projectId}
-                queryResults={queryResults}
-                selectedComponentId={selectedComponentId}
-                selectedComponentName={selectedComponentName}
-                zoneOptions={draftQueryModel.zoneOptions}
-                editSnapshot={editSnapshot}
-              />
+                  energyError={energyError}
+                  energyLoading={energyLoading}
+                  energyResult={energyResult}
+                  energyResultZone={energyResultZone}
+                  filters={draftFilters}
+                  hasQueried={hasQueried}
+                  levelOptions={draftQueryModel.levelOptions}
+                  onFiltersChange={setDraftFilters}
+                  onJumpToLevel3HighlightZones={handleJumpToLevel3HighlightZones}
+                  onQuery={handleSubmitQuery}
+                  projectId={projectId}
+                  queryResults={queryResults}
+                  selectedComponentId={selectedComponentId}
+                  selectedComponentName={selectedComponentName}
+                  zoneOptions={draftQueryModel.zoneOptions}
+                  editSnapshot={editSnapshot}
+                />
               </div>
             ) : (
               <HostRightRail

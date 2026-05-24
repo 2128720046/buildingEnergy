@@ -1,5 +1,6 @@
-﻿'use client'
+'use client'
 
+import { tooltipAttrs } from '@/features/analytics/components/dashboard-tooltip'
 import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { HOST_WORKSPACES } from '@/features/host-shell/lib/host-workspaces'
 import { cn } from '@/lib/utils'
@@ -76,6 +77,16 @@ export default function WorkspaceNavigation({
             key={workspace.key}
             onClick={() => onChange(workspace.key)}
             type="button"
+            {...tooltipAttrs({
+              rows: isActive
+                ? [
+                    { label: '核心指标', value: '累计耗电 / 人流 / 峰值负荷' },
+                    { label: '图表模块', value: '趋势 / 时段 / 热力 / 构成' },
+                    { label: '明细模块', value: '风险分层 / 监测表格 / 设备卡片' },
+                  ]
+                : [{ label: '模块简介', value: workspace.description }],
+              title: workspace.label,
+            })}
           >
             <WorkspaceIcon active={isActive} workspace={workspace.key} />
             <span>{workspace.label}</span>

@@ -1,0 +1,513 @@
+[    1172ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    1278ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    3578ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[    4294ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[    4358ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  436022ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  436898ms] [LOG] [Fast Refresh] done in 860ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  447928ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  448914ms] [LOG] [Fast Refresh] done in 971ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  507939ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  508584ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js?id=%255Bproject%255D%252Fapps%252Feditor%252Ffeatures%252Fanalytics%252Fcomponents%252Fdata-analysis-workspace.tsx+%255Bapp-client%255D+%2528ecmascript%2529:5645:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performSyncWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10179:316)
+    at flushSyncWork$1 (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9230:86)
+    at Object.scheduleRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:299:13)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:391:33
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:384:38)
+    at applyUpdate (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:878:31)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:886:13
+[  508725ms] [LOG] [Fast Refresh] done in 777ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  548013ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  548194ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  549350ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js?id=%255Bproject%255D%252Fapps%252Feditor%252Ffeatures%252Fanalytics%252Fcomponents%252Fdata-analysis-workspace.tsx+%255Bapp-client%255D+%2528ecmascript%2529:5645:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performSyncWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10179:316)
+    at flushSyncWork$1 (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9230:86)
+    at Object.scheduleRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:299:13)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:391:33
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:384:38)
+    at applyUpdate (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:878:31)
+    at http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:886:13
+[  549365ms] [LOG] [Fast Refresh] done in 274ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  549936ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  550136ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  550170ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  550771ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:6918:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  717337ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  717505ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  717526ms] [LOG] [Fast Refresh] done in 267ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  717630ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  717741ms] [LOG] [Fast Refresh] done in 212ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  719130ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  719139ms] [LOG] [Fast Refresh] done in 118ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  719148ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  719188ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  719212ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  719559ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:6937:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  721886ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  722018ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  722039ms] [LOG] [Fast Refresh] done in 239ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  722143ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  722253ms] [LOG] [Fast Refresh] done in 211ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  723932ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  723970ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  723987ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  724313ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:6936:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  738951ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  739097ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  739120ms] [LOG] [Fast Refresh] done in 241ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  739226ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  739357ms] [LOG] [Fast Refresh] done in 235ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  740811ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  740854ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  740872ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  741212ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:6938:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  787319ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  787503ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  787525ms] [LOG] [Fast Refresh] done in 290ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  787629ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  787713ms] [LOG] [Fast Refresh] done in 188ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  789167ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  789212ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  789236ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  789440ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  789580ms] [LOG] [Fast Refresh] done in 259ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  789585ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:6985:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  805168ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  805409ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  805442ms] [LOG] [Fast Refresh] done in 337ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  805545ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  805693ms] [LOG] [Fast Refresh] done in 251ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  807257ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  807298ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  807318ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  807663ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7142:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  810804ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  810931ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  810954ms] [LOG] [Fast Refresh] done in 226ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  811066ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  811220ms] [LOG] [Fast Refresh] done in 259ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  812583ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  812705ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  812724ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  813065ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7149:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  823106ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  823535ms] [ERROR] ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17
+Expected '</', got 'ident'
+  1848 |               />
+  1849 |               <circle
+> 1850 |                 className="daily-bar-top-glow"
+       |                 ^^^^^^^^^
+  1851 |                 cx={bar.x + bar.width / 2}
+  1852 |                 cy={bar.y + 2}
+  1853 |                 fill="#7AF7FF"
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component] @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[  823649ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  823824ms] [ERROR] ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17
+Expected '</', got 'ident'
+  1848 |               />
+  1849 |               <circle
+> 1850 |                 className="daily-bar-top-glow"
+       |                 ^^^^^^^^^
+  1851 |                 cx={bar.x + bar.width / 2}
+  1852 |                 cy={bar.y + 2}
+  1853 |                 fill="#7AF7FF"
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component] @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[  823833ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  823918ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0kqo_react-dom_0~5_eus._.js:15305
+[  823965ms] Error: ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17
+Expected '</', got 'ident'
+  1848 |               />
+  1849 |               <circle
+> 1850 |                 className="daily-bar-top-glow"
+       |                 ^^^^^^^^^
+  1851 |                 cx={bar.x + bar.width / 2}
+  1852 |                 cy={bar.y + 2}
+  1853 |                 fill="#7AF7FF"
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17)
+    at Object.getCompilationErrors (file://C:\Users\asus\Desktop\files\Coding\Web\BuildingEnergy\buildingEnergy\node_modules\.bun\next@16.2.1+bf16f8eded5e12ee\node_modules\next\dist\server\dev\hot-reloader-turbopack.js:1189:59)
+    at DevBundlerService.getCompilationError (file://C:\Users\asus\Desktop\files\Coding\Web\BuildingEnergy\buildingEnergy\node_modules\.bun\next@16.2.1+bf16f8eded5e12ee\node_modules\next\dist\server\lib\dev-bundler-service.js:44:55)
+    at DevServer.getCompilationError (file://C:\Users\asus\Desktop\files\Coding\Web\BuildingEnergy\buildingEnergy\node_modules\.bun\next@16.2.1+bf16f8eded5e12ee\node_modules\next\dist\server\dev\next-dev-server.js:719:42)
+    at DevServer.findPageComponents (file://C:\Users\asus\Desktop\files\Coding\Web\BuildingEnergy\buildingEnergy\node_modules\.bun\next@16.2.1+bf16f8eded5e12ee\node_modules\next\dist\server\dev\next-dev-server.js:689:43)
+    at async DevServer.renderErrorToResponseImpl (file://C:\Users\asus\Desktop\files\Coding\Web\BuildingEnergy\buildingEnergy\node_modules\.bun\next@16.2.1+bf16f8eded5e12ee\node_modules\next\dist\server\base-server.js:1745:26)
+[  823966ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  823968ms] [ERROR] ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17
+Expected '</', got 'ident'
+  1848 |               />
+  1849 |               <circle
+> 1850 |                 className="daily-bar-top-glow"
+       |                 ^^^^^^^^^
+  1851 |                 cx={bar.x + bar.width / 2}
+  1852 |                 cy={bar.y + 2}
+  1853 |                 fill="#7AF7FF"
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component] @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1945
+[  824055ms] [ERROR] ./apps/editor/features/analytics/components/data-analysis-workspace.tsx:1850:17
+Expected '</', got 'ident'
+  1848 |               />
+  1849 |               <circle
+> 1850 |                 className="daily-bar-top-glow"
+       |                 ^^^^^^^^^
+  1851 |                 cx={bar.x + bar.width / 2}
+  1852 |                 cy={bar.y + 2}
+  1853 |                 fill="#7AF7FF"
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component Browser]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./apps/editor/features/analytics/components/data-analysis-workspace.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Client Component SSR]
+    ./apps/editor/features/host-shell/components/host-workbench.tsx [Server Component]
+    ./apps/editor/app/page.tsx [Server Component] @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1945
+[  824069ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  866640ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  867011ms] [LOG] [Fast Refresh] done in 395ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  868544ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  868636ms] [LOG] [Fast Refresh] done in 200ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0s5g2dj._.js:1226
+[  868976ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  869021ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  869048ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  869448ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7194:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  879943ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  880170ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  880203ms] [LOG] [Fast Refresh] done in 329ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  880308ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  880528ms] [LOG] [Fast Refresh] done in 321ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  882974ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  883033ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  883063ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  883570ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7226:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  896870ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  897091ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  897127ms] [LOG] [Fast Refresh] done in 320ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  897230ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  897458ms] [LOG] [Fast Refresh] done in 330ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  899455ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  899503ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  899533ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  899986ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7242:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  918408ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  918633ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  918661ms] [LOG] [Fast Refresh] done in 330ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  918764ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  918963ms] [LOG] [Fast Refresh] done in 300ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  921125ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  921191ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  921227ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  921718ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7244:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  921836ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  921837ms] [LOG] [Fast Refresh] done in 102ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  935602ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  935947ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  935991ms] [LOG] [Fast Refresh] done in 444ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  936095ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  936377ms] [LOG] [Fast Refresh] done in 383ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  938542ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/?workspace=data-analysis:0
+[  938758ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  938786ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  939532ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at DataAnalysisWorkspace (http://localhost:3002/_next/static/chunks/apps_editor_features_analytics_0cexogk._.js:7329:49)
+    at Object.react_stack_bottom_frame (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:15037:24)
+    at renderWithHooks (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6081:21)
+    at beginWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:965:74)
+    at performUnitOfWork (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9555:97)
+    at workLoopSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9449:40)
+    at renderRootSync (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_react-dom_0-5eaha._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3002/_next/static/chunks/0nan_next_dist_compiled_020_qqi._.js:2647:64)
+[  939653ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  939661ms] [LOG] [Fast Refresh] done in 113ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  942592ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  942801ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  942869ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  942884ms] [LOG] [Fast Refresh] done in 378ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  942986ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  943159ms] [LOG] [Fast Refresh] done in 275ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  945841ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  945994ms] [LOG] [HMR] connected @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  950909ms] [WARNING] THREE.THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  952191ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  953279ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ http://localhost:3002/_next/static/chunks/07nq_three_build_three_webgpu_0~8eknf.js:54770
+[  953836ms] [WARNING] Asset not found: 3398e925-95f6-4861-9b83-4f24ca8abb46 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  956233ms] [LOG] [Fast Refresh] done in 5146ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  956360ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  960355ms] [LOG] [Fast Refresh] done in 3799ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  989664ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[  990463ms] [LOG] [Fast Refresh] done in 604ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1002854ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1003701ms] [LOG] [Fast Refresh] done in 813ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1023919ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1025395ms] [LOG] [Fast Refresh] done in 1443ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1041902ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1042348ms] [LOG] [Fast Refresh] done in 575ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1057292ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1057729ms] [LOG] [Fast Refresh] done in 537ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1093086ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1093798ms] [LOG] [Fast Refresh] done in 431ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1124331ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1124788ms] [LOG] [Fast Refresh] done in 548ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1132782ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1134058ms] [LOG] [Fast Refresh] done in 1264ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1190047ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1191988ms] [LOG] [Fast Refresh] done in 1810ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1232849ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1234081ms] [LOG] [Fast Refresh] done in 1311ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1248953ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1250071ms] [LOG] [Fast Refresh] done in 1036ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1339709ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1340486ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1341471ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1342218ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1342554ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1343544ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1344359ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1345131ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1345511ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1346580ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1347395ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1347731ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1348543ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1349569ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1350430ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1350842ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1351494ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1352424ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1353030ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1353525ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1354466ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1355499ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1355911ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1356604ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1357463ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1358470ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1359575ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1360423ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1360630ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1361080ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1361496ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1362495ms] [ERROR] Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 1779618814574 @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:3272
+[ 1413309ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
+[ 1413695ms] [LOG] [Fast Refresh] done in 553ms @ http://localhost:3002/_next/static/chunks/0nan_next_dist_0re-alt._.js:2431
