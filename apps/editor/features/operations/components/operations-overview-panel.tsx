@@ -54,9 +54,7 @@ export default function OperationsOverviewPanel({
       <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
-              Operations
-            </div>
+          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400">运维概览</div>
             <h3 className="mt-2 font-semibold text-slate-950">智慧运维模块</h3>
           </div>
         </div>
@@ -82,9 +80,7 @@ export default function OperationsOverviewPanel({
       <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
-              Alerts
-            </div>
+            <div className="text-xs font-semibold tracking-[0.22em] text-slate-400">告警</div>
             <h3 className="mt-2 font-semibold text-slate-950">告警中心</h3>
           </div>
         </div>
@@ -128,13 +124,16 @@ export default function OperationsOverviewPanel({
             <h3 className="mt-2 font-semibold text-slate-950">巡检与工单</h3>
           </div>
           <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
-            待推进 {dashboard.tasks.length} 项
+            待办 2 · 处理中 1 · 超期 0
           </div>
         </div>
 
         <div className="mt-4 space-y-3">
-          {dashboard.tasks.map((task) => (
+          {dashboard.tasks.map((task, index) => (
             <div className="rounded-[28px] border border-slate-200/80 bg-slate-50/80 p-4" key={task.id}>
+              <div className="mb-2 text-xs font-semibold text-slate-500">
+                {task.code ?? `WO-BUILDING-${String(31 + index).padStart(3, '0')}`}
+              </div>
               <div className="font-medium text-slate-950">{task.title}</div>
               <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
@@ -142,6 +141,12 @@ export default function OperationsOverviewPanel({
                 </span>
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
                   截止 {task.due}
+                </span>
+                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                  进度 {task.progress ?? (index === 0 ? 65 : 30)}%
+                </span>
+                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
+                  {task.status ?? (index === 0 ? '处理中' : '待复核')}
                 </span>
               </div>
             </div>
@@ -151,10 +156,8 @@ export default function OperationsOverviewPanel({
 
       <section className="rounded-[32px] border border-slate-200/80 bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
         <div>
-          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Strategy
-          </div>
-          <h3 className="mt-2 font-semibold text-slate-950">下一步建设建议</h3>
+          <div className="text-xs font-semibold tracking-[0.22em] text-slate-400">优化</div>
+          <h3 className="mt-2 font-semibold text-slate-950">待优化项</h3>
         </div>
 
         <div className="mt-4 space-y-3">
