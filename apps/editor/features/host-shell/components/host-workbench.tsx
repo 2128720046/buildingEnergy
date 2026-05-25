@@ -44,6 +44,7 @@ import {
 import WorkspaceNavigation from '@/features/host-shell/components/workspace-navigation'
 import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
+import { useNow } from '@/features/host-shell/lib/time-store'
 import SmartOperationsWorkspace from '@/features/operations/components/smart-operations-workspace'
 import type { OperationsTask } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
@@ -401,14 +402,7 @@ function DataAnalysisTitlePlate() {
 }
 
 function DataAnalysisHeaderStatus() {
-  const [now, setNow] = useState<Date | null>(null)
-
-  useEffect(() => {
-    const tick = () => setNow(new Date())
-    tick()
-    const timer = window.setInterval(tick, 1000)
-    return () => window.clearInterval(timer)
-  }, [])
+  const now = useNow()
 
   const dateText = now
     ? new Intl.DateTimeFormat('zh-CN', {

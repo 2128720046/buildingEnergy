@@ -27,6 +27,7 @@ import {
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
+import { useNow } from '@/features/host-shell/lib/time-store'
 import {
   buildOperationsDashboardData,
   type OperationsAlert,
@@ -1226,19 +1227,13 @@ export default function SmartOperationsWorkspace({
   )
 
   const [scope, setScope] = useState('全部设备')
-  const [now, setNow] = useState<Date | null>(null)
+  const now = useNow()
   const [lastSyncSeconds, setLastSyncSeconds] = useState(0)
   const [operators, setOperators] = useState(7)
   const [pulseAlertId, setPulseAlertId] = useState<string | null>(null)
   const [highlightedAlertId, setHighlightedAlertId] = useState<string | null>(null)
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null)
   const [agentPulse, setAgentPulse] = useState(false)
-
-  useEffect(() => {
-    setNow(new Date())
-    const timer = window.setInterval(() => setNow(new Date()), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
 
   const liveTasks = useMemo<LiveTask[]>(
     () =>
