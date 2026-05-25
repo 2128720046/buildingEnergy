@@ -1,0 +1,52 @@
+{
+  "label": "after-S2-fixed",
+  "capturedAt": "2026-05-25T06:13:45.239Z",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "results": [
+    {
+      "key": "data-analysis",
+      "slug": "data-analysis",
+      "url": "http://localhost:3002/?workspace=data-analysis",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-fixed-data-analysis.png",
+      "metrics": {
+        "fpsAvg5s": 11.89,
+        "longTaskCount10s": 154,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 86.44,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    },
+    {
+      "key": "energy-query",
+      "slug": "energy-insights",
+      "url": "http://localhost:3002/?workspace=energy-query",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-fixed-energy-insights.png",
+      "metrics": {
+        "fpsAvg5s": 14.38,
+        "longTaskCount10s": 87,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 89.55,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    },
+    {
+      "key": "smart-operations",
+      "slug": "smart-operations",
+      "url": "http://localhost:3002/?workspace=smart-operations",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-fixed-smart-operations.png",
+      "metrics": {
+        "fpsAvg5s": 15.63,
+        "longTaskCount10s": 102,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 106.08,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    }
+  ]
+}

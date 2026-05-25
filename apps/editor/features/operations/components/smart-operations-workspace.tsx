@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { BevelCard, VideoBackground } from '@/features/analytics/components/dashboard-primitives'
 import { DASHBOARD_COLORS, DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import {
@@ -27,6 +27,7 @@ import {
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
+import { useNow } from '@/features/host-shell/lib/time-store'
 import {
   buildOperationsDashboardData,
   type OperationsAlert,
@@ -406,7 +407,7 @@ function StatusBadge({
   )
 }
 
-function OperationsKpiCard({
+const OperationsKpiCard = memo(function OperationsKpiCard({
   detail,
   icon,
   label,
@@ -453,9 +454,9 @@ function OperationsKpiCard({
       <div className="operations-kpi-detail mt-4 font-semibold text-cyan-100/68">{detail}</div>
     </BevelCard>
   )
-}
+})
 
-function FocusSummary({
+const FocusSummary = memo(function FocusSummary({
   alert,
   summary,
   onFocusAlert,
@@ -503,9 +504,9 @@ function FocusSummary({
       </div>
     </OperationsPanel>
   )
-}
+})
 
-function AlertCard({
+const AlertCard = memo(function AlertCard({
   alert,
   highlighted,
   onHighlightTask,
@@ -574,9 +575,9 @@ function AlertCard({
       </div>
     </article>
   )
-}
+})
 
-function AlertCenter({
+const AlertCenter = memo(function AlertCenter({
   alerts,
   highlightedAlertId,
   onHighlightTask,
@@ -606,9 +607,9 @@ function AlertCenter({
       </div>
     </OperationsPanel>
   )
-}
+})
 
-function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask }) {
+const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask }) {
   const dueTone = task.due.includes('今天') ? 'amber' : 'cyan'
 
   return (
@@ -689,9 +690,9 @@ function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask 
       </div>
     </article>
   )
-}
+})
 
-function TaskList({
+const TaskList = memo(function TaskList({
   highlightedTaskId,
   tasks,
 }: {
@@ -711,9 +712,9 @@ function TaskList({
       </div>
     </OperationsPanel>
   )
-}
+})
 
-function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
+const StrategyList = memo(function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
   const [expanded, setExpanded] = useState<string | null>(strategies[0]?.title ?? null)
 
   useEffect(() => {
@@ -760,9 +761,9 @@ function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
       </div>
     </OperationsPanel>
   )
-}
+})
 
-function FocusOverview({
+const FocusOverview = memo(function FocusOverview({
   alerts,
   highlightedAlertId,
   onHighlight,
@@ -813,7 +814,7 @@ function FocusOverview({
       </div>
     </OperationsPanel>
   )
-}
+})
 
 function TypingText({
   active,
@@ -873,7 +874,7 @@ function buildFallbackAnswer(prompt: string): AgentAnswer {
   }
 }
 
-function AgentChat({ agentPulse }: { agentPulse: boolean }) {
+const AgentChat = memo(function AgentChat({ agentPulse }: { agentPulse: boolean }) {
   const [draft, setDraft] = useState('')
   const [thinking, setThinking] = useState(false)
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
@@ -1075,9 +1076,9 @@ function AgentChat({ agentPulse }: { agentPulse: boolean }) {
       </div>
     </OperationsPanel>
   )
-}
+})
 
-function OperationsStatusBar({
+const OperationsStatusBar = memo(function OperationsStatusBar({
   doneTasks,
   lastSyncSeconds,
   operators,
@@ -1124,7 +1125,7 @@ function OperationsStatusBar({
       </div>
     </BevelCard>
   )
-}
+})
 
 function kpiTooltip(label: string): DashboardTooltipContent {
   if (label === '站点健康度') {
@@ -1226,19 +1227,13 @@ export default function SmartOperationsWorkspace({
   )
 
   const [scope, setScope] = useState('全部设备')
-  const [now, setNow] = useState<Date | null>(null)
+  const now = useNow()
   const [lastSyncSeconds, setLastSyncSeconds] = useState(0)
   const [operators, setOperators] = useState(7)
   const [pulseAlertId, setPulseAlertId] = useState<string | null>(null)
   const [highlightedAlertId, setHighlightedAlertId] = useState<string | null>(null)
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null)
   const [agentPulse, setAgentPulse] = useState(false)
-
-  useEffect(() => {
-    setNow(new Date())
-    const timer = window.setInterval(() => setNow(new Date()), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
 
   const liveTasks = useMemo<LiveTask[]>(
     () =>

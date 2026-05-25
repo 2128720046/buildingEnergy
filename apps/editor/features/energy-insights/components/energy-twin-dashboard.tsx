@@ -3,8 +3,8 @@
 import NumberFlow from '@number-flow/react'
 import { type AnyNode, useScene } from '@pascal-app/core'
 import { useEditor, type ViewMode } from '@pascal-app/editor'
-import type { EChartsOption } from 'echarts'
-import ReactECharts from 'echarts-for-react'
+import type { EChartsCoreOption as EChartsOption } from 'echarts/core'
+import ReactEChartsCore from 'echarts-for-react/lib/core'
 import {
   AlertTriangle,
   Building2,
@@ -17,7 +17,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
@@ -39,12 +39,17 @@ import type {
   HostQueryFilters,
   HostQueryResult,
 } from '@/features/energy-insights/lib/host-query'
+import { echarts } from '@/lib/echarts-bundle'
 import { cn } from '@/lib/utils'
 
 const RIGHT_CHART_RAIL_WIDTH = 360
 const ASSISTANT_PANEL_WIDTH = 400
 const EDITOR_PANEL_AVOID_GAP = 20
 const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
+
+const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
+  return <ReactEChartsCore echarts={echarts} {...props} />
+})
 
 interface EnergyTwinDashboardProps {
   energyError: string | null
@@ -557,7 +562,7 @@ function buildPredictionOption(
 }
 
 /** 数字过渡动画包装 */
-function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
+const AnimatedValue = memo(function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
   return (
     <span className={cn('inline-flex items-baseline gap-0.5', className)}>
       <NumberFlow
@@ -569,9 +574,9 @@ function AnimatedValue({ value, suffix = '', className = '' }: { value: number; 
       {suffix ? <span className="text-[0.55em] opacity-60">{suffix}</span> : null}
     </span>
   )
-}
+})
 
-function CardHeader({
+const CardHeader = memo(function CardHeader({
   action,
   icon,
   title,
@@ -601,22 +606,22 @@ function CardHeader({
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   )
-}
+})
 
-function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
+const GlassCard = memo(function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <section className={cn('glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
+    <section className={cn('contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
       <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
       {children}
     </section>
   )
-}
+})
 
-function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('tech-chart-frame h-full', className)}>{children}</div>
-}
+const ChartFrame = memo(function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
+})
 
-function DockedViewModeSwitch() {
+const DockedViewModeSwitch = memo(function DockedViewModeSwitch() {
   const viewMode = useEditor((state) => state.viewMode)
   const setViewMode = useEditor((state) => state.setViewMode)
 
@@ -649,7 +654,7 @@ function DockedViewModeSwitch() {
       })}
     </div>
   )
-}
+})
 
 export default function EnergyTwinDashboard({
   energyError,
@@ -745,6 +750,48 @@ export default function EnergyTwinDashboard({
   const predictionData = useMemo(
     () => buildPrediction(sceneNodes, filters.levelId || '', filters.zoneId || '', timelineDate, editSnapshot),
     [sceneNodes, filters.levelId, filters.zoneId, timelineDate, editSnapshot],
+  )
+
+  const dualLineOption = useMemo(
+    () =>
+      buildDualLineOption(
+        dashboardData.left.hourlyCurve.today,
+        dashboardData.left.hourlyCurve.yesterday,
+        dashboardData.left.hourlyCurve.peak,
+        dashboardData.left.hourlyCurve.valley,
+      ),
+    [
+      dashboardData.left.hourlyCurve.today,
+      dashboardData.left.hourlyCurve.yesterday,
+      dashboardData.left.hourlyCurve.peak,
+      dashboardData.left.hourlyCurve.valley,
+    ],
+  )
+
+  const compositionDonutOption = useMemo(
+    () => buildCompositionDonut(dashboardData.left.composition),
+    [dashboardData.left.composition],
+  )
+
+  const rankingBarOption = useMemo(
+    () => buildRankingBar(dashboardData.right.ranking),
+    [dashboardData.right.ranking],
+  )
+
+  const weeklyTrendOption = useMemo(
+    () => buildWeeklyTrend(dashboardData.right.weeklyTrend),
+    [dashboardData.right.weeklyTrend],
+  )
+
+  const predictionOption = useMemo(
+    () =>
+      buildPredictionOption(
+        predictionData.labels,
+        predictionData.actual,
+        predictionData.predicted,
+        predictionData.editImpact,
+      ),
+    [predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact],
   )
 
   return (
@@ -896,12 +943,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`dual-${timelineDate}`}
-                    option={buildDualLineOption(
-                      dashboardData.left.hourlyCurve.today,
-                      dashboardData.left.hourlyCurve.yesterday,
-                      dashboardData.left.hourlyCurve.peak,
-                      dashboardData.left.hourlyCurve.valley,
-                    )}
+                    option={dualLineOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -915,7 +957,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`comp-${timelineDate}`}
-                    option={buildCompositionDonut(dashboardData.left.composition)}
+                    option={compositionDonutOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -945,7 +987,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`rank-${timelineDate}`}
-                    option={buildRankingBar(dashboardData.right.ranking)}
+                    option={rankingBarOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -1073,7 +1115,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`week-${timelineDate}`}
-                    option={buildWeeklyTrend(dashboardData.right.weeklyTrend)}
+                    option={weeklyTrendOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -1103,7 +1145,7 @@ export default function EnergyTwinDashboard({
           <div className="h-[150px]">
             <ReactECharts
               key={`pred-${timelineDate}-${filters.levelId}-${filters.zoneId}`}
-              option={buildPredictionOption(predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact)}
+              option={predictionOption}
               opts={{ notMerge: true } as any}
               style={{ height: '150px', width: '100%' }}
             />

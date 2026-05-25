@@ -1,0 +1,52 @@
+{
+  "label": "after-S0",
+  "capturedAt": "2026-05-25T03:42:57.861Z",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "results": [
+    {
+      "key": "data-analysis",
+      "slug": "data-analysis",
+      "url": "http://localhost:3002/?workspace=data-analysis",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S0-data-analysis.png",
+      "metrics": {
+        "fpsAvg5s": 141.84,
+        "longTaskCount10s": 26,
+        "reactCommitCount10s": 286,
+        "reactCommitAvgDurationMs": 0.001,
+        "jsHeapSteadyMB": 268.31,
+        "note": "React commit count is captured through a pre-injected React DevTools hook. Avg duration is hook callback duration; Chrome DevTools Profiler flamegraph duration is not available in headless CDP."
+      }
+    },
+    {
+      "key": "energy-query",
+      "slug": "energy-insights",
+      "url": "http://localhost:3002/?workspace=energy-query",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S0-energy-insights.png",
+      "metrics": {
+        "fpsAvg5s": 148.63,
+        "longTaskCount10s": 20,
+        "reactCommitCount10s": 409,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 313.75,
+        "note": "React commit count is captured through a pre-injected React DevTools hook. Avg duration is hook callback duration; Chrome DevTools Profiler flamegraph duration is not available in headless CDP."
+      }
+    },
+    {
+      "key": "smart-operations",
+      "slug": "smart-operations",
+      "url": "http://localhost:3002/?workspace=smart-operations",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S0-smart-operations.png",
+      "metrics": {
+        "fpsAvg5s": 108.55,
+        "longTaskCount10s": 23,
+        "reactCommitCount10s": 436,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 176.06,
+        "note": "React commit count is captured through a pre-injected React DevTools hook. Avg duration is hook callback duration; Chrome DevTools Profiler flamegraph duration is not available in headless CDP."
+      }
+    }
+  ]
+}
