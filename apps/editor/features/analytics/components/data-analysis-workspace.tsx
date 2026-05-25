@@ -2002,28 +2002,36 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
   const chartWidth = 460
   const chartHeight = 210
   const padding = 24
-  const maxHourlyElectricity = Math.max(...model.hourlySeries.map((point) => point.electricity), 1)
-  const maxHourlyOccupancy = Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)
-  const minHourlyElectricity = Math.min(...model.hourlySeries.map((point) => point.electricity))
-  const swing = maxHourlyElectricity - minHourlyElectricity
-  const peakPoint = model.hourlySeries.reduce((best, point) =>
-    point.electricity > best.electricity ? point : best,
-  )
-  const quietPoint = model.hourlySeries.reduce((best, point) =>
-    point.electricity < best.electricity ? point : best,
-  )
-  const electricityBars = buildBars(
-    model.hourlySeries.map((point) => point.electricity),
-    chartWidth,
-    chartHeight,
-    padding,
-  )
-  const occupancyPoints = buildLinePoints(
-    model.hourlySeries.map((point) => point.occupancy),
-    chartWidth,
-    chartHeight,
-    padding,
-  )
+  const {
+    electricityBars,
+    maxHourlyElectricity,
+    maxHourlyOccupancy,
+    occupancyPoints,
+    peakPoint,
+    quietPoint,
+    swing,
+  } = useMemo(() => {
+    const electricityValues = model.hourlySeries.map((point) => point.electricity)
+    const occupancyValues = model.hourlySeries.map((point) => point.occupancy)
+    const maxHourlyElectricity = Math.max(...electricityValues, 1)
+    const minHourlyElectricity = Math.min(...electricityValues)
+    const peakPoint = model.hourlySeries.reduce((best, point) =>
+      point.electricity > best.electricity ? point : best,
+    )
+    const quietPoint = model.hourlySeries.reduce((best, point) =>
+      point.electricity < best.electricity ? point : best,
+    )
+
+    return {
+      electricityBars: buildBars(electricityValues, chartWidth, chartHeight, padding),
+      maxHourlyElectricity,
+      maxHourlyOccupancy: Math.max(...occupancyValues, 1),
+      occupancyPoints: buildLinePoints(occupancyValues, chartWidth, chartHeight, padding),
+      peakPoint,
+      quietPoint,
+      swing: maxHourlyElectricity - minHourlyElectricity,
+    }
+  }, [model.hourlySeries])
 
   return (
     <HudPanel divider={3} icon="load" title="时段负荷关系">
@@ -2473,13 +2481,18 @@ const RiskLayerPanel = memo(function RiskLayerPanel({ model }: { model: Monitori
     { building: 'BLDG-A-03', ratio: 0.22 },
     { building: 'BLDG-B-01', ratio: 0.2 },
   ]
-  const maxWarningCount = Math.max(
-    ...model.buildingSummaries.map((summary) => summary.warningCount),
-    1,
+  const { maxWarningCount, topRiskBuildings } = useMemo(
+    () => ({
+      maxWarningCount: Math.max(
+        ...model.buildingSummaries.map((summary) => summary.warningCount),
+        1,
+      ),
+      topRiskBuildings: [...model.buildingSummaries]
+        .sort((a, b) => b.warningCount - a.warningCount || a.efficiencyScore - b.efficiencyScore)
+        .slice(0, 3),
+    }),
+    [model.buildingSummaries],
   )
-  const topRiskBuildings = [...model.buildingSummaries]
-    .sort((a, b) => b.warningCount - a.warningCount || a.efficiencyScore - b.efficiencyScore)
-    .slice(0, 3)
 
   return (
     <HudPanel contentClassName="[&>div:first-child]:mb-3" divider={5} icon="risk" title="风险分层">
@@ -2611,25 +2624,32 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
   const chartWidth = 720
   const chartHeight = 330
   const padding = 42
-  const visiblePoints = points.filter((point) => !hiddenTones.has(point.tone))
-  const scatterPoints = buildScatterPoints(
-    visiblePoints,
-    chartWidth,
-    chartHeight,
-    padding,
-    xAccessor,
-    yAccessor,
+  const visiblePoints = useMemo(
+    () => points.filter((point) => !hiddenTones.has(point.tone)),
+    [hiddenTones, points],
+  )
+  const scatterPoints = useMemo(
+    () => buildScatterPoints(visiblePoints, chartWidth, chartHeight, padding, xAccessor, yAccessor),
+    [visiblePoints, xAccessor, yAccessor],
   )
   const chartId = xLabel.includes('温度') || xLabel.includes('度') ? 'temperature' : 'occupancy'
   const trendId = `scatterTrend-${chartId}`
   const pointGlowId = `scatterPointGlow-${chartId}`
-  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth, chartHeight)
-  const warningCount = points.filter(
-    (point) => point.tone === 'amber' || point.tone === 'rose',
-  ).length
-  const riskSamples = points.filter(
-    (point) => point.electricity > 170 && (xAccessor(point) > 70 || point.tone === 'rose'),
-  ).length
+  const trendLine = useMemo(
+    () => buildTrendLine(scatterPoints, padding, chartWidth, chartHeight),
+    [scatterPoints],
+  )
+  const warningCount = useMemo(
+    () => points.filter((point) => point.tone === 'amber' || point.tone === 'rose').length,
+    [points],
+  )
+  const riskSamples = useMemo(
+    () =>
+      points.filter(
+        (point) => point.electricity > 170 && (xAccessor(point) > 70 || point.tone === 'rose'),
+      ).length,
+    [points, xAccessor],
+  )
   const trendTravelPoint = trendLine
     ? {
         x: trendLine.x1 + (trendLine.x2 - trendLine.x1) * trendProgress,
@@ -3025,14 +3045,19 @@ const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: Monitori
     mode: 'cell' | 'column' | 'row'
   } | null>(null)
   const [sampledCellKey, setSampledCellKey] = useState<string | null>(null)
-  const dates = [...new Set(heatmap.map((item) => item.date))]
-  const hours = [...new Set(heatmap.map((item) => item.hour))]
-  const peakElectricity = Math.max(...heatmap.map((item) => item.electricity), 1)
-  const averageElectricity =
-    heatmap.reduce((sum, item) => sum + item.electricity, 0) / Math.max(heatmap.length, 1)
-  const peakCell = heatmap.reduce(
-    (best, item) => (item.electricity > best.electricity ? item : best),
-    heatmap[0] ?? { date: '-', electricity: 0, hour: '--:--', intensity: 0, occupancy: 0 },
+  const { averageElectricity, dates, hours, peakCell, peakElectricity } = useMemo(
+    () => ({
+      averageElectricity:
+        heatmap.reduce((sum, item) => sum + item.electricity, 0) / Math.max(heatmap.length, 1),
+      dates: [...new Set(heatmap.map((item) => item.date))],
+      hours: [...new Set(heatmap.map((item) => item.hour))],
+      peakCell: heatmap.reduce(
+        (best, item) => (item.electricity > best.electricity ? item : best),
+        heatmap[0] ?? { date: '-', electricity: 0, hour: '--:--', intensity: 0, occupancy: 0 },
+      ),
+      peakElectricity: Math.max(...heatmap.map((item) => item.electricity), 1),
+    }),
+    [heatmap],
   )
 
   useIntervalTick(() => {
@@ -3266,30 +3291,34 @@ const CompositionPanel = memo(function CompositionPanel({
   statusDistribution: MonitoringStatusBucket[]
 }) {
   const [hoveredComposition, setHoveredComposition] = useState<string | null>(null)
-  const total = composition.reduce((sum, item) => sum + item.value, 0)
-  const maxCompositionValue = Math.max(...composition.map((item) => item.value), 1)
-  let currentAngle = -88
-  const compositionArcs = composition.map((item, index) => {
-    const angle = total === 0 ? 0 : (item.value / total) * 360
-    const gap = 2.2
-    const startAngle = currentAngle + gap / 2
-    const endAngle = currentAngle + angle - gap / 2
-    currentAngle += angle
-    const midAngle = (startAngle + endAngle) / 2
-    const lift = polarToCartesian(0, 0, 5, midAngle)
-    const ratio = total === 0 ? 0 : (item.value / total) * 100
+  const { compositionArcs, maxCompositionValue, total } = useMemo(() => {
+    const total = composition.reduce((sum, item) => sum + item.value, 0)
+    const maxCompositionValue = Math.max(...composition.map((item) => item.value), 1)
+    let currentAngle = -88
+    const compositionArcs = composition.map((item, index) => {
+      const angle = total === 0 ? 0 : (item.value / total) * 360
+      const gap = 2.2
+      const startAngle = currentAngle + gap / 2
+      const endAngle = currentAngle + angle - gap / 2
+      currentAngle += angle
+      const midAngle = (startAngle + endAngle) / 2
+      const lift = polarToCartesian(0, 0, 5, midAngle)
+      const ratio = total === 0 ? 0 : (item.value / total) * 100
 
-    return {
-      ...item,
-      endAngle,
-      gradientId: `compositionGradient-${index}`,
-      highlightId: `compositionHighlight-${index}`,
-      lift,
-      midAngle,
-      ratio,
-      startAngle,
-    }
-  })
+      return {
+        ...item,
+        endAngle,
+        gradientId: `compositionGradient-${index}`,
+        highlightId: `compositionHighlight-${index}`,
+        lift,
+        midAngle,
+        ratio,
+        startAngle,
+      }
+    })
+
+    return { compositionArcs, maxCompositionValue, total }
+  }, [composition])
 
   return (
     <HudPanel
