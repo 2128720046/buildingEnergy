@@ -3,8 +3,8 @@
 import NumberFlow from '@number-flow/react'
 import { type AnyNode, useScene } from '@pascal-app/core'
 import { useEditor, type ViewMode } from '@pascal-app/editor'
-import type { EChartsOption } from 'echarts'
-import ReactECharts from 'echarts-for-react'
+import type { EChartsCoreOption as EChartsOption } from 'echarts/core'
+import ReactEChartsCore from 'echarts-for-react/lib/core'
 import {
   AlertTriangle,
   Building2,
@@ -17,7 +17,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
@@ -39,12 +39,17 @@ import type {
   HostQueryFilters,
   HostQueryResult,
 } from '@/features/energy-insights/lib/host-query'
+import { echarts } from '@/lib/echarts-bundle'
 import { cn } from '@/lib/utils'
 
 const RIGHT_CHART_RAIL_WIDTH = 360
 const ASSISTANT_PANEL_WIDTH = 400
 const EDITOR_PANEL_AVOID_GAP = 20
 const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
+
+function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
+  return <ReactEChartsCore echarts={echarts} {...props} />
+}
 
 interface EnergyTwinDashboardProps {
   energyError: string | null
