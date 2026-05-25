@@ -2,7 +2,7 @@
 
 import NumberFlow from '@number-flow/react'
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BevelCard,
   Pill,
@@ -864,11 +864,14 @@ function useRealtimeMonitoringModel(projectId: string) {
   useEffect(() => {
     let tableTimer: number | undefined
     let eventTimer: number | undefined
+    const setNonUrgentState = (update: Parameters<typeof setState>[0]) => {
+      startTransition(() => setState(update))
+    }
 
     const scheduleTableInsert = () => {
       tableTimer = window.setTimeout(
         () => {
-          setState((current) => {
+          setNonUrgentState((current) => {
             const newRecord = createLiveMonitoringRecord(Date.now())
             const nextModel = updateLiveMetrics({
               ...current.model,
@@ -916,7 +919,7 @@ function useRealtimeMonitoringModel(projectId: string) {
     }
 
     const triggerRandomEvent = () => {
-      setState((current) => {
+      setNonUrgentState((current) => {
         const eventType = randomInt(1, 4)
         const stats = statsFromModel(current.model)
 
@@ -1023,19 +1026,19 @@ function useRealtimeMonitoringModel(projectId: string) {
 
     const timers = [
       window.setInterval(() => {
-        setState((current) => ({
+        setNonUrgentState((current) => ({
           ...current,
           lastSyncSeconds: current.lastSyncSeconds + 1,
         }))
       }, 1000),
       window.setInterval(() => {
-        setState((current) => ({
+        setNonUrgentState((current) => ({
           ...current,
           model: updateLiveMetrics(current.model),
         }))
       }, 2000),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const model = current.model
           const currentSlotIndex = getCurrentSlotIndex()
           const hourlySeries = model.hourlySeries.map((point, index) => {
@@ -1087,7 +1090,7 @@ function useRealtimeMonitoringModel(projectId: string) {
         })
       }, 8000),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const energyIncrement = randomBetween(5, 30)
           const todayEnergy = getMetricNumber(current.model.metrics, '今日累计') + energyIncrement
           const crossedThousand =
@@ -1123,7 +1126,7 @@ function useRealtimeMonitoringModel(projectId: string) {
       }, 10_000),
       window.setInterval(
         () => {
-          setState((current) => {
+          setNonUrgentState((current) => {
             if (Math.random() < 0.5) return current
 
             const stats = statsFromModel(current.model)
@@ -1159,7 +1162,7 @@ function useRealtimeMonitoringModel(projectId: string) {
         randomInt(30_000, 60_000),
       ),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const stats = statsFromModel(current.model)
           const warningDelta = randomInt(-1, 1)
           const normalDelta = -warningDelta
@@ -3777,7 +3780,8 @@ function DetailTable({
 
 export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspaceProps) {
   const realtime = useRealtimeMonitoringModel(projectId)
-  const { model } = realtime
+  const deferredModel = useDeferredValue(realtime.model)
+  const model = deferredModel
 
   return (
     <div className="relative h-full overflow-auto bg-[#020817]/35 text-cyan-50">
