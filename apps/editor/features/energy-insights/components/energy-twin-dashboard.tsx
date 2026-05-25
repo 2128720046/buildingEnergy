@@ -17,7 +17,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
@@ -47,9 +47,9 @@ const ASSISTANT_PANEL_WIDTH = 400
 const EDITOR_PANEL_AVOID_GAP = 20
 const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
 
-function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
+const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
   return <ReactEChartsCore echarts={echarts} {...props} />
-}
+})
 
 interface EnergyTwinDashboardProps {
   energyError: string | null
@@ -562,7 +562,7 @@ function buildPredictionOption(
 }
 
 /** 数字过渡动画包装 */
-function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
+const AnimatedValue = memo(function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
   return (
     <span className={cn('inline-flex items-baseline gap-0.5', className)}>
       <NumberFlow
@@ -574,9 +574,9 @@ function AnimatedValue({ value, suffix = '', className = '' }: { value: number; 
       {suffix ? <span className="text-[0.55em] opacity-60">{suffix}</span> : null}
     </span>
   )
-}
+})
 
-function CardHeader({
+const CardHeader = memo(function CardHeader({
   action,
   icon,
   title,
@@ -606,22 +606,22 @@ function CardHeader({
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   )
-}
+})
 
-function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
+const GlassCard = memo(function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <section className={cn('contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
       <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
       {children}
     </section>
   )
-}
+})
 
-function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
+const ChartFrame = memo(function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
-}
+})
 
-function DockedViewModeSwitch() {
+const DockedViewModeSwitch = memo(function DockedViewModeSwitch() {
   const viewMode = useEditor((state) => state.viewMode)
   const setViewMode = useEditor((state) => state.setViewMode)
 
@@ -654,7 +654,7 @@ function DockedViewModeSwitch() {
       })}
     </div>
   )
-}
+})
 
 export default function EnergyTwinDashboard({
   energyError,

@@ -2,7 +2,7 @@
 
 import NumberFlow from '@number-flow/react'
 import type { CSSProperties, ReactNode } from 'react'
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BevelCard,
   Pill,
@@ -558,7 +558,7 @@ function RealtimeSyncWidget({ seconds }: { seconds: number }) {
   )
 }
 
-function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
+const DashboardToastStack = memo(function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
   return (
     <div className="dashboard-toast-stack fixed right-5 top-[138px] z-40 flex w-[330px] flex-col gap-2">
       {toasts.map((toast) => (
@@ -569,7 +569,7 @@ function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
       ))}
     </div>
   )
-}
+})
 
 function metricTooltip(metric: MonitoringMetric): DashboardTooltipContent {
   const parsed = parseMetricValue(metric.value)
@@ -1586,7 +1586,7 @@ export interface DataAnalysisWorkspaceProps {
   selectedComponentName: string
 }
 
-function MetricCard({ metric }: { metric: MonitoringMetric }) {
+const MetricCard = memo(function MetricCard({ metric }: { metric: MonitoringMetric }) {
   const accent = metricToneColor(metric.tone)
   const parsedValue = parseMetricValue(metric.value)
   const metricIcon: Record<MonitoringMetric['tone'], PanelIconKind> = {
@@ -1631,9 +1631,9 @@ function MetricCard({ metric }: { metric: MonitoringMetric }) {
       </div>
     </BevelCard>
   )
-}
+})
 
-function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
+const HealthGaugePanel = memo(function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
   const angle = (model.performanceScore / 100) * 360
   const maintenanceBucket = model.statusDistribution.find((bucket) => bucket.tone === 'amber')
   const offlineBucket = model.statusDistribution.find((bucket) => bucket.tone === 'slate')
@@ -1771,9 +1771,9 @@ function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const DailyLoadPanel = memo(function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const [hoveredDailyIndex, setHoveredDailyIndex] = useState<number | null>(null)
   const [scanIndex, setScanIndex] = useState(0)
   const lineProgress = useLoopProgress(6000)
@@ -1994,9 +1994,9 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const [hoveredHourlyIndex, setHoveredHourlyIndex] = useState<number | null>(null)
   const currentSlotIndex = getCurrentSlotIndex()
   const chartWidth = 460
@@ -2294,9 +2294,9 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
+const PeakDevicePanel = memo(function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
   const snapshot = model.peakSnapshot
   const relatedDevices = [
     {
@@ -2461,9 +2461,9 @@ function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const RiskLayerPanel = memo(function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
   const maintenanceBucket = model.statusDistribution.find((bucket) => bucket.tone === 'amber')
   const warningTotal = warningBucket?.count ?? 0
@@ -2581,9 +2581,9 @@ function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function RelationshipScatterPanel({
+const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
   correlation,
   points,
   title,
@@ -3016,9 +3016,9 @@ function RelationshipScatterPanel({
       </div>
     </HudPanel>
   )
-}
+})
 
-function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
+const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
   const [hoveredHeatmap, setHoveredHeatmap] = useState<{
     date?: string
     hour?: string
@@ -3256,9 +3256,9 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function CompositionPanel({
+const CompositionPanel = memo(function CompositionPanel({
   composition,
   statusDistribution,
 }: {
@@ -3540,9 +3540,9 @@ function CompositionPanel({
       </div>
     </HudPanel>
   )
-}
+})
 
-function DetailTable({
+const DetailTable = memo(function DetailTable({
   model,
   sampleCount,
   sampleRate,
@@ -3776,7 +3776,7 @@ function DetailTable({
       </div>
     </HudPanel>
   )
-}
+})
 
 export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspaceProps) {
   const realtime = useRealtimeMonitoringModel(projectId)
