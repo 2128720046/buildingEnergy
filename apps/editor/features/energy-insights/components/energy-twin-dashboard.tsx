@@ -747,6 +747,48 @@ export default function EnergyTwinDashboard({
     [sceneNodes, filters.levelId, filters.zoneId, timelineDate, editSnapshot],
   )
 
+  const dualLineOption = useMemo(
+    () =>
+      buildDualLineOption(
+        dashboardData.left.hourlyCurve.today,
+        dashboardData.left.hourlyCurve.yesterday,
+        dashboardData.left.hourlyCurve.peak,
+        dashboardData.left.hourlyCurve.valley,
+      ),
+    [
+      dashboardData.left.hourlyCurve.today,
+      dashboardData.left.hourlyCurve.yesterday,
+      dashboardData.left.hourlyCurve.peak,
+      dashboardData.left.hourlyCurve.valley,
+    ],
+  )
+
+  const compositionDonutOption = useMemo(
+    () => buildCompositionDonut(dashboardData.left.composition),
+    [dashboardData.left.composition],
+  )
+
+  const rankingBarOption = useMemo(
+    () => buildRankingBar(dashboardData.right.ranking),
+    [dashboardData.right.ranking],
+  )
+
+  const weeklyTrendOption = useMemo(
+    () => buildWeeklyTrend(dashboardData.right.weeklyTrend),
+    [dashboardData.right.weeklyTrend],
+  )
+
+  const predictionOption = useMemo(
+    () =>
+      buildPredictionOption(
+        predictionData.labels,
+        predictionData.actual,
+        predictionData.predicted,
+        predictionData.editImpact,
+      ),
+    [predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact],
+  )
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-slate-100">
       <div className="cockpit-atmosphere" />
@@ -896,12 +938,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`dual-${timelineDate}`}
-                    option={buildDualLineOption(
-                      dashboardData.left.hourlyCurve.today,
-                      dashboardData.left.hourlyCurve.yesterday,
-                      dashboardData.left.hourlyCurve.peak,
-                      dashboardData.left.hourlyCurve.valley,
-                    )}
+                    option={dualLineOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -915,7 +952,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`comp-${timelineDate}`}
-                    option={buildCompositionDonut(dashboardData.left.composition)}
+                    option={compositionDonutOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -945,7 +982,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`rank-${timelineDate}`}
-                    option={buildRankingBar(dashboardData.right.ranking)}
+                    option={rankingBarOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -1073,7 +1110,7 @@ export default function EnergyTwinDashboard({
                   <ChartFrame>
                   <ReactECharts
                     key={`week-${timelineDate}`}
-                    option={buildWeeklyTrend(dashboardData.right.weeklyTrend)}
+                    option={weeklyTrendOption}
                     style={{ height: '144px', width: '100%' }}
                   />
                   </ChartFrame>
@@ -1103,7 +1140,7 @@ export default function EnergyTwinDashboard({
           <div className="h-[150px]">
             <ReactECharts
               key={`pred-${timelineDate}-${filters.levelId}-${filters.zoneId}`}
-              option={buildPredictionOption(predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact)}
+              option={predictionOption}
               opts={{ notMerge: true } as any}
               style={{ height: '150px', width: '100%' }}
             />
