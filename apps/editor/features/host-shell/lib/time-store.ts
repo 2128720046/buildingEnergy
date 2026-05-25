@@ -1,6 +1,6 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { createElement, useSyncExternalStore } from 'react'
 
 let currentNow = new Date()
 let timer: number | null = null
@@ -41,5 +41,5 @@ export function ClockText({
   format: (date: Date) => string
 }) {
   const now = useNow()
-  return <span className={className}>{format(now)}</span>
+  return createElement('span', { className }, format(now))
 }
