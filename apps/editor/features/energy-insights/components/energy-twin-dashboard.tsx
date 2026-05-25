@@ -610,7 +610,7 @@ function CardHeader({
 
 function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <section className={cn('glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
+    <section className={cn('contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
       <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
       {children}
     </section>
@@ -618,7 +618,7 @@ function GlassCard({ children, className }: { children: ReactNode; className?: s
 }
 
 function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('tech-chart-frame h-full', className)}>{children}</div>
+  return <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
 }
 
 function DockedViewModeSwitch() {
