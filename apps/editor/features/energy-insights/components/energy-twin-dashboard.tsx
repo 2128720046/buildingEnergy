@@ -46,6 +46,8 @@ const RIGHT_CHART_RAIL_WIDTH = 360
 const ASSISTANT_PANEL_WIDTH = 400
 const EDITOR_PANEL_AVOID_GAP = 20
 const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
+const COCKPIT_SIDE_RAIL_WIDTH = 'clamp(280px, 22vw, 360px)'
+const BOTTOM_CENTER_OVERLAY_WIDTH = `calc(100% - ${COCKPIT_SIDE_RAIL_WIDTH} - ${COCKPIT_SIDE_RAIL_WIDTH} - 80px)`
 
 const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
   return <ReactEChartsCore echarts={echarts} {...props} />
@@ -810,7 +812,7 @@ export default function EnergyTwinDashboard({
       <section
         className="pointer-events-none absolute inset-0 z-20 grid gap-4 px-4 pt-3 pb-4"
         style={{
-          gridTemplateColumns: 'clamp(280px, 22vw, 360px) minmax(0, 1fr) clamp(280px, 22vw, 360px)',
+          gridTemplateColumns: `${COCKPIT_SIDE_RAIL_WIDTH} minmax(0, 1fr) ${COCKPIT_SIDE_RAIL_WIDTH}`,
         }}
       >
         <div className="pointer-events-auto min-h-0 w-full max-w-[360px]">
@@ -1128,20 +1130,23 @@ export default function EnergyTwinDashboard({
       </section>
 
       {/* 能耗预测图（始终可见） */}
-      <div className="pointer-events-auto absolute bottom-2 left-1/2 z-40 w-[min(44vw,680px)] min-w-[420px] -translate-x-1/2">
-          <div className="rounded border border-cyan-300/15 bg-[#061522]/72 p-2 shadow-[0_0_28px_rgba(0,212,255,0.12)] backdrop-blur-sm">
-            <div className="mb-1 flex items-center gap-2">
-              <Clock3 className="h-3 w-3 text-[#00F5FF]" />
-              <span
-                className="font-semibold text-[14px] uppercase tracking-[0.12em] text-white/55"
-                style={{ fontFamily: DASHBOARD_FONTS.cn }}
-              >
-                未来 24h 能耗预测
-              </span>
-              <span className="ml-auto text-[12px] text-white/30" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
-                {filters.zoneId ? '房间级' : filters.levelId ? '楼层级' : '整栋级'}
-              </span>
-            </div>
+      <div
+        className="pointer-events-auto absolute bottom-2 left-1/2 z-40 -translate-x-1/2"
+        style={{ width: BOTTOM_CENTER_OVERLAY_WIDTH }}
+      >
+        <div className="rounded border border-cyan-300/15 bg-[#061522]/72 p-2 shadow-[0_0_28px_rgba(0,212,255,0.12)] backdrop-blur-sm">
+          <div className="mb-1 flex items-center gap-2">
+            <Clock3 className="h-3 w-3 text-[#00F5FF]" />
+            <span
+              className="font-semibold text-[14px] uppercase tracking-[0.12em] text-white/55"
+              style={{ fontFamily: DASHBOARD_FONTS.cn }}
+            >
+              未来 24h 能耗预测
+            </span>
+            <span className="ml-auto text-[12px] text-white/30" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
+              {filters.zoneId ? '房间级' : filters.levelId ? '楼层级' : '整栋级'}
+            </span>
+          </div>
           <div className="h-[150px]">
             <ReactECharts
               key={`pred-${timelineDate}-${filters.levelId}-${filters.zoneId}`}
@@ -1155,7 +1160,10 @@ export default function EnergyTwinDashboard({
 
       {/* 时间轴（只读模式下显示，编辑模式下隐藏） */}
       {readOnly ? (
-        <div className="pointer-events-auto absolute bottom-[200px] left-1/2 z-40 w-[calc(100%-150px)] max-w-[1100px] -translate-x-1/2">
+        <div
+          className="pointer-events-auto absolute bottom-[200px] left-1/2 z-40 -translate-x-1/2"
+          style={{ width: BOTTOM_CENTER_OVERLAY_WIDTH }}
+        >
           <EnergyTimelineStrip
             date={timelineDate}
             hour={timelineHour}
