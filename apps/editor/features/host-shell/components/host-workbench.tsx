@@ -44,6 +44,7 @@ import {
 import WorkspaceNavigation from '@/features/host-shell/components/workspace-navigation'
 import type { HostWorkspace } from '@/features/host-shell/lib/host-workspaces'
 import { loadProjectSummaries, type ProjectSummary } from '@/features/host-shell/lib/project-api'
+import { useNow } from '@/features/host-shell/lib/time-store'
 import SmartOperationsWorkspace from '@/features/operations/components/smart-operations-workspace'
 import type { OperationsTask } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
@@ -143,6 +144,21 @@ function readPreferredWorkspace(): HostWorkspace {
 
   const storedWorkspace = window.localStorage.getItem(ACTIVE_WORKSPACE_STORAGE_KEY)
   return isHostWorkspace(storedWorkspace) ? storedWorkspace : 'energy-query'
+}
+
+function hasNodeReferenceChanges(
+  current: Record<string, AnyNode>,
+  snapshot: Record<string, AnyNode>,
+) {
+  const currentKeys = Object.keys(current)
+  const snapshotKeys = Object.keys(snapshot)
+  if (currentKeys.length !== snapshotKeys.length) return true
+
+  for (const key of currentKeys) {
+    if (current[key] !== snapshot[key]) return true
+  }
+
+  return false
 }
 
 function persistWorkspace(workspace: HostWorkspace) {
@@ -401,14 +417,7 @@ function DataAnalysisTitlePlate() {
 }
 
 function DataAnalysisHeaderStatus() {
-  const [now, setNow] = useState<Date | null>(null)
-
-  useEffect(() => {
-    const tick = () => setNow(new Date())
-    tick()
-    const timer = window.setInterval(tick, 1000)
-    return () => window.clearInterval(timer)
-  }, [])
+  const now = useNow()
 
   const dateText = now
     ? new Intl.DateTimeFormat('zh-CN', {
@@ -660,6 +669,7 @@ export default function HostWorkbench({
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editSnapshot, setEditSnapshot] = useState<Record<string, AnyNode> | null>(null)
+  const editReferenceSnapshotRef = useRef<Record<string, AnyNode> | null>(null)
   const pendingEditToggleRef = useRef(false)
 
   const handleToggleEdit = useCallback(() => {
@@ -667,15 +677,14 @@ export default function HostWorkbench({
       // 进入编辑：保存快照（改为 state，触发 React 重渲染传递 props）
       const clone = JSON.parse(JSON.stringify(nodes)) as Record<string, AnyNode>
       setEditSnapshot(clone)
+      editReferenceSnapshotRef.current = { ...nodes }
       setEditEnabled(true)
       return
     }
     // 退出编辑：检测是否有修改（节点内容是否变化）
     let hasChanges = false
-    if (editSnapshot) {
-      const cur = JSON.stringify(nodes)
-      const snap = JSON.stringify(editSnapshot)
-      hasChanges = cur !== snap
+    if (editReferenceSnapshotRef.current) {
+      hasChanges = hasNodeReferenceChanges(nodes, editReferenceSnapshotRef.current)
     }
 
     if (hasChanges) {
@@ -683,14 +692,16 @@ export default function HostWorkbench({
       setEditDialogOpen(true)
     } else {
       setEditSnapshot(null)
+      editReferenceSnapshotRef.current = null
       if (mode !== 'select') setMode('select')
       setEditEnabled(false)
     }
-  }, [editEnabled, mode, setMode, nodes, editSnapshot])
+  }, [editEnabled, mode, setMode, nodes])
 
   const handleSaveEdits = useCallback(() => {
     useScene.temporal.getState().clear()
     setEditSnapshot(null)
+    editReferenceSnapshotRef.current = null
     setEditDialogOpen(false)
     if (pendingEditToggleRef.current) {
       pendingEditToggleRef.current = false
@@ -714,6 +725,7 @@ export default function HostWorkbench({
       }
     })
     setEditSnapshot(null)
+    editReferenceSnapshotRef.current = null
     setEditDialogOpen(false)
     if (pendingEditToggleRef.current) {
       pendingEditToggleRef.current = false

@@ -23,6 +23,7 @@ import {
 import { useAssetUrl } from '../../../hooks/use-asset-url'
 import { useGLTFKTX2 } from '../../../hooks/use-gltf-ktx2'
 import useViewer from '../../../store/use-viewer'
+import { ErrorBoundary } from '../../error-boundary'
 
 export const ScanRenderer = ({ node }: { node: ScanNode }) => {
   const showScans = useViewer((s) => s.showScans)
@@ -40,9 +41,11 @@ export const ScanRenderer = ({ node }: { node: ScanNode }) => {
       visible={showScans}
     >
       {resolvedUrl && (
-        <Suspense fallback={<ScanLoadingPlaceholder />}>
-          <ScanModel opacity={node.opacity} url={resolvedUrl} />
-        </Suspense>
+        <ErrorBoundary fallback={<ScanLoadFailurePlaceholder />}>
+          <Suspense fallback={<ScanLoadingPlaceholder />}>
+            <ScanModel opacity={node.opacity} url={resolvedUrl} />
+          </Suspense>
+        </ErrorBoundary>
       )}
       <ScanDragHandle nodeId={node.id} positionY={node.position[1]} />
     </group>
@@ -59,6 +62,15 @@ const ScanLoadingPlaceholder = memo(() => {
   )
 })
 ScanLoadingPlaceholder.displayName = 'ScanLoadingPlaceholder'
+
+const ScanLoadFailurePlaceholder = memo(() => {
+  return (
+    <mesh visible={false}>
+      <boxGeometry args={[1, 1, 1]} />
+    </mesh>
+  )
+})
+ScanLoadFailurePlaceholder.displayName = 'ScanLoadFailurePlaceholder'
 
 const ScanModel = memo(({ url, opacity }: { url: string; opacity: number }) => {
   const gltf = useGLTFKTX2(url) as any

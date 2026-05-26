@@ -1,0 +1,3108 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - navigation "Workspace navigation" [ref=e5]:
+        - button "能耗查询" [ref=e6] [cursor=pointer]:
+          - img [ref=e7]
+          - generic [ref=e9]: 能耗查询
+        - button "数据分析" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+          - generic [ref=e13]: 数据分析
+        - button "智慧运维" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e17]: 智慧运维
+      - generic:
+        - generic:
+          - img
+          - generic: 建筑能耗管理与运维系统
+      - generic [ref=e18]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: 系统在线
+          - generic [ref=e23]: 健康运行
+        - generic [ref=e26]:
+          - generic [ref=e27]: 05/25周一
+          - generic [ref=e28]: 15:05:11
+        - generic [ref=e32]:
+          - generic [ref=e33]: 多云
+          - generic [ref=e34]: 26°C
+        - generic [ref=e36]:
+          - button "消息提醒" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+          - button "系统设置" [ref=e41] [cursor=pointer]:
+            - img [ref=e42]
+    - generic [ref=e44]:
+      - generic:
+        - generic:
+          - button "收起侧边栏":
+            - img
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - button "场景"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: No buildings yet
+                - generic:
+                  - generic:
+                    - generic [ref=e45]:
+                      - button "收起侧边栏" [ref=e47] [cursor=pointer]:
+                        - img [ref=e48]
+                      - generic [ref=e51]:
+                        - button "三维" [ref=e52] [cursor=pointer]:
+                          - generic [ref=e53]: 三维
+                        - button "二维" [ref=e54] [cursor=pointer]:
+                          - generic [ref=e55]: 二维
+                        - button "分屏" [ref=e56] [cursor=pointer]:
+                          - img [ref=e57]
+                          - generic [ref=e59]: 分屏
+                    - generic [ref=e61]:
+                      - generic [ref=e62]:
+                        - button "堆叠" [ref=e63] [cursor=pointer]:
+                          - generic [ref=e64]: 堆叠
+                        - button "完整墙体 完整墙体" [ref=e65] [cursor=pointer]:
+                          - img "完整墙体" [ref=e66]
+                          - generic [ref=e67]: 完整墙体
+                        - button "m" [ref=e69] [cursor=pointer]:
+                          - generic [ref=e70]: m
+                        - button [ref=e71] [cursor=pointer]:
+                          - img [ref=e72]
+                        - button [ref=e78] [cursor=pointer]
+                      - button "导入" [ref=e79] [cursor=pointer]
+                      - button "编辑中" [ref=e80] [cursor=pointer]:
+                        - img [ref=e82]
+                        - text: 编辑中
+                  - generic [ref=e88]:
+                    - generic [ref=e89]:
+                      - button "选择 V" [ref=e90] [cursor=pointer]:
+                        - img "选择" [ref=e92]
+                        - generic [ref=e94]: V
+                      - button [ref=e95] [cursor=pointer]
+                      - button "编辑场地" [ref=e97] [cursor=pointer]:
+                        - img "编辑场地" [ref=e99]
+                      - button "建模 B" [ref=e100] [cursor=pointer]:
+                        - img "建模" [ref=e102]
+                        - generic [ref=e104]: B
+                      - button "布置 F" [ref=e105] [cursor=pointer]:
+                        - img "布置" [ref=e107]
+                        - generic [ref=e109]: F
+                      - button "区域 Z" [ref=e110] [cursor=pointer]:
+                        - img "区域" [ref=e112]
+                        - generic [ref=e114]: Z
+                      - button "D" [ref=e115] [cursor=pointer]:
+                        - generic [ref=e116]:
+                          - img
+                        - generic [ref=e118]: D
+                    - generic [ref=e120]:
+                      - generic [ref=e121]:
+                        - button "扫描模型 0" [ref=e122] [cursor=pointer]:
+                          - generic [ref=e124]:
+                            - img "扫描模型" [ref=e125]
+                            - generic [ref=e126]: "0"
+                        - button "扫描模型设置" [ref=e127] [cursor=pointer]:
+                          - img [ref=e128]
+                      - generic [ref=e130]:
+                        - button "参考图 0" [ref=e131] [cursor=pointer]:
+                          - generic [ref=e133]:
+                            - img "参考图" [ref=e134]
+                            - generic [ref=e135]: "0"
+                        - button "参考图设置" [ref=e136] [cursor=pointer]:
+                          - img [ref=e137]
+                    - generic [ref=e140]:
+                      - button "向左旋转" [ref=e141] [cursor=pointer]:
+                        - img "向左旋转" [ref=e143]
+                      - button "向右旋转" [ref=e144] [cursor=pointer]:
+                        - img "向右旋转" [ref=e146]
+                      - button "顶视图" [ref=e147] [cursor=pointer]:
+                        - img "顶视图" [ref=e149]
+          - generic:
+            - generic:
+              - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+              - generic [ref=e150]:
+                - button "三维" [ref=e151] [cursor=pointer]
+                - button "平面图" [ref=e152] [cursor=pointer]
+                - button "分屏" [ref=e153] [cursor=pointer]
+              - generic:
+                - generic [ref=e156]:
+                  - generic [ref=e157]:
+                    - generic [ref=e159]:
+                      - img [ref=e161]
+                      - heading "告警状态" [level=3] [ref=e164]: 告警状态
+                    - generic [ref=e167]: ✓ 当前无告警，系统运行正常
+                  - generic [ref=e168]:
+                    - generic [ref=e170]:
+                      - img [ref=e172]
+                      - heading "实时功率" [level=3] [ref=e175]: 实时功率
+                    - generic [ref=e178]:
+                      - generic [ref=e180]:
+                        - generic [ref=e187]: "0"
+                        - generic [ref=e188]: kW
+                      - generic [ref=e203]:
+                        - generic [ref=e204]: →0%
+                        - generic [ref=e205]: vs 昨日同时刻
+                  - generic [ref=e206]:
+                    - generic [ref=e208]:
+                      - img [ref=e210]
+                      - heading "能耗强度" [level=3] [ref=e214]: 能耗强度
+                    - generic [ref=e217]:
+                      - generic [ref=e218]:
+                        - generic [ref=e219]: 总电耗
+                        - generic [ref=e220]: "0"
+                        - generic [ref=e221]: kWh
+                      - generic [ref=e222]:
+                        - generic [ref=e223]: 能耗强度
+                        - generic [ref=e224]: "0.00"
+                        - generic [ref=e225]: kWh/m²
+                    - generic [ref=e227]: 0% vs 昨日
+                  - generic [ref=e230]:
+                    - img [ref=e232]
+                    - heading "24h 负荷曲线" [level=3] [ref=e236]: 24h 负荷曲线
+                  - generic [ref=e246]:
+                    - img [ref=e248]
+                    - heading "分项占比" [level=3] [ref=e253]: 分项占比
+                - generic [ref=e263]:
+                  - generic [ref=e266]:
+                    - img [ref=e268]
+                    - heading "楼层能耗排行" [level=3] [ref=e273]: 楼层能耗排行
+                  - generic [ref=e280]:
+                    - generic [ref=e282]:
+                      - img [ref=e284]
+                      - heading "今日峰值" [level=3] [ref=e290]: 今日峰值
+                    - generic [ref=e293]:
+                      - generic [ref=e294]:
+                        - generic [ref=e296]:
+                          - generic [ref=e303]: "0"
+                          - generic [ref=e304]: kW
+                        - generic [ref=e306]: 00:00
+                      - generic [ref=e308]:
+                        - generic [ref=e309]: 当前 0.0 kW
+                        - generic [ref=e310]: 峰值 0.0 kW
+                  - generic [ref=e311]:
+                    - generic [ref=e313]:
+                      - img [ref=e315]
+                      - heading "室内外环境" [level=3] [ref=e318]: 室内外环境
+                    - generic [ref=e321]:
+                      - generic [ref=e322]:
+                        - generic [ref=e325]: 0°
+                        - generic [ref=e326]: 室内温度
+                      - generic [ref=e327]:
+                        - generic [ref=e330]: 0%
+                        - generic [ref=e331]: 室内湿度
+                      - generic [ref=e332]:
+                        - generic [ref=e335]: "0"
+                        - generic [ref=e336]: CO₂
+                      - generic [ref=e337]:
+                        - generic [ref=e340]: 30°
+                        - generic [ref=e341]: 室外温度
+                      - generic [ref=e342]:
+                        - generic [ref=e345]: 55%
+                        - generic [ref=e346]: 室外湿度
+                      - generic [ref=e347]:
+                        - generic [ref=e350]: "0"
+                        - generic [ref=e351]: PM2.5
+                  - generic [ref=e352]:
+                    - generic [ref=e354]:
+                      - img [ref=e356]
+                      - heading "电费估算" [level=3] [ref=e360]: 电费估算
+                    - generic [ref=e363]:
+                      - generic [ref=e364]:
+                        - generic [ref=e365]: 今日
+                        - generic [ref=e367]:
+                          - text: ¥
+                          - generic [ref=e373]: "0"
+                      - generic [ref=e374]:
+                        - generic [ref=e375]: 本月
+                        - generic [ref=e377]:
+                          - text: ¥
+                          - generic [ref=e383]: "0"
+                    - generic [ref=e384]: 按 0.82 元/kWh 综合电价估算
+                  - generic [ref=e387]:
+                    - img [ref=e389]
+                    - heading "本周趋势" [level=3] [ref=e393]: 本周趋势
+              - generic [ref=e403]:
+                - img [ref=e404]
+                - generic [ref=e407]: 未来 24h 能耗预测
+                - generic [ref=e408]: 整栋级
+              - button [ref=e414] [cursor=pointer]:
+                - img [ref=e415]
+      - generic:
+        - generic:
+          - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+          - generic:
+            - generic:
+              - generic: 实时同步中
+              - generic: 上次同步 0s 前
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: "2"
+                                - generic:
+                                  - generic: "7"
+                                - generic:
+                                  - generic: ","
+                                - generic:
+                                  - generic: "6"
+                                - generic:
+                                  - generic: "0"
+                                - generic:
+                                  - generic: "6"
+                        - generic: kWh
+                      - generic: 今日累计
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: "7"
+                                - generic:
+                                  - generic: "6"
+                              - generic:
+                                - generic:
+                                  - generic: .
+                                - generic:
+                                  - generic: "3"
+                      - generic: 当前人流指数
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: "2"
+                                - generic:
+                                  - generic: "3"
+                                - generic:
+                                  - generic: "6"
+                              - generic:
+                                - generic:
+                                  - generic: .
+                                - generic:
+                                  - generic: "8"
+                        - generic: kWh
+                      - generic: 今日峰值负荷
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: "5"
+                                - generic:
+                                  - generic: "2"
+                              - generic:
+                                - generic:
+                                  - generic: .
+                                - generic:
+                                  - generic: "6"
+                        - generic: "%"
+                      - generic: HVAC 当前占比
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic: "1"
+                                - generic:
+                                  - generic: "9"
+                                - generic:
+                                  - generic: "4"
+                        - generic: 条
+                      - generic: 今日预警
+                      - img
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "运行健康评分" [level=2]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic: "9"
+                                      - generic:
+                                        - generic: "6"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: 正常
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "1"
+                                        - generic:
+                                          - generic: "0"
+                                        - generic:
+                                          - generic: "1"
+                              - text: /
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "3"
+                                        - generic:
+                                          - generic: "3"
+                                      - generic:
+                                        - generic:
+                                          - generic: .
+                                        - generic:
+                                          - generic: "8"
+                                - generic: "%"
+                        - generic:
+                          - generic:
+                            - generic: 预警
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "1"
+                                        - generic:
+                                          - generic: "9"
+                                        - generic:
+                                          - generic: "4"
+                              - text: /
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "6"
+                                        - generic:
+                                          - generic: "4"
+                                      - generic:
+                                        - generic:
+                                          - generic: .
+                                        - generic:
+                                          - generic: "9"
+                                - generic: "%"
+                        - generic:
+                          - generic:
+                            - generic: 维护中
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "2"
+                              - text: /
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "0"
+                                      - generic:
+                                        - generic:
+                                          - generic: .
+                                        - generic:
+                                          - generic: "7"
+                                - generic: "%"
+                        - generic:
+                          - generic:
+                            - generic: 离线
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "2"
+                              - text: /
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "0"
+                                      - generic:
+                                        - generic:
+                                          - generic: .
+                                        - generic:
+                                          - generic: "7"
+                                - generic: "%"
+                    - generic:
+                      - generic:
+                        - generic: 正常记录
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "0"
+                                  - generic:
+                                    - generic: "1"
+                      - generic:
+                        - generic: 预警记录
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "4"
+                      - generic:
+                        - generic: 监测总量
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "9"
+                    - generic:
+                      - generic:
+                        - generic: 风险占比
+                        - generic: 65.6%
+                      - generic:
+                        - generic: 稳定占比
+                        - generic: 33.8%
+                      - generic:
+                        - generic: 维护占比
+                        - generic: 0.7%
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "今日峰值设备" [level=2]
+                    - generic:
+                      - generic: BLDG-C-07
+                      - generic: BLDG-C-07-DEV-15
+                      - generic:
+                        - generic:
+                          - generic: 峰值电耗
+                          - generic: 236.8 kWh
+                        - generic:
+                          - generic: 监测时间
+                          - generic: 05-24 12:00
+                        - generic:
+                          - generic: 温度
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "6"
+                            - generic: °C
+                        - generic:
+                          - generic: 人流
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: BLDG-A-03-DEV-21
+                            - generic: BLDG-A-03 / 05-24 12:00
+                          - generic: "214"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: BLDG-B-01-DEV-05
+                            - generic: BLDG-B-01 / 05-24 12:00
+                          - generic: "198"
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "风险分层" [level=2]
+                    - generic:
+                      - generic:
+                        - generic: 预警记录
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "4"
+                      - generic:
+                        - generic: 维护中
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: "1"
+                            - generic:
+                              - generic: BLDG-A-03
+                              - generic: 效率 61
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic: "3"
+                                      - generic:
+                                        - generic: "4"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: "2"
+                            - generic:
+                              - generic: BLDG-D-02
+                              - generic: 效率 61
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic: "3"
+                                      - generic:
+                                        - generic: "2"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: "3"
+                            - generic:
+                              - generic: BLDG-B-01
+                              - generic: 效率 61
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic: "2"
+                                      - generic:
+                                        - generic: "9"
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "每日能耗与人流走势" [level=2]
+                    - generic:
+                      - generic:
+                        - generic: 电耗柱状
+                      - generic:
+                        - generic: 人流折线
+                      - generic:
+                        - generic: 12 天窗口
+                    - generic:
+                      - img
+                    - generic:
+                      - generic:
+                        - generic: 05-14
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "6"
+                                  - generic:
+                                    - generic: "5"
+                                  - generic:
+                                    - generic: "8"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "3"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-15
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "7"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "0"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "0"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-16
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: "0"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "7"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-17
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "0"
+                                  - generic:
+                                    - generic: "8"
+                                  - generic:
+                                    - generic: "8"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "4"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-18
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "0"
+                                  - generic:
+                                    - generic: "8"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "4"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-19
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "5"
+                                  - generic:
+                                    - generic: "5"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "3"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-20
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "0"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "2"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "5"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-21
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "0"
+                                  - generic:
+                                    - generic: "8"
+                                  - generic:
+                                    - generic: "2"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "4"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-22
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "8"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "9"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-23
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "3"
+                                  - generic:
+                                    - generic: "4"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "2"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-24
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "8"
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: "7"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "1"
+                          - generic: kWh
+                      - generic:
+                        - generic: 05-25
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: ","
+                                  - generic:
+                                    - generic: "7"
+                                  - generic:
+                                    - generic: "5"
+                                  - generic:
+                                    - generic: "3"
+                                - generic:
+                                  - generic:
+                                    - generic: .
+                                  - generic:
+                                    - generic: "7"
+                          - generic: kWh
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "时段热力矩阵" [level=2]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 峰值时段
+                          - generic: 05-19 12:00
+                        - generic:
+                          - generic: 峰值电耗
+                          - generic: 225 kWh
+                        - generic:
+                          - generic: 均值电耗
+                          - generic: 186 kWh
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: 00:00
+                            - generic: 06:00
+                            - generic: 12:00
+                            - generic: 18:00
+                          - generic:
+                            - generic: 05-19
+                            - generic: 05-20
+                            - generic: 05-21
+                            - generic: 05-22
+                            - generic: 05-23
+                            - generic: 05-24
+                            - generic: 05-25
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic: "72"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "6"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "87"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "5"
+                            - generic:
+                              - generic:
+                                - generic: "100"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "5"
+                            - generic:
+                              - generic:
+                                - generic: "92"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "0"
+                                            - generic:
+                                              - generic: "7"
+                            - generic:
+                              - generic:
+                                - generic: "69"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "5"
+                                            - generic:
+                                              - generic: "6"
+                            - generic:
+                              - generic:
+                                - generic: "86"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "3"
+                            - generic:
+                              - generic:
+                                - generic: "99"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "90"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "0"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "71"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "5"
+                                            - generic:
+                                              - generic: "9"
+                            - generic:
+                              - generic:
+                                - generic: "85"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "99"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "88"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "7"
+                            - generic:
+                              - generic:
+                                - generic: "68"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "5"
+                                            - generic:
+                                              - generic: "3"
+                            - generic:
+                              - generic:
+                                - generic: "84"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "8"
+                                            - generic:
+                                              - generic: "9"
+                            - generic:
+                              - generic:
+                                - generic: "96"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "7"
+                            - generic:
+                              - generic:
+                                - generic: "85"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "64"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "4"
+                                            - generic:
+                                              - generic: "4"
+                            - generic:
+                              - generic:
+                                - generic: "80"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "8"
+                                            - generic:
+                                              - generic: "1"
+                            - generic:
+                              - generic:
+                                - generic: "96"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "7"
+                            - generic:
+                              - generic:
+                                - generic: "85"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "2"
+                            - generic:
+                              - generic:
+                                - generic: "60"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "3"
+                                            - generic:
+                                              - generic: "6"
+                            - generic:
+                              - generic:
+                                - generic: "74"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "6"
+                                            - generic:
+                                              - generic: "7"
+                            - generic:
+                              - generic:
+                                - generic: "95"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "4"
+                            - generic:
+                              - generic:
+                                - generic: "85"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "9"
+                                            - generic:
+                                              - generic: "0"
+                            - generic:
+                              - generic:
+                                - generic: "60"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "3"
+                                            - generic:
+                                              - generic: "4"
+                            - generic:
+                              - generic:
+                                - generic: "75"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "6"
+                                            - generic:
+                                              - generic: "8"
+                            - generic:
+                              - generic:
+                                - generic: "91"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "2"
+                                            - generic:
+                                              - generic: "0"
+                                            - generic:
+                                              - generic: "5"
+                            - generic:
+                              - generic:
+                                - generic: "80"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic: "1"
+                                            - generic:
+                                              - generic: "8"
+                                            - generic:
+                                              - generic: "1"
+                          - generic:
+                            - generic: 低负荷
+                            - generic: 高负荷
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "时段负荷关系" [level=2]
+                    - generic:
+                      - generic:
+                        - generic: 电耗高峰
+                        - generic: 12:00
+                      - generic:
+                        - generic: 低谷时段
+                        - generic: 00:00
+                      - generic:
+                        - generic: 峰谷差值
+                        - generic: "69"
+                      - generic:
+                        - generic: 人流峰值
+                        - generic: "93"
+                    - generic:
+                      - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: 00:00
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "4"
+                                  - generic:
+                                    - generic: "7"
+                        - generic: kWh
+                      - generic:
+                        - generic:
+                          - generic: 06:00
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "8"
+                                  - generic:
+                                    - generic: "1"
+                        - generic: kWh
+                      - generic:
+                        - generic:
+                          - generic: 12:00
+                          - generic: 当前
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "6"
+                        - generic: kWh
+                      - generic:
+                        - generic:
+                          - generic: 18:00
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "1"
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "4"
+                        - generic: kWh
+                    - generic:
+                      - generic:
+                        - generic: 峰值负荷
+                        - generic: 216 kWh
+                      - generic:
+                        - generic: 低谷负荷
+                        - generic: 147 kWh
+                      - generic:
+                        - generic: 人流高峰
+                        - generic: 12:00
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "本月构成占比" [level=2]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "4"
+                                        - generic:
+                                          - generic: "6"
+                                        - generic:
+                                          - generic: ","
+                                        - generic:
+                                          - generic: "1"
+                                        - generic:
+                                          - generic: "0"
+                                        - generic:
+                                          - generic: "6"
+                              - generic: 本月累计
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 暖通系统
+                            - generic: "19780"
+                          - generic:
+                            - generic: 42.9%
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 照明系统
+                            - generic: "8437"
+                          - generic:
+                            - generic: 18.3%
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 插座与设备
+                            - generic: "6685"
+                          - generic:
+                            - generic: 14.5%
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 公共区域
+                            - generic: "4611"
+                          - generic:
+                            - generic: 10.0%
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 实验与专用负荷
+                            - generic: "3458"
+                          - generic:
+                            - generic: 7.5%
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 其他损耗
+                            - generic: "3135"
+                          - generic:
+                            - generic: 6.8%
+                      - generic:
+                        - generic:
+                          - generic: 正常
+                          - generic: "101"
+                        - generic:
+                          - generic: 预警
+                          - generic: "194"
+                        - generic:
+                          - generic: 维护中
+                          - generic: "2"
+                        - generic:
+                          - generic: 离线
+                          - generic: "2"
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                      - generic:
+                        - heading "能耗与人流关系" [level=2]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: 强正相关
+                      - generic:
+                        - generic: 样本 48
+                      - generic:
+                        - generic: 风险点 24
+                    - generic:
+                      - generic: "0.80"
+                  - generic:
+                    - generic:
+                      - button "办公": 办公
+                      - button "教学": 教学
+                      - button "实验": 实验
+                      - button "预警": 预警
+                    - img:
+                      - generic: 能耗 kWh
+                      - generic: 人流指数
+                    - generic:
+                      - generic:
+                        - generic: 样本数
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "4"
+                                  - generic:
+                                    - generic: "8"
+                      - generic:
+                        - generic: 风险点
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: "4"
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                      - generic:
+                        - heading "能耗与温度关系" [level=2]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: 中等正相关
+                      - generic:
+                        - generic: 样本 48
+                      - generic:
+                        - generic: 风险点 24
+                    - generic:
+                      - generic: "0.64"
+                  - generic:
+                    - generic:
+                      - button "办公": 办公
+                      - button "教学": 教学
+                      - button "实验": 实验
+                      - button "预警": 预警
+                    - img:
+                      - generic: 能耗 kWh
+                      - generic: 温度 °C
+                    - generic:
+                      - generic:
+                        - generic: 样本数
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "4"
+                                  - generic:
+                                    - generic: "8"
+                      - generic:
+                        - generic: 风险点
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                                  - generic:
+                                    - generic: "4"
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - heading "近期监测明细" [level=2]
+                - generic:
+                  - generic: 实时
+                  - generic:
+                    - text: 今日已采集
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic: "1"
+                              - generic:
+                                - generic: ","
+                              - generic:
+                                - generic: "2"
+                              - generic:
+                                - generic: "8"
+                              - generic:
+                                - generic: "6"
+                    - text: 条 · 当前速率
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic: "2"
+                              - generic:
+                                - generic: "8"
+                    - text: 条/分钟
+                - generic:
+                  - table:
+                    - rowgroup:
+                      - row "楼栋⇅ 时间⇅ 电耗⇅ 暖通⇅ 用水⇅ 温度⇅ 湿度⇅ 人流⇅ 设备⇅ 状态⇅":
+                        - columnheader "楼栋⇅"
+                        - columnheader "时间⇅"
+                        - columnheader "电耗⇅"
+                        - columnheader "暖通⇅"
+                        - columnheader "用水⇅"
+                        - columnheader "温度⇅"
+                        - columnheader "湿度⇅"
+                        - columnheader "人流⇅"
+                        - columnheader "设备⇅"
+                        - columnheader "状态⇅"
+                    - rowgroup:
+                      - row "BLDG-A-03 2026-05-25 18:00 1 8 2 . 5 8 1 . 9 2 3 . 2 2 6 . 4 °C 4 8 . 1 % 9 2 . 0 BLDG-A-03-DEV-21 预警":
+                        - cell "BLDG-A-03"
+                        - cell "2026-05-25 18:00":
+                          - generic: 2026-05-25 18:00
+                        - cell "1 8 2 . 5":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "5"
+                        - cell "8 1 . 9":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                        - cell "2 3 . 2":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                        - cell "2 6 . 4 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                            - generic: °C
+                        - cell "4 8 . 1 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "4"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                            - generic: "%"
+                        - cell "9 2 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-A-03-DEV-21"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-B-01 2026-05-25 18:00 1 6 1 . 5 6 9 . 7 1 8 . 5 2 6 . 2 °C 5 2 . 1 % 7 3 . 0 BLDG-B-01-DEV-05 预警":
+                        - cell "BLDG-B-01"
+                        - cell "2026-05-25 18:00":
+                          - generic: 2026-05-25 18:00
+                        - cell "1 6 1 . 5":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "6"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "5"
+                        - cell "6 9 . 7":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "6"
+                                    - generic:
+                                      - generic: "9"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "7"
+                        - cell "1 8 . 5":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "5"
+                        - cell "2 6 . 2 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                            - generic: °C
+                        - cell "5 2 . 1 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                            - generic: "%"
+                        - cell "7 3 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "7"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-B-01-DEV-05"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-C-07 2026-05-25 18:00 1 9 3 . 8 9 1 . 8 2 4 . 0 2 5 . 8 °C 4 6 . 9 % 7 5 . 0 BLDG-C-07-DEV-06 预警":
+                        - cell "BLDG-C-07"
+                        - cell "2026-05-25 18:00":
+                          - generic: 2026-05-25 18:00
+                        - cell "1 9 3 . 8":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                        - cell "9 1 . 8":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                        - cell "2 4 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "4"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "2 5 . 8 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                            - generic: °C
+                        - cell "4 6 . 9 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "4"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                            - generic: "%"
+                        - cell "7 5 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "7"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-C-07-DEV-06"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-D-02 2026-05-25 18:00 1 8 5 . 4 8 0 . 0 2 1 . 1 2 5 . 4 °C 5 3 . 7 % 8 8 . 0 BLDG-D-02-DEV-01 预警":
+                        - cell "BLDG-D-02"
+                        - cell "2026-05-25 18:00":
+                          - generic: 2026-05-25 18:00
+                        - cell "1 8 5 . 4":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                        - cell "8 0 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "0"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "2 1 . 1":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                        - cell "2 5 . 4 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                            - generic: °C
+                        - cell "5 3 . 7 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "7"
+                            - generic: "%"
+                        - cell "8 8 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-D-02-DEV-01"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-A-03 2026-05-25 12:00 2 0 8 . 2 1 0 0 . 8 2 4 . 4 2 8 . 4 °C 4 8 . 1 % 9 8 . 0 BLDG-A-03-DEV-15 预警":
+                        - cell "BLDG-A-03"
+                        - cell "2026-05-25 12:00":
+                          - generic: 2026-05-25 12:00
+                        - cell "2 0 8 . 2":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "0"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                        - cell "1 0 0 . 8":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "0"
+                                    - generic:
+                                      - generic: "0"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                        - cell "2 4 . 4":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "4"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                        - cell "2 8 . 4 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                            - generic: °C
+                        - cell "4 8 . 1 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "4"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                            - generic: "%"
+                        - cell "9 8 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-A-03-DEV-15"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-B-01 2026-05-25 12:00 1 8 7 . 3 8 8 . 6 1 9 . 7 2 8 . 2 °C 5 2 . 1 % 8 7 . 0 BLDG-B-01-DEV-26 预警":
+                        - cell "BLDG-B-01"
+                        - cell "2026-05-25 12:00":
+                          - generic: 2026-05-25 12:00
+                        - cell "1 8 7 . 3":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "3"
+                        - cell "8 8 . 6":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "6"
+                        - cell "1 9 . 7":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "9"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "7"
+                        - cell "2 8 . 2 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                            - generic: °C
+                        - cell "5 2 . 1 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                            - generic: "%"
+                        - cell "8 7 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-B-01-DEV-26"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-C-07 2026-05-25 12:00 2 1 6 . 8 1 0 9 . 2 2 5 . 0 2 7 . 8 °C 4 6 . 0 % 8 6 . 0 BLDG-C-07-DEV-27 预警":
+                        - cell "BLDG-C-07"
+                        - cell "2026-05-25 12:00":
+                          - generic: 2026-05-25 12:00
+                        - cell "2 1 6 . 8":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                        - cell "1 0 9 . 2":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "0"
+                                    - generic:
+                                      - generic: "9"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                        - cell "2 5 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "2 7 . 8 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                            - generic: °C
+                        - cell "4 6 . 0 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "4"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                            - generic: "%"
+                        - cell "8 6 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "8"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-C-07-DEV-27"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-D-02 2026-05-25 12:00 2 0 9 . 4 9 8 . 3 2 2 . 2 2 7 . 4 °C 5 3 . 7 % 9 8 . 0 BLDG-D-02-DEV-22 预警":
+                        - cell "BLDG-D-02"
+                        - cell "2026-05-25 12:00":
+                          - generic: 2026-05-25 12:00
+                        - cell "2 0 9 . 4":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "0"
+                                    - generic:
+                                      - generic: "9"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                        - cell "9 8 . 3":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "3"
+                        - cell "2 2 . 2":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                        - cell "2 7 . 4 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                            - generic: °C
+                        - cell "5 3 . 7 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "7"
+                            - generic: "%"
+                        - cell "9 8 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-D-02-DEV-22"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-A-03 2026-05-25 06:00 1 7 1 . 9 9 1 . 9 2 2 . 4 2 6 . 9 °C 5 0 . 8 % 9 2 . 0 BLDG-A-03-DEV-16 预警":
+                        - cell "BLDG-A-03"
+                        - cell "2026-05-25 06:00":
+                          - generic: 2026-05-25 06:00
+                        - cell "1 7 1 . 9":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "7"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                        - cell "9 1 . 9":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                        - cell "2 2 . 4":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "4"
+                        - cell "2 6 . 9 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "6"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                            - generic: °C
+                        - cell "5 0 . 8 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "0"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                            - generic: "%"
+                        - cell "9 2 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "9"
+                                    - generic:
+                                      - generic: "2"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-A-03-DEV-16"
+                        - cell "预警":
+                          - generic: 预警
+                      - row "BLDG-B-01 2026-05-25 06:00 1 4 7 . 7 5 8 . 2 1 7 . 1 2 5 . 8 °C 5 3 . 9 % 6 1 . 0 BLDG-B-01-DEV-24 正常":
+                        - cell "BLDG-B-01"
+                        - cell "2026-05-25 06:00":
+                          - generic: 2026-05-25 06:00
+                        - cell "1 4 7 . 7":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "4"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "7"
+                        - cell "5 8 . 2":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "8"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "2"
+                        - cell "1 7 . 1":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "1"
+                                    - generic:
+                                      - generic: "7"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "1"
+                        - cell "2 5 . 8 °C":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "2"
+                                    - generic:
+                                      - generic: "5"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "8"
+                            - generic: °C
+                        - cell "5 3 . 9 %":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "5"
+                                    - generic:
+                                      - generic: "3"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "9"
+                            - generic: "%"
+                        - cell "6 1 . 0":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: "6"
+                                    - generic:
+                                      - generic: "1"
+                                  - generic:
+                                    - generic:
+                                      - generic: .
+                                    - generic:
+                                      - generic: "0"
+                        - cell "BLDG-B-01-DEV-24"
+                        - cell "正常":
+                          - generic: 正常
+          - generic:
+            - generic: "1"
+            - generic: Issue
+      - generic [ref=e418]:
+        - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+        - generic [ref=e419]:
+          - generic [ref=e420]:
+            - generic [ref=e421]:
+              - heading "智慧运维" [level=1] [ref=e422]
+              - generic [ref=e423]: 公寓楼(BLDG-APT) / 全部设备
+            - generic [ref=e424]:
+              - generic [ref=e425]:
+                - img [ref=e426]
+                - generic [ref=e428]: 筛选范围
+                - combobox "筛选范围" [ref=e429]:
+                  - option "全部设备" [selected]
+                  - option "暖通设备"
+                  - option "电气回路"
+                  - option "给排水设备"
+                - img [ref=e430]
+              - generic [ref=e432]: 健康运行
+              - generic [ref=e434]: 15:05:11
+              - generic [ref=e435]:
+                - img [ref=e436]
+                - text: 多云 26°C
+          - generic [ref=e441]:
+            - generic [ref=e443]:
+              - generic [ref=e444]:
+                - generic [ref=e445]:
+                  - generic [ref=e446]: 站点健康度
+                  - generic [ref=e448]:
+                    - generic [ref=e452]:
+                      - generic [ref=e454]: "9"
+                      - generic [ref=e456]: "7"
+                    - generic [ref=e457]: 分
+                - img [ref=e459]
+              - generic [ref=e462]: 较昨日 +2
+            - generic [ref=e464]:
+              - generic [ref=e465]:
+                - generic [ref=e466]:
+                  - generic [ref=e467]: 活跃告警
+                  - generic [ref=e469]:
+                    - generic [ref=e475]: "5"
+                    - generic [ref=e476]: 条
+                - img [ref=e478]
+              - generic [ref=e480]: 高优 1 · 中优 3 · 低优 1
+            - generic [ref=e482]:
+              - generic [ref=e483]:
+                - generic [ref=e484]:
+                  - generic [ref=e485]: 待处理工单
+                  - generic [ref=e487]:
+                    - generic [ref=e493]: "2"
+                    - generic [ref=e494]: 条
+                - img [ref=e496]
+              - generic [ref=e499]: 超期 0 · 即将到期 1
+            - generic [ref=e501]:
+              - generic [ref=e502]:
+                - generic [ref=e503]:
+                  - generic [ref=e504]: 巡检覆盖率
+                  - generic [ref=e506]:
+                    - generic [ref=e510]:
+                      - generic [ref=e512]: "9"
+                      - generic [ref=e514]: "9"
+                    - generic [ref=e515]: "%"
+                - img [ref=e517]
+              - generic [ref=e524]: 本月累计 412 次
+            - generic [ref=e526]:
+              - generic [ref=e527]:
+                - generic [ref=e528]:
+                  - generic [ref=e529]: 智能体状态
+                  - generic [ref=e530]: 已接入
+                - img [ref=e532]
+              - generic [ref=e535]: 平均响应 1.2s · v2.4.1
+          - generic [ref=e536]:
+            - generic [ref=e537]:
+              - generic [ref=e539]:
+                - generic: ///
+                - generic [ref=e541]:
+                  - img [ref=e543]
+                  - heading "优先事项" [level=3] [ref=e547]: 优先事项
+                - generic [ref=e551]: 优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。处置重点是过滤器压差、阀门开度和送回风温差,责任人为暖通运维一组;今天 16:30 前完成现场复核,若负荷 30 分钟内未回落,同步调整新风策略并升级为值班长复核。
+              - generic [ref=e554]:
+                - generic: ///
+                - generic [ref=e555]:
+                  - generic [ref=e556]:
+                    - img [ref=e558]
+                    - heading "告警中心" [level=3] [ref=e561]: 告警中心
+                  - generic [ref=e565]: 5 条活跃
+                - generic [ref=e567]:
+                  - article [ref=e568]:
+                    - generic [ref=e569]:
+                      - generic [ref=e570]:
+                        - heading "BLDG-APT-3F 新风机组 负荷偏高" [level=4] [ref=e571]
+                        - generic [ref=e572]:
+                          - generic [ref=e573]:
+                            - generic [ref=e574]: 位置
+                            - text: Level 3 西侧设备间
+                          - generic [ref=e575]:
+                            - generic [ref=e576]: 当前值
+                            - text: 112.4 kWh
+                          - generic [ref=e577]:
+                            - generic [ref=e578]: 基线偏差
+                            - text: +29.8%
+                          - generic [ref=e579]:
+                            - generic [ref=e580]: 发生时间
+                            - text: 19:42
+                      - generic [ref=e581]:
+                        - generic [ref=e582]: 高优
+                        - generic [ref=e583]: 处理中
+                    - generic [ref=e584]: 优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。暖通运维一组需先核查过滤器压差、阀门开度和送回风温差,今晚复核后回填处理记录。
+                    - button "查看详情" [ref=e586] [cursor=pointer]
+                  - article [ref=e587]:
+                    - generic [ref=e588]:
+                      - generic [ref=e589]:
+                        - heading "BLDG-APT-2F 公区照明回路 夜间未闭锁" [level=4] [ref=e590]
+                        - generic [ref=e591]:
+                          - generic [ref=e592]:
+                            - generic [ref=e593]: 位置
+                            - text: Level 2 公区走廊
+                          - generic [ref=e594]:
+                            - generic [ref=e595]: 当前值
+                            - text: 78.8 kWh
+                          - generic [ref=e596]:
+                            - generic [ref=e597]: 基线偏差
+                            - text: +16.4%
+                          - generic [ref=e598]:
+                            - generic [ref=e599]: 发生时间
+                            - text: 19:18
+                      - generic [ref=e600]:
+                        - generic [ref=e601]: 中优
+                        - generic [ref=e602]: 已派单
+                    - generic [ref=e603]: 已派单给电气运维二组，复核 21:00-06:00 定时闭锁与人体感应阈值。
+                    - button "查看详情" [ref=e605] [cursor=pointer]
+                  - article [ref=e606]:
+                    - generic [ref=e607]:
+                      - generic [ref=e608]:
+                        - heading "BLDG-APT-B1 水泵 频繁启停" [level=4] [ref=e609]
+                        - generic [ref=e610]:
+                          - generic [ref=e611]:
+                            - generic [ref=e612]: 位置
+                            - text: 地下设备层
+                          - generic [ref=e613]:
+                            - generic [ref=e614]: 当前值
+                            - text: 11 次/小时
+                          - generic [ref=e615]:
+                            - generic [ref=e616]: 基线偏差
+                            - text: 较基线 +6 次/小时
+                          - generic [ref=e617]:
+                            - generic [ref=e618]: 发生时间
+                            - text: 18:55
+                      - generic [ref=e619]:
+                        - generic [ref=e620]: 中优
+                        - generic [ref=e621]: 待处理
+                    - generic [ref=e622]: 待给排水组现场复核止回阀状态、压差传感器采样和启停阈值。
+                    - button "查看详情" [ref=e624] [cursor=pointer]
+                  - article [ref=e625]:
+                    - generic [ref=e626]:
+                      - generic [ref=e627]:
+                        - heading "BLDG-APT-5F 空调机组 回风温度异常" [level=4] [ref=e628]
+                        - generic [ref=e629]:
+                          - generic [ref=e630]:
+                            - generic [ref=e631]: 位置
+                            - text: Level 5
+                          - generic [ref=e632]:
+                            - generic [ref=e633]: 当前值
+                            - text: 28.6°C
+                          - generic [ref=e634]:
+                            - generic [ref=e635]: 基线偏差
+                            - text: +3.2°C
+                          - generic [ref=e636]:
+                            - generic [ref=e637]: 发生时间
+                            - text: 17:30
+                      - generic [ref=e638]:
+                        - generic [ref=e639]: 中优
+                        - generic [ref=e640]: 待处理
+                    - generic [ref=e641]: 待暖通值班员检查回风传感器、冷冻水阀门开度和末端风量。
+                    - button "查看详情" [ref=e643] [cursor=pointer]
+                  - article [ref=e644]:
+                    - generic [ref=e645]:
+                      - generic [ref=e646]:
+                        - heading "BLDG-APT-RF 屋顶冷却塔 风机振动告警" [level=4] [ref=e647]
+                        - generic [ref=e648]:
+                          - generic [ref=e649]:
+                            - generic [ref=e650]: 位置
+                            - text: 屋面
+                          - generic [ref=e651]:
+                            - generic [ref=e652]: 当前值
+                            - text: 4.8 mm/s
+                          - generic [ref=e653]:
+                            - generic [ref=e654]: 基线偏差
+                            - text: 较阈值 +0.6 mm/s
+                          - generic [ref=e655]:
+                            - generic [ref=e656]: 发生时间
+                            - text: 16:12
+                      - generic [ref=e657]:
+                        - generic [ref=e658]: 低优
+                        - generic [ref=e659]: 已确认
+                    - generic [ref=e660]: 已确认并纳入本周巡检，优先检查风机轴承、紧固件和基础减振状态。
+                    - button "查看详情" [ref=e662] [cursor=pointer]
+              - generic [ref=e664]:
+                - generic: ///
+                - generic [ref=e665]:
+                  - generic [ref=e666]:
+                    - img [ref=e668]
+                    - heading "巡检与工单" [level=3] [ref=e672]: 巡检与工单
+                  - generic [ref=e676]: 待办 2 · 处理中 1 · 超期 0
+                - generic [ref=e678]:
+                  - article [ref=e679]:
+                    - generic [ref=e680]:
+                      - generic [ref=e681]:
+                        - generic [ref=e682]: WO-BUILDING-031
+                        - heading "处置 3F 新风机组负荷偏高" [level=4] [ref=e683]
+                        - generic [ref=e684]:
+                          - generic [ref=e685]: 责任人 暖通运维一组
+                          - generic [ref=e686]: 截止 今天 16:30
+                          - generic [ref=e687]: 处理中
+                      - generic [ref=e689]:
+                        - generic [ref=e693]:
+                          - generic [ref=e695]: "6"
+                          - generic [ref=e697]: "5"
+                        - text: "%"
+                  - article [ref=e700]:
+                    - generic [ref=e701]:
+                      - generic [ref=e702]:
+                        - generic [ref=e703]: WO-BUILDING-032
+                        - heading "复核 2F 公区照明回路夜间未闭锁" [level=4] [ref=e704]
+                        - generic [ref=e705]:
+                          - generic [ref=e706]: 责任人 电气运维二组
+                          - generic [ref=e707]: 截止 明天 10:00
+                          - generic [ref=e708]: 待复核
+                      - generic [ref=e710]:
+                        - generic [ref=e714]:
+                          - generic [ref=e716]: "3"
+                          - generic [ref=e718]: "0"
+                        - text: "%"
+              - generic [ref=e722]:
+                - generic: ///
+                - generic [ref=e724]:
+                  - img [ref=e726]
+                  - heading "待优化项" [level=3] [ref=e729]: 待优化项
+                - generic [ref=e733]:
+                  - button "1 完成 3F 新风机组过滤器更换 查看 暖通组负责，本周内完成并回填复核记录。" [ref=e734] [cursor=pointer]:
+                    - generic [ref=e735]:
+                      - generic [ref=e736]: "1"
+                      - generic [ref=e737]: 完成 3F 新风机组过滤器更换
+                      - generic [ref=e738]: 查看
+                    - generic [ref=e739]: 暖通组负责，本周内完成并回填复核记录。
+                  - button "2 复核 2F 公区照明感应阈值 查看" [ref=e740] [cursor=pointer]:
+                    - generic [ref=e741]:
+                      - generic [ref=e742]: "2"
+                      - generic [ref=e743]: 复核 2F 公区照明感应阈值
+                      - generic [ref=e744]: 查看
+                  - button "3 校准 B1 水泵压差报警阈值 查看" [ref=e745] [cursor=pointer]:
+                    - generic [ref=e746]:
+                      - generic [ref=e747]: "3"
+                      - generic [ref=e748]: 校准 B1 水泵压差报警阈值
+                      - generic [ref=e749]: 查看
+            - generic [ref=e750]:
+              - generic [ref=e752]:
+                - generic: ///
+                - generic [ref=e754]:
+                  - img [ref=e756]
+                  - heading "当前运维焦点" [level=3] [ref=e764]: 当前运维焦点
+                - generic [ref=e768]:
+                  - button "BLDG-APT-3F 新风机组 负荷偏高 Level 3 西侧设备间 · 112.4 kWh" [ref=e769] [cursor=pointer]:
+                    - generic [ref=e771]: BLDG-APT-3F 新风机组 负荷偏高
+                    - generic [ref=e773]: Level 3 西侧设备间 · 112.4 kWh
+                  - button "BLDG-APT-2F 公区照明回路 夜间未闭锁 Level 2 公区走廊 · 78.8 kWh" [ref=e774] [cursor=pointer]:
+                    - generic [ref=e776]: BLDG-APT-2F 公区照明回路 夜间未闭锁
+                    - generic [ref=e778]: Level 2 公区走廊 · 78.8 kWh
+                  - button "BLDG-APT-B1 水泵 频繁启停 地下设备层 · 11 次/小时" [ref=e779] [cursor=pointer]:
+                    - generic [ref=e781]: BLDG-APT-B1 水泵 频繁启停
+                    - generic [ref=e783]: 地下设备层 · 11 次/小时
+                  - button "BLDG-APT-5F 空调机组 回风温度异常 Level 5 · 28.6°C" [ref=e784] [cursor=pointer]:
+                    - generic [ref=e786]: BLDG-APT-5F 空调机组 回风温度异常
+                    - generic [ref=e788]: Level 5 · 28.6°C
+              - generic [ref=e790]:
+                - generic: ///
+                - generic [ref=e791]:
+                  - generic [ref=e792]:
+                    - img [ref=e794]
+                    - heading "智能体问答" [level=3] [ref=e798]: 智能体问答
+                  - generic [ref=e802]: 已接入
+                - generic [ref=e805]:
+                  - generic [ref=e806]:
+                    - button "总结当前能耗情况" [ref=e807] [cursor=pointer]
+                    - button "峰值出现在什么时段?" [ref=e808] [cursor=pointer]
+                    - button "给我三条优化建议" [ref=e809] [cursor=pointer]
+                    - button "列出当前高能耗设备" [ref=e810] [cursor=pointer]
+                  - generic [ref=e811]:
+                    - generic [ref=e814]: 总结当前能耗情况
+                    - generic [ref=e815]:
+                      - generic [ref=e816]:
+                        - generic [ref=e817]: AI
+                        - generic [ref=e818]: "【问题理解】 快速掌握公寓楼当前整体能耗状况与异常点。 【核心结论】 整体能耗在合理区间,但有 2 个重点异常:BLDG-APT-3F 新风机组负荷 高于基线 29.8%,需优先处置;2F 公区照明夜间未按计划闭锁,产生 16.4% 的无效负荷。 【分析依据】 ● 数据依据:近 1 小时新风机组负荷 112.4 kWh(基线 86.6 kWh); 2F 公区照明夜间负荷 78.8 kWh(基线 67.7 kWh)。 ● 知识依据:基线取自过去 30 天同时段加权平均。 【原因分析】 ● 新风机组:阀门开度异常或过滤器压差超标,导致风机长时间高频运转 (可能性高)。 ● 公区照明:人体感应阈值过低或定时控制策略失效,触发夜间常亮 (可能性中)。 【排查与优化建议】 ● 排查步骤: 1. 现场核查 3F 新风机组过滤器压差与送回风温差 2. 调取 2F 照明回路 21:00–06:00 控制日志 ● 优化措施: - 短期:推进工单 WO-BUILDING-031,今晚前完成新风机组复核; 调整 2F 公区照明定时策略至 22:00 强制闭锁 - 中长期:为新风机组增配振动传感器,接入预测性维护模型; 统一公区照明人体感应阈值标准"
+                      - generic [ref=e819]:
+                        - button "新风机组的能耗趋势怎么样?" [ref=e820] [cursor=pointer]
+                        - button "怎么排查照明回路夜间未闭锁?" [ref=e821] [cursor=pointer]
+                  - generic [ref=e822]:
+                    - generic [ref=e823]:
+                      - generic [ref=e824]: 输入问题
+                      - textbox "输入问题" [ref=e825]:
+                        - /placeholder: 例如:3F 新风机组为什么负荷偏高?
+                    - button "发送" [ref=e826] [cursor=pointer]:
+                      - img [ref=e827]
+          - generic [ref=e832]:
+            - generic [ref=e833]: 上次同步 0s 前
+            - generic [ref=e835]: 在线运维人员 7 人
+            - generic [ref=e836]: 今日已处理工单 8 件
+            - generic [ref=e837]: 今日新增告警 237 条
+  - alert [ref=e838]

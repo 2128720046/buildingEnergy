@@ -1,0 +1,52 @@
+{
+  "label": "after-S2-new",
+  "capturedAt": "2026-05-25T06:06:23.499Z",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "results": [
+    {
+      "key": "data-analysis",
+      "slug": "data-analysis",
+      "url": "http://localhost:3002/?workspace=data-analysis",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-new-data-analysis.png",
+      "metrics": {
+        "fpsAvg5s": 20.56,
+        "longTaskCount10s": 65,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 98.04,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    },
+    {
+      "key": "energy-query",
+      "slug": "energy-insights",
+      "url": "http://localhost:3002/?workspace=energy-query",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-new-energy-insights.png",
+      "metrics": {
+        "fpsAvg5s": 18.78,
+        "longTaskCount10s": 72,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 89.06,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    },
+    {
+      "key": "smart-operations",
+      "slug": "smart-operations",
+      "url": "http://localhost:3002/?workspace=smart-operations",
+      "screenshotPath": "C:\\Users\\asus\\Desktop\\files\\Coding\\Web\\BuildingEnergy\\buildingEnergy\\output\\perf\\screenshots\\after-S2-new-smart-operations.png",
+      "metrics": {
+        "fpsAvg5s": 21.03,
+        "longTaskCount10s": 59,
+        "reactCommitCount10s": 0,
+        "reactCommitAvgDurationMs": 0,
+        "jsHeapSteadyMB": 112.43,
+        "note": "React commit count uses pre-injected React DevTools hook; avg duration is hook callback time."
+      }
+    }
+  ]
+}

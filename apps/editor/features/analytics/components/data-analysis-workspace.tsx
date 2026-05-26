@@ -2,7 +2,7 @@
 
 import NumberFlow from '@number-flow/react'
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BevelCard,
   Pill,
@@ -558,7 +558,7 @@ function RealtimeSyncWidget({ seconds }: { seconds: number }) {
   )
 }
 
-function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
+const DashboardToastStack = memo(function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
   return (
     <div className="dashboard-toast-stack fixed right-5 top-[138px] z-40 flex w-[330px] flex-col gap-2">
       {toasts.map((toast) => (
@@ -569,7 +569,7 @@ function DashboardToastStack({ toasts }: { toasts: DashboardToast[] }) {
       ))}
     </div>
   )
-}
+})
 
 function metricTooltip(metric: MonitoringMetric): DashboardTooltipContent {
   const parsed = parseMetricValue(metric.value)
@@ -864,11 +864,14 @@ function useRealtimeMonitoringModel(projectId: string) {
   useEffect(() => {
     let tableTimer: number | undefined
     let eventTimer: number | undefined
+    const setNonUrgentState = (update: Parameters<typeof setState>[0]) => {
+      startTransition(() => setState(update))
+    }
 
     const scheduleTableInsert = () => {
       tableTimer = window.setTimeout(
         () => {
-          setState((current) => {
+          setNonUrgentState((current) => {
             const newRecord = createLiveMonitoringRecord(Date.now())
             const nextModel = updateLiveMetrics({
               ...current.model,
@@ -916,7 +919,7 @@ function useRealtimeMonitoringModel(projectId: string) {
     }
 
     const triggerRandomEvent = () => {
-      setState((current) => {
+      setNonUrgentState((current) => {
         const eventType = randomInt(1, 4)
         const stats = statsFromModel(current.model)
 
@@ -1023,19 +1026,19 @@ function useRealtimeMonitoringModel(projectId: string) {
 
     const timers = [
       window.setInterval(() => {
-        setState((current) => ({
+        setNonUrgentState((current) => ({
           ...current,
           lastSyncSeconds: current.lastSyncSeconds + 1,
         }))
       }, 1000),
       window.setInterval(() => {
-        setState((current) => ({
+        setNonUrgentState((current) => ({
           ...current,
           model: updateLiveMetrics(current.model),
         }))
       }, 2000),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const model = current.model
           const currentSlotIndex = getCurrentSlotIndex()
           const hourlySeries = model.hourlySeries.map((point, index) => {
@@ -1087,7 +1090,7 @@ function useRealtimeMonitoringModel(projectId: string) {
         })
       }, 8000),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const energyIncrement = randomBetween(5, 30)
           const todayEnergy = getMetricNumber(current.model.metrics, '今日累计') + energyIncrement
           const crossedThousand =
@@ -1123,7 +1126,7 @@ function useRealtimeMonitoringModel(projectId: string) {
       }, 10_000),
       window.setInterval(
         () => {
-          setState((current) => {
+          setNonUrgentState((current) => {
             if (Math.random() < 0.5) return current
 
             const stats = statsFromModel(current.model)
@@ -1159,7 +1162,7 @@ function useRealtimeMonitoringModel(projectId: string) {
         randomInt(30_000, 60_000),
       ),
       window.setInterval(() => {
-        setState((current) => {
+        setNonUrgentState((current) => {
           const stats = statsFromModel(current.model)
           const warningDelta = randomInt(-1, 1)
           const normalDelta = -warningDelta
@@ -1583,7 +1586,7 @@ export interface DataAnalysisWorkspaceProps {
   selectedComponentName: string
 }
 
-function MetricCard({ metric }: { metric: MonitoringMetric }) {
+const MetricCard = memo(function MetricCard({ metric }: { metric: MonitoringMetric }) {
   const accent = metricToneColor(metric.tone)
   const parsedValue = parseMetricValue(metric.value)
   const metricIcon: Record<MonitoringMetric['tone'], PanelIconKind> = {
@@ -1628,9 +1631,9 @@ function MetricCard({ metric }: { metric: MonitoringMetric }) {
       </div>
     </BevelCard>
   )
-}
+})
 
-function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
+const HealthGaugePanel = memo(function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
   const angle = (model.performanceScore / 100) * 360
   const maintenanceBucket = model.statusDistribution.find((bucket) => bucket.tone === 'amber')
   const offlineBucket = model.statusDistribution.find((bucket) => bucket.tone === 'slate')
@@ -1768,9 +1771,9 @@ function HealthGaugePanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const DailyLoadPanel = memo(function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const [hoveredDailyIndex, setHoveredDailyIndex] = useState<number | null>(null)
   const [scanIndex, setScanIndex] = useState(0)
   const lineProgress = useLoopProgress(6000)
@@ -1991,36 +1994,44 @@ function DailyLoadPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const [hoveredHourlyIndex, setHoveredHourlyIndex] = useState<number | null>(null)
   const currentSlotIndex = getCurrentSlotIndex()
   const chartWidth = 460
   const chartHeight = 210
   const padding = 24
-  const maxHourlyElectricity = Math.max(...model.hourlySeries.map((point) => point.electricity), 1)
-  const maxHourlyOccupancy = Math.max(...model.hourlySeries.map((point) => point.occupancy), 1)
-  const minHourlyElectricity = Math.min(...model.hourlySeries.map((point) => point.electricity))
-  const swing = maxHourlyElectricity - minHourlyElectricity
-  const peakPoint = model.hourlySeries.reduce((best, point) =>
-    point.electricity > best.electricity ? point : best,
-  )
-  const quietPoint = model.hourlySeries.reduce((best, point) =>
-    point.electricity < best.electricity ? point : best,
-  )
-  const electricityBars = buildBars(
-    model.hourlySeries.map((point) => point.electricity),
-    chartWidth,
-    chartHeight,
-    padding,
-  )
-  const occupancyPoints = buildLinePoints(
-    model.hourlySeries.map((point) => point.occupancy),
-    chartWidth,
-    chartHeight,
-    padding,
-  )
+  const {
+    electricityBars,
+    maxHourlyElectricity,
+    maxHourlyOccupancy,
+    occupancyPoints,
+    peakPoint,
+    quietPoint,
+    swing,
+  } = useMemo(() => {
+    const electricityValues = model.hourlySeries.map((point) => point.electricity)
+    const occupancyValues = model.hourlySeries.map((point) => point.occupancy)
+    const maxHourlyElectricity = Math.max(...electricityValues, 1)
+    const minHourlyElectricity = Math.min(...electricityValues)
+    const peakPoint = model.hourlySeries.reduce((best, point) =>
+      point.electricity > best.electricity ? point : best,
+    )
+    const quietPoint = model.hourlySeries.reduce((best, point) =>
+      point.electricity < best.electricity ? point : best,
+    )
+
+    return {
+      electricityBars: buildBars(electricityValues, chartWidth, chartHeight, padding),
+      maxHourlyElectricity,
+      maxHourlyOccupancy: Math.max(...occupancyValues, 1),
+      occupancyPoints: buildLinePoints(occupancyValues, chartWidth, chartHeight, padding),
+      peakPoint,
+      quietPoint,
+      swing: maxHourlyElectricity - minHourlyElectricity,
+    }
+  }, [model.hourlySeries])
 
   return (
     <HudPanel divider={3} icon="load" title="时段负荷关系">
@@ -2291,9 +2302,9 @@ function HourlyPatternPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
+const PeakDevicePanel = memo(function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
   const snapshot = model.peakSnapshot
   const relatedDevices = [
     {
@@ -2458,9 +2469,9 @@ function PeakDevicePanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
+const RiskLayerPanel = memo(function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
   const warningBucket = model.statusDistribution.find((bucket) => bucket.tone === 'rose')
   const maintenanceBucket = model.statusDistribution.find((bucket) => bucket.tone === 'amber')
   const warningTotal = warningBucket?.count ?? 0
@@ -2470,13 +2481,18 @@ function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
     { building: 'BLDG-A-03', ratio: 0.22 },
     { building: 'BLDG-B-01', ratio: 0.2 },
   ]
-  const maxWarningCount = Math.max(
-    ...model.buildingSummaries.map((summary) => summary.warningCount),
-    1,
+  const { maxWarningCount, topRiskBuildings } = useMemo(
+    () => ({
+      maxWarningCount: Math.max(
+        ...model.buildingSummaries.map((summary) => summary.warningCount),
+        1,
+      ),
+      topRiskBuildings: [...model.buildingSummaries]
+        .sort((a, b) => b.warningCount - a.warningCount || a.efficiencyScore - b.efficiencyScore)
+        .slice(0, 3),
+    }),
+    [model.buildingSummaries],
   )
-  const topRiskBuildings = [...model.buildingSummaries]
-    .sort((a, b) => b.warningCount - a.warningCount || a.efficiencyScore - b.efficiencyScore)
-    .slice(0, 3)
 
   return (
     <HudPanel contentClassName="[&>div:first-child]:mb-3" divider={5} icon="risk" title="风险分层">
@@ -2578,9 +2594,9 @@ function RiskLayerPanel({ model }: { model: MonitoringAnalyticsModel }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function RelationshipScatterPanel({
+const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
   correlation,
   points,
   title,
@@ -2608,25 +2624,32 @@ function RelationshipScatterPanel({
   const chartWidth = 720
   const chartHeight = 330
   const padding = 42
-  const visiblePoints = points.filter((point) => !hiddenTones.has(point.tone))
-  const scatterPoints = buildScatterPoints(
-    visiblePoints,
-    chartWidth,
-    chartHeight,
-    padding,
-    xAccessor,
-    yAccessor,
+  const visiblePoints = useMemo(
+    () => points.filter((point) => !hiddenTones.has(point.tone)),
+    [hiddenTones, points],
+  )
+  const scatterPoints = useMemo(
+    () => buildScatterPoints(visiblePoints, chartWidth, chartHeight, padding, xAccessor, yAccessor),
+    [visiblePoints, xAccessor, yAccessor],
   )
   const chartId = xLabel.includes('温度') || xLabel.includes('度') ? 'temperature' : 'occupancy'
   const trendId = `scatterTrend-${chartId}`
   const pointGlowId = `scatterPointGlow-${chartId}`
-  const trendLine = buildTrendLine(scatterPoints, padding, chartWidth, chartHeight)
-  const warningCount = points.filter(
-    (point) => point.tone === 'amber' || point.tone === 'rose',
-  ).length
-  const riskSamples = points.filter(
-    (point) => point.electricity > 170 && (xAccessor(point) > 70 || point.tone === 'rose'),
-  ).length
+  const trendLine = useMemo(
+    () => buildTrendLine(scatterPoints, padding, chartWidth, chartHeight),
+    [scatterPoints],
+  )
+  const warningCount = useMemo(
+    () => points.filter((point) => point.tone === 'amber' || point.tone === 'rose').length,
+    [points],
+  )
+  const riskSamples = useMemo(
+    () =>
+      points.filter(
+        (point) => point.electricity > 170 && (xAccessor(point) > 70 || point.tone === 'rose'),
+      ).length,
+    [points, xAccessor],
+  )
   const trendTravelPoint = trendLine
     ? {
         x: trendLine.x1 + (trendLine.x2 - trendLine.x1) * trendProgress,
@@ -3013,23 +3036,28 @@ function RelationshipScatterPanel({
       </div>
     </HudPanel>
   )
-}
+})
 
-function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
+const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
   const [hoveredHeatmap, setHoveredHeatmap] = useState<{
     date?: string
     hour?: string
     mode: 'cell' | 'column' | 'row'
   } | null>(null)
   const [sampledCellKey, setSampledCellKey] = useState<string | null>(null)
-  const dates = [...new Set(heatmap.map((item) => item.date))]
-  const hours = [...new Set(heatmap.map((item) => item.hour))]
-  const peakElectricity = Math.max(...heatmap.map((item) => item.electricity), 1)
-  const averageElectricity =
-    heatmap.reduce((sum, item) => sum + item.electricity, 0) / Math.max(heatmap.length, 1)
-  const peakCell = heatmap.reduce(
-    (best, item) => (item.electricity > best.electricity ? item : best),
-    heatmap[0] ?? { date: '-', electricity: 0, hour: '--:--', intensity: 0, occupancy: 0 },
+  const { averageElectricity, dates, hours, peakCell, peakElectricity } = useMemo(
+    () => ({
+      averageElectricity:
+        heatmap.reduce((sum, item) => sum + item.electricity, 0) / Math.max(heatmap.length, 1),
+      dates: [...new Set(heatmap.map((item) => item.date))],
+      hours: [...new Set(heatmap.map((item) => item.hour))],
+      peakCell: heatmap.reduce(
+        (best, item) => (item.electricity > best.electricity ? item : best),
+        heatmap[0] ?? { date: '-', electricity: 0, hour: '--:--', intensity: 0, occupancy: 0 },
+      ),
+      peakElectricity: Math.max(...heatmap.map((item) => item.electricity), 1),
+    }),
+    [heatmap],
   )
 
   useIntervalTick(() => {
@@ -3253,9 +3281,9 @@ function HeatmapPanel({ heatmap }: { heatmap: MonitoringHeatmapCell[] }) {
       </div>
     </HudPanel>
   )
-}
+})
 
-function CompositionPanel({
+const CompositionPanel = memo(function CompositionPanel({
   composition,
   statusDistribution,
 }: {
@@ -3263,30 +3291,34 @@ function CompositionPanel({
   statusDistribution: MonitoringStatusBucket[]
 }) {
   const [hoveredComposition, setHoveredComposition] = useState<string | null>(null)
-  const total = composition.reduce((sum, item) => sum + item.value, 0)
-  const maxCompositionValue = Math.max(...composition.map((item) => item.value), 1)
-  let currentAngle = -88
-  const compositionArcs = composition.map((item, index) => {
-    const angle = total === 0 ? 0 : (item.value / total) * 360
-    const gap = 2.2
-    const startAngle = currentAngle + gap / 2
-    const endAngle = currentAngle + angle - gap / 2
-    currentAngle += angle
-    const midAngle = (startAngle + endAngle) / 2
-    const lift = polarToCartesian(0, 0, 5, midAngle)
-    const ratio = total === 0 ? 0 : (item.value / total) * 100
+  const { compositionArcs, maxCompositionValue, total } = useMemo(() => {
+    const total = composition.reduce((sum, item) => sum + item.value, 0)
+    const maxCompositionValue = Math.max(...composition.map((item) => item.value), 1)
+    let currentAngle = -88
+    const compositionArcs = composition.map((item, index) => {
+      const angle = total === 0 ? 0 : (item.value / total) * 360
+      const gap = 2.2
+      const startAngle = currentAngle + gap / 2
+      const endAngle = currentAngle + angle - gap / 2
+      currentAngle += angle
+      const midAngle = (startAngle + endAngle) / 2
+      const lift = polarToCartesian(0, 0, 5, midAngle)
+      const ratio = total === 0 ? 0 : (item.value / total) * 100
 
-    return {
-      ...item,
-      endAngle,
-      gradientId: `compositionGradient-${index}`,
-      highlightId: `compositionHighlight-${index}`,
-      lift,
-      midAngle,
-      ratio,
-      startAngle,
-    }
-  })
+      return {
+        ...item,
+        endAngle,
+        gradientId: `compositionGradient-${index}`,
+        highlightId: `compositionHighlight-${index}`,
+        lift,
+        midAngle,
+        ratio,
+        startAngle,
+      }
+    })
+
+    return { compositionArcs, maxCompositionValue, total }
+  }, [composition])
 
   return (
     <HudPanel
@@ -3537,9 +3569,9 @@ function CompositionPanel({
       </div>
     </HudPanel>
   )
-}
+})
 
-function DetailTable({
+const DetailTable = memo(function DetailTable({
   model,
   sampleCount,
   sampleRate,
@@ -3773,11 +3805,12 @@ function DetailTable({
       </div>
     </HudPanel>
   )
-}
+})
 
 export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspaceProps) {
   const realtime = useRealtimeMonitoringModel(projectId)
-  const { model } = realtime
+  const deferredModel = useDeferredValue(realtime.model)
+  const model = deferredModel
 
   return (
     <div className="relative h-full overflow-auto bg-[#020817]/35 text-cyan-50">

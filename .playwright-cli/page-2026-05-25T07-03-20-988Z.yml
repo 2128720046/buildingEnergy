@@ -1,0 +1,2084 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - navigation "Workspace navigation" [ref=e5]:
+        - button "能耗查询" [ref=e6] [cursor=pointer]:
+          - img [ref=e7]
+          - generic [ref=e9]: 能耗查询
+        - button "数据分析" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+          - generic [ref=e13]: 数据分析
+        - button "智慧运维" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e17]: 智慧运维
+      - generic:
+        - generic:
+          - img
+          - generic: 建筑能耗管理与运维系统
+      - generic [ref=e18]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: 系统在线
+          - generic [ref=e23]: 健康运行
+        - generic [ref=e26]:
+          - generic [ref=e27]: 05/25周一
+          - generic [ref=e28]: 15:03:20
+        - generic [ref=e32]:
+          - generic [ref=e33]: 多云
+          - generic [ref=e34]: 26°C
+        - generic [ref=e36]:
+          - button "消息提醒" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+          - button "系统设置" [ref=e41] [cursor=pointer]:
+            - img [ref=e42]
+    - generic [ref=e44]:
+      - generic:
+        - generic:
+          - button "收起侧边栏":
+            - img
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - button "场景"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: No buildings yet
+                - generic:
+                  - generic:
+                    - generic [ref=e45]:
+                      - button "收起侧边栏" [ref=e47] [cursor=pointer]:
+                        - img [ref=e48]
+                      - generic [ref=e51]:
+                        - button "三维" [ref=e52] [cursor=pointer]:
+                          - generic [ref=e53]: 三维
+                        - button "二维" [ref=e54] [cursor=pointer]:
+                          - generic [ref=e55]: 二维
+                        - button "分屏" [ref=e56] [cursor=pointer]:
+                          - img [ref=e57]
+                          - generic [ref=e59]: 分屏
+                    - generic [ref=e61]:
+                      - generic [ref=e62]:
+                        - button "堆叠" [ref=e63] [cursor=pointer]:
+                          - generic [ref=e64]: 堆叠
+                        - button "完整墙体 完整墙体" [ref=e65] [cursor=pointer]:
+                          - img "完整墙体" [ref=e66]
+                          - generic [ref=e67]: 完整墙体
+                        - button "m" [ref=e69] [cursor=pointer]:
+                          - generic [ref=e70]: m
+                        - button [ref=e71] [cursor=pointer]:
+                          - img [ref=e72]
+                        - button [ref=e78] [cursor=pointer]
+                      - button "导入" [ref=e79] [cursor=pointer]
+                      - button "编辑中" [ref=e80] [cursor=pointer]:
+                        - img [ref=e82]
+                        - text: 编辑中
+                  - generic [ref=e88]:
+                    - generic [ref=e89]:
+                      - button "选择 V" [ref=e90] [cursor=pointer]:
+                        - img "选择" [ref=e92]
+                        - generic [ref=e94]: V
+                      - button [ref=e95] [cursor=pointer]
+                      - button "编辑场地" [ref=e97] [cursor=pointer]:
+                        - img "编辑场地" [ref=e99]
+                      - button "建模 B" [ref=e100] [cursor=pointer]:
+                        - img "建模" [ref=e102]
+                        - generic [ref=e104]: B
+                      - button "布置 F" [ref=e105] [cursor=pointer]:
+                        - img "布置" [ref=e107]
+                        - generic [ref=e109]: F
+                      - button "区域 Z" [ref=e110] [cursor=pointer]:
+                        - img "区域" [ref=e112]
+                        - generic [ref=e114]: Z
+                      - button "D" [ref=e115] [cursor=pointer]:
+                        - generic [ref=e116]:
+                          - img
+                        - generic [ref=e118]: D
+                    - generic [ref=e120]:
+                      - generic [ref=e121]:
+                        - button "扫描模型 0" [ref=e122] [cursor=pointer]:
+                          - generic [ref=e124]:
+                            - img "扫描模型" [ref=e125]
+                            - generic [ref=e126]: "0"
+                        - button "扫描模型设置" [ref=e127] [cursor=pointer]:
+                          - img [ref=e128]
+                      - generic [ref=e130]:
+                        - button "参考图 0" [ref=e131] [cursor=pointer]:
+                          - generic [ref=e133]:
+                            - img "参考图" [ref=e134]
+                            - generic [ref=e135]: "0"
+                        - button "参考图设置" [ref=e136] [cursor=pointer]:
+                          - img [ref=e137]
+                    - generic [ref=e140]:
+                      - button "向左旋转" [ref=e141] [cursor=pointer]:
+                        - img "向左旋转" [ref=e143]
+                      - button "向右旋转" [ref=e144] [cursor=pointer]:
+                        - img "向右旋转" [ref=e146]
+                      - button "顶视图" [ref=e147] [cursor=pointer]:
+                        - img "顶视图" [ref=e149]
+          - generic:
+            - generic:
+              - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+              - generic [ref=e150]:
+                - button "三维" [ref=e151] [cursor=pointer]
+                - button "平面图" [ref=e152] [cursor=pointer]
+                - button "分屏" [ref=e153] [cursor=pointer]
+              - generic:
+                - generic [ref=e156]:
+                  - generic [ref=e157]:
+                    - generic [ref=e159]:
+                      - img [ref=e161]
+                      - heading "告警状态" [level=3] [ref=e164]: 告警状态
+                    - generic [ref=e167]: ✓ 当前无告警，系统运行正常
+                  - generic [ref=e168]:
+                    - generic [ref=e170]:
+                      - img [ref=e172]
+                      - heading "实时功率" [level=3] [ref=e175]: 实时功率
+                    - generic [ref=e178]:
+                      - generic [ref=e180]:
+                        - generic [ref=e187]: "0"
+                        - generic [ref=e188]: kW
+                      - generic [ref=e203]:
+                        - generic [ref=e204]: →0%
+                        - generic [ref=e205]: vs 昨日同时刻
+                  - generic [ref=e206]:
+                    - generic [ref=e208]:
+                      - img [ref=e210]
+                      - heading "能耗强度" [level=3] [ref=e214]: 能耗强度
+                    - generic [ref=e217]:
+                      - generic [ref=e218]:
+                        - generic [ref=e219]: 总电耗
+                        - generic [ref=e220]: "0"
+                        - generic [ref=e221]: kWh
+                      - generic [ref=e222]:
+                        - generic [ref=e223]: 能耗强度
+                        - generic [ref=e224]: "0.00"
+                        - generic [ref=e225]: kWh/m²
+                    - generic [ref=e227]: 0% vs 昨日
+                  - generic [ref=e230]:
+                    - img [ref=e232]
+                    - heading "24h 负荷曲线" [level=3] [ref=e236]: 24h 负荷曲线
+                  - generic [ref=e246]:
+                    - img [ref=e248]
+                    - heading "分项占比" [level=3] [ref=e253]: 分项占比
+                - generic [ref=e263]:
+                  - generic [ref=e266]:
+                    - img [ref=e268]
+                    - heading "楼层能耗排行" [level=3] [ref=e273]: 楼层能耗排行
+                  - generic [ref=e280]:
+                    - generic [ref=e282]:
+                      - img [ref=e284]
+                      - heading "今日峰值" [level=3] [ref=e290]: 今日峰值
+                    - generic [ref=e293]:
+                      - generic [ref=e294]:
+                        - generic [ref=e296]:
+                          - generic [ref=e303]: "0"
+                          - generic [ref=e304]: kW
+                        - generic [ref=e306]: 00:00
+                      - generic [ref=e308]:
+                        - generic [ref=e309]: 当前 0.0 kW
+                        - generic [ref=e310]: 峰值 0.0 kW
+                  - generic [ref=e311]:
+                    - generic [ref=e313]:
+                      - img [ref=e315]
+                      - heading "室内外环境" [level=3] [ref=e318]: 室内外环境
+                    - generic [ref=e321]:
+                      - generic [ref=e322]:
+                        - generic [ref=e325]: 0°
+                        - generic [ref=e326]: 室内温度
+                      - generic [ref=e327]:
+                        - generic [ref=e330]: 0%
+                        - generic [ref=e331]: 室内湿度
+                      - generic [ref=e332]:
+                        - generic [ref=e335]: "0"
+                        - generic [ref=e336]: CO₂
+                      - generic [ref=e337]:
+                        - generic [ref=e340]: 30°
+                        - generic [ref=e341]: 室外温度
+                      - generic [ref=e342]:
+                        - generic [ref=e345]: 55%
+                        - generic [ref=e346]: 室外湿度
+                      - generic [ref=e347]:
+                        - generic [ref=e350]: "0"
+                        - generic [ref=e351]: PM2.5
+                  - generic [ref=e352]:
+                    - generic [ref=e354]:
+                      - img [ref=e356]
+                      - heading "电费估算" [level=3] [ref=e360]: 电费估算
+                    - generic [ref=e363]:
+                      - generic [ref=e364]:
+                        - generic [ref=e365]: 今日
+                        - generic [ref=e367]:
+                          - text: ¥
+                          - generic [ref=e373]: "0"
+                      - generic [ref=e374]:
+                        - generic [ref=e375]: 本月
+                        - generic [ref=e377]:
+                          - text: ¥
+                          - generic [ref=e383]: "0"
+                    - generic [ref=e384]: 按 0.82 元/kWh 综合电价估算
+                  - generic [ref=e387]:
+                    - img [ref=e389]
+                    - heading "本周趋势" [level=3] [ref=e393]: 本周趋势
+              - generic [ref=e403]:
+                - img [ref=e404]
+                - generic [ref=e407]: 未来 24h 能耗预测
+                - generic [ref=e408]: 整栋级
+              - button [ref=e414] [cursor=pointer]:
+                - img [ref=e415]
+      - generic [ref=e418]:
+        - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+        - generic [ref=e421]:
+          - generic [ref=e422]: 实时同步中
+          - generic [ref=e423]: 上次同步 0s 前
+        - generic [ref=e424]:
+          - generic [ref=e425]:
+            - generic [ref=e428]:
+              - img [ref=e431]
+              - generic [ref=e436]:
+                - generic [ref=e437]:
+                  - generic [ref=e441]:
+                    - generic [ref=e443]: "2"
+                    - generic [ref=e445]: "7"
+                    - generic [ref=e447]: ","
+                    - generic [ref=e449]: "6"
+                    - generic [ref=e451]: "0"
+                    - generic [ref=e453]: "6"
+                  - generic [ref=e454]: kWh
+                - generic [ref=e455]: 今日累计
+                - img [ref=e456]
+            - generic [ref=e462]:
+              - img [ref=e465]
+              - generic [ref=e471]:
+                - generic [ref=e475]:
+                  - generic [ref=e476]:
+                    - generic [ref=e478]: "7"
+                    - generic [ref=e480]: "6"
+                  - generic [ref=e481]:
+                    - generic [ref=e483]: .
+                    - generic [ref=e485]: "3"
+                - generic [ref=e486]: 当前人流指数
+                - img [ref=e487]
+            - generic [ref=e493]:
+              - img [ref=e496]
+              - generic [ref=e500]:
+                - generic [ref=e501]:
+                  - generic [ref=e504]:
+                    - generic [ref=e505]:
+                      - generic [ref=e507]: "2"
+                      - generic [ref=e509]: "3"
+                      - generic [ref=e511]: "6"
+                    - generic [ref=e512]:
+                      - generic [ref=e514]: .
+                      - generic [ref=e516]: "8"
+                  - generic [ref=e517]: kWh
+                - generic [ref=e518]: 今日峰值负荷
+                - img [ref=e519]
+            - generic [ref=e525]:
+              - img [ref=e528]
+              - generic [ref=e533]:
+                - generic [ref=e534]:
+                  - generic [ref=e537]:
+                    - generic [ref=e538]:
+                      - generic [ref=e540]: "5"
+                      - generic [ref=e542]: "2"
+                    - generic [ref=e543]:
+                      - generic [ref=e545]: .
+                      - generic [ref=e547]: "6"
+                  - generic [ref=e548]: "%"
+                - generic [ref=e549]: HVAC 当前占比
+                - img [ref=e550]
+            - generic [ref=e556]:
+              - img [ref=e559]
+              - generic [ref=e563]:
+                - generic [ref=e564]:
+                  - generic [ref=e568]:
+                    - generic [ref=e570]: "1"
+                    - generic [ref=e572]: "9"
+                    - generic [ref=e574]: "4"
+                  - generic [ref=e575]: 条
+                - generic [ref=e576]: 今日预警
+                - img [ref=e577]
+          - generic [ref=e581]:
+            - generic [ref=e582]:
+              - generic [ref=e584]:
+                - generic [ref=e586]:
+                  - img [ref=e589]
+                  - heading "运行健康评分" [level=2] [ref=e595]
+                - generic [ref=e600]:
+                  - generic [ref=e610]:
+                    - generic [ref=e612]: "9"
+                    - generic [ref=e614]: "6"
+                  - generic [ref=e615]:
+                    - generic [ref=e617]:
+                      - generic [ref=e618]: 正常
+                      - generic [ref=e620]:
+                        - generic [ref=e625]:
+                          - generic [ref=e627]: "1"
+                          - generic [ref=e629]: "0"
+                          - generic [ref=e631]: "1"
+                        - text: /
+                        - generic [ref=e632]:
+                          - generic [ref=e635]:
+                            - generic [ref=e636]:
+                              - generic [ref=e638]: "3"
+                              - generic [ref=e640]: "3"
+                            - generic [ref=e641]:
+                              - generic [ref=e643]: .
+                              - generic [ref=e645]: "8"
+                          - generic [ref=e646]: "%"
+                    - generic [ref=e650]:
+                      - generic [ref=e651]: 预警
+                      - generic [ref=e653]:
+                        - generic [ref=e658]:
+                          - generic [ref=e660]: "1"
+                          - generic [ref=e662]: "9"
+                          - generic [ref=e664]: "4"
+                        - text: /
+                        - generic [ref=e665]:
+                          - generic [ref=e668]:
+                            - generic [ref=e669]:
+                              - generic [ref=e671]: "6"
+                              - generic [ref=e673]: "4"
+                            - generic [ref=e674]:
+                              - generic [ref=e676]: .
+                              - generic [ref=e678]: "9"
+                          - generic [ref=e679]: "%"
+                    - generic [ref=e683]:
+                      - generic [ref=e684]: 维护中
+                      - generic [ref=e686]:
+                        - generic [ref=e693]: "2"
+                        - text: /
+                        - generic [ref=e694]:
+                          - generic [ref=e697]:
+                            - generic [ref=e700]: "0"
+                            - generic [ref=e701]:
+                              - generic [ref=e703]: .
+                              - generic [ref=e705]: "7"
+                          - generic [ref=e706]: "%"
+                    - generic [ref=e710]:
+                      - generic [ref=e711]: 离线
+                      - generic [ref=e713]:
+                        - generic [ref=e720]: "2"
+                        - text: /
+                        - generic [ref=e721]:
+                          - generic [ref=e724]:
+                            - generic [ref=e727]: "0"
+                            - generic [ref=e728]:
+                              - generic [ref=e730]: .
+                              - generic [ref=e732]: "7"
+                          - generic [ref=e733]: "%"
+                - generic [ref=e736]:
+                  - generic [ref=e737]:
+                    - generic [ref=e738]: 正常记录
+                    - generic [ref=e743]:
+                      - generic [ref=e745]: "1"
+                      - generic [ref=e747]: "0"
+                      - generic [ref=e749]: "1"
+                  - generic [ref=e750]:
+                    - generic [ref=e751]: 预警记录
+                    - generic [ref=e756]:
+                      - generic [ref=e758]: "1"
+                      - generic [ref=e760]: "9"
+                      - generic [ref=e762]: "4"
+                  - generic [ref=e763]:
+                    - generic [ref=e764]: 监测总量
+                    - generic [ref=e769]:
+                      - generic [ref=e771]: "2"
+                      - generic [ref=e773]: "9"
+                      - generic [ref=e775]: "9"
+                - generic [ref=e776]:
+                  - generic [ref=e777]:
+                    - generic [ref=e778]: 风险占比
+                    - generic [ref=e779]: 65.6%
+                  - generic [ref=e780]:
+                    - generic [ref=e781]: 稳定占比
+                    - generic [ref=e782]: 33.8%
+                  - generic [ref=e783]:
+                    - generic [ref=e784]: 维护占比
+                    - generic [ref=e785]: 0.7%
+              - generic [ref=e787]:
+                - generic [ref=e789]:
+                  - img [ref=e792]
+                  - heading "今日峰值设备" [level=2] [ref=e797]
+                - generic [ref=e802]:
+                  - generic [ref=e803]: BLDG-C-07
+                  - generic [ref=e804]: BLDG-C-07-DEV-15
+                  - generic [ref=e805]:
+                    - generic [ref=e806]:
+                      - generic [ref=e807]: 峰值电耗
+                      - generic [ref=e808]: 236.8 kWh
+                    - generic [ref=e809]:
+                      - generic [ref=e810]: 监测时间
+                      - generic [ref=e811]: 05-24 12:00
+                    - generic [ref=e812]:
+                      - generic [ref=e813]: 温度
+                      - generic [ref=e814]:
+                        - generic [ref=e817]:
+                          - generic [ref=e818]:
+                            - generic [ref=e820]: "2"
+                            - generic [ref=e822]: "8"
+                          - generic [ref=e823]:
+                            - generic [ref=e825]: .
+                            - generic [ref=e827]: "6"
+                        - generic [ref=e828]: °C
+                    - generic [ref=e829]:
+                      - generic [ref=e830]: 人流
+                      - generic [ref=e834]:
+                        - generic [ref=e835]:
+                          - generic [ref=e837]: "9"
+                          - generic [ref=e839]: "5"
+                        - generic [ref=e840]:
+                          - generic [ref=e842]: .
+                          - generic [ref=e844]: "8"
+                - generic [ref=e845]:
+                  - generic [ref=e847]:
+                    - generic [ref=e848]:
+                      - generic [ref=e849]: BLDG-A-03-DEV-21
+                      - generic [ref=e850]: BLDG-A-03 / 05-24 12:00
+                    - generic [ref=e851]: "214"
+                  - generic [ref=e855]:
+                    - generic [ref=e856]:
+                      - generic [ref=e857]: BLDG-B-01-DEV-05
+                      - generic [ref=e858]: BLDG-B-01 / 05-24 12:00
+                    - generic [ref=e859]: "198"
+              - generic [ref=e863]:
+                - generic [ref=e865]:
+                  - img [ref=e868]
+                  - heading "风险分层" [level=2] [ref=e873]
+                - generic [ref=e878]:
+                  - generic [ref=e879]:
+                    - generic [ref=e880]: 预警记录
+                    - generic [ref=e885]:
+                      - generic [ref=e887]: "1"
+                      - generic [ref=e889]: "9"
+                      - generic [ref=e891]: "4"
+                  - generic [ref=e892]:
+                    - generic [ref=e893]: 维护中
+                    - generic [ref=e900]: "2"
+                - generic [ref=e901]:
+                  - generic [ref=e903]:
+                    - generic [ref=e904]:
+                      - generic [ref=e905]: "1"
+                      - generic [ref=e906]:
+                        - generic [ref=e907]: BLDG-A-03
+                        - generic [ref=e908]: 效率 61
+                    - generic [ref=e914]:
+                      - generic [ref=e916]: "3"
+                      - generic [ref=e918]: "4"
+                  - generic [ref=e922]:
+                    - generic [ref=e923]:
+                      - generic [ref=e924]: "2"
+                      - generic [ref=e925]:
+                        - generic [ref=e926]: BLDG-D-02
+                        - generic [ref=e927]: 效率 61
+                    - generic [ref=e933]:
+                      - generic [ref=e935]: "3"
+                      - generic [ref=e937]: "2"
+                  - generic [ref=e941]:
+                    - generic [ref=e942]:
+                      - generic [ref=e943]: "3"
+                      - generic [ref=e944]:
+                        - generic [ref=e945]: BLDG-B-01
+                        - generic [ref=e946]: 效率 61
+                    - generic [ref=e952]:
+                      - generic [ref=e954]: "2"
+                      - generic [ref=e956]: "9"
+            - generic [ref=e959]:
+              - generic [ref=e961]:
+                - generic [ref=e963]:
+                  - img [ref=e966]
+                  - heading "每日能耗与人流走势" [level=2] [ref=e972]
+                - generic [ref=e977]:
+                  - generic [ref=e979]: 电耗柱状
+                  - generic [ref=e981]: 人流折线
+                  - generic [ref=e983]: 12 天窗口
+                - img [ref=e985]
+                - generic [ref=e1024]:
+                  - generic [ref=e1025]:
+                    - generic [ref=e1026]: 05-14
+                    - generic [ref=e1027]:
+                      - generic [ref=e1030]:
+                        - generic [ref=e1031]:
+                          - generic [ref=e1033]: "2"
+                          - generic [ref=e1035]: ","
+                          - generic [ref=e1037]: "6"
+                          - generic [ref=e1039]: "5"
+                          - generic [ref=e1041]: "8"
+                        - generic [ref=e1042]:
+                          - generic [ref=e1044]: .
+                          - generic [ref=e1046]: "3"
+                      - generic [ref=e1047]: kWh
+                  - generic [ref=e1048]:
+                    - generic [ref=e1049]: 05-15
+                    - generic [ref=e1050]:
+                      - generic [ref=e1053]:
+                        - generic [ref=e1054]:
+                          - generic [ref=e1056]: "2"
+                          - generic [ref=e1058]: ","
+                          - generic [ref=e1060]: "7"
+                          - generic [ref=e1062]: "9"
+                          - generic [ref=e1064]: "0"
+                        - generic [ref=e1065]:
+                          - generic [ref=e1067]: .
+                          - generic [ref=e1069]: "0"
+                      - generic [ref=e1070]: kWh
+                  - generic [ref=e1071]:
+                    - generic [ref=e1072]: 05-16
+                    - generic [ref=e1073]:
+                      - generic [ref=e1076]:
+                        - generic [ref=e1077]:
+                          - generic [ref=e1079]: "2"
+                          - generic [ref=e1081]: ","
+                          - generic [ref=e1083]: "9"
+                          - generic [ref=e1085]: "3"
+                          - generic [ref=e1087]: "0"
+                        - generic [ref=e1088]:
+                          - generic [ref=e1090]: .
+                          - generic [ref=e1092]: "7"
+                      - generic [ref=e1093]: kWh
+                  - generic [ref=e1094]:
+                    - generic [ref=e1095]: 05-17
+                    - generic [ref=e1096]:
+                      - generic [ref=e1099]:
+                        - generic [ref=e1100]:
+                          - generic [ref=e1102]: "3"
+                          - generic [ref=e1104]: ","
+                          - generic [ref=e1106]: "0"
+                          - generic [ref=e1108]: "8"
+                          - generic [ref=e1110]: "8"
+                        - generic [ref=e1111]:
+                          - generic [ref=e1113]: .
+                          - generic [ref=e1115]: "4"
+                      - generic [ref=e1116]: kWh
+                  - generic [ref=e1117]:
+                    - generic [ref=e1118]: 05-18
+                    - generic [ref=e1119]:
+                      - generic [ref=e1122]:
+                        - generic [ref=e1123]:
+                          - generic [ref=e1125]: "3"
+                          - generic [ref=e1127]: ","
+                          - generic [ref=e1129]: "1"
+                          - generic [ref=e1131]: "0"
+                          - generic [ref=e1133]: "8"
+                        - generic [ref=e1134]:
+                          - generic [ref=e1136]: .
+                          - generic [ref=e1138]: "4"
+                      - generic [ref=e1139]: kWh
+                  - generic [ref=e1140]:
+                    - generic [ref=e1141]: 05-19
+                    - generic [ref=e1142]:
+                      - generic [ref=e1145]:
+                        - generic [ref=e1146]:
+                          - generic [ref=e1148]: "3"
+                          - generic [ref=e1150]: ","
+                          - generic [ref=e1152]: "1"
+                          - generic [ref=e1154]: "5"
+                          - generic [ref=e1156]: "5"
+                        - generic [ref=e1157]:
+                          - generic [ref=e1159]: .
+                          - generic [ref=e1161]: "3"
+                      - generic [ref=e1162]: kWh
+                  - generic [ref=e1163]:
+                    - generic [ref=e1164]: 05-20
+                    - generic [ref=e1165]:
+                      - generic [ref=e1168]:
+                        - generic [ref=e1169]:
+                          - generic [ref=e1171]: "3"
+                          - generic [ref=e1173]: ","
+                          - generic [ref=e1175]: "0"
+                          - generic [ref=e1177]: "9"
+                          - generic [ref=e1179]: "2"
+                        - generic [ref=e1180]:
+                          - generic [ref=e1182]: .
+                          - generic [ref=e1184]: "5"
+                      - generic [ref=e1185]: kWh
+                  - generic [ref=e1186]:
+                    - generic [ref=e1187]: 05-21
+                    - generic [ref=e1188]:
+                      - generic [ref=e1191]:
+                        - generic [ref=e1192]:
+                          - generic [ref=e1194]: "3"
+                          - generic [ref=e1196]: ","
+                          - generic [ref=e1198]: "0"
+                          - generic [ref=e1200]: "8"
+                          - generic [ref=e1202]: "2"
+                        - generic [ref=e1203]:
+                          - generic [ref=e1205]: .
+                          - generic [ref=e1207]: "4"
+                      - generic [ref=e1208]: kWh
+                  - generic [ref=e1209]:
+                    - generic [ref=e1210]: 05-22
+                    - generic [ref=e1211]:
+                      - generic [ref=e1214]:
+                        - generic [ref=e1215]:
+                          - generic [ref=e1217]: "2"
+                          - generic [ref=e1219]: ","
+                          - generic [ref=e1221]: "9"
+                          - generic [ref=e1223]: "9"
+                          - generic [ref=e1225]: "8"
+                        - generic [ref=e1226]:
+                          - generic [ref=e1228]: .
+                          - generic [ref=e1230]: "9"
+                      - generic [ref=e1231]: kWh
+                  - generic [ref=e1232]:
+                    - generic [ref=e1233]: 05-23
+                    - generic [ref=e1234]:
+                      - generic [ref=e1237]:
+                        - generic [ref=e1238]:
+                          - generic [ref=e1240]: "2"
+                          - generic [ref=e1242]: ","
+                          - generic [ref=e1244]: "9"
+                          - generic [ref=e1246]: "3"
+                          - generic [ref=e1248]: "4"
+                        - generic [ref=e1249]:
+                          - generic [ref=e1251]: .
+                          - generic [ref=e1253]: "2"
+                      - generic [ref=e1254]: kWh
+                  - generic [ref=e1255]:
+                    - generic [ref=e1256]: 05-24
+                    - generic [ref=e1257]:
+                      - generic [ref=e1260]:
+                        - generic [ref=e1261]:
+                          - generic [ref=e1263]: "2"
+                          - generic [ref=e1265]: ","
+                          - generic [ref=e1267]: "8"
+                          - generic [ref=e1269]: "2"
+                          - generic [ref=e1271]: "7"
+                        - generic [ref=e1272]:
+                          - generic [ref=e1274]: .
+                          - generic [ref=e1276]: "1"
+                      - generic [ref=e1277]: kWh
+                  - generic [ref=e1278]:
+                    - generic [ref=e1279]: 05-25
+                    - generic [ref=e1280]:
+                      - generic [ref=e1283]:
+                        - generic [ref=e1284]:
+                          - generic [ref=e1286]: "2"
+                          - generic [ref=e1288]: ","
+                          - generic [ref=e1290]: "7"
+                          - generic [ref=e1292]: "5"
+                          - generic [ref=e1294]: "3"
+                        - generic [ref=e1295]:
+                          - generic [ref=e1297]: .
+                          - generic [ref=e1299]: "7"
+                      - generic [ref=e1300]: kWh
+              - generic [ref=e1302]:
+                - generic [ref=e1304]:
+                  - img [ref=e1307]
+                  - heading "时段热力矩阵" [level=2] [ref=e1320]
+                - generic [ref=e1325]:
+                  - generic [ref=e1326]:
+                    - generic [ref=e1327]:
+                      - generic [ref=e1328]: 峰值时段
+                      - generic [ref=e1329]: 05-19 12:00
+                    - generic [ref=e1330]:
+                      - generic [ref=e1331]: 峰值电耗
+                      - generic [ref=e1332]: 225 kWh
+                    - generic [ref=e1333]:
+                      - generic [ref=e1334]: 均值电耗
+                      - generic [ref=e1335]: 186 kWh
+                  - generic [ref=e1337]:
+                    - generic [ref=e1339]:
+                      - generic [ref=e1340]: 00:00
+                      - generic [ref=e1341]: 06:00
+                      - generic [ref=e1342]: 12:00
+                      - generic [ref=e1343]: 18:00
+                    - generic [ref=e1344]:
+                      - generic [ref=e1345]: 05-19
+                      - generic [ref=e1346]: 05-20
+                      - generic [ref=e1347]: 05-21
+                      - generic [ref=e1348]: 05-22
+                      - generic [ref=e1349]: 05-23
+                      - generic [ref=e1350]: 05-24
+                      - generic [ref=e1351]: 05-25
+                    - generic [ref=e1352]:
+                      - generic [ref=e1356]:
+                        - generic [ref=e1357]: "72"
+                        - generic [ref=e1363]:
+                          - generic [ref=e1365]: "1"
+                          - generic [ref=e1367]: "6"
+                          - generic [ref=e1369]: "2"
+                      - generic [ref=e1373]:
+                        - generic [ref=e1374]: "87"
+                        - generic [ref=e1380]:
+                          - generic [ref=e1382]: "1"
+                          - generic [ref=e1384]: "9"
+                          - generic [ref=e1386]: "5"
+                      - generic [ref=e1390]:
+                        - generic [ref=e1391]: "100"
+                        - generic [ref=e1397]:
+                          - generic [ref=e1399]: "2"
+                          - generic [ref=e1401]: "2"
+                          - generic [ref=e1403]: "5"
+                      - generic [ref=e1407]:
+                        - generic [ref=e1408]: "92"
+                        - generic [ref=e1414]:
+                          - generic [ref=e1416]: "2"
+                          - generic [ref=e1418]: "0"
+                          - generic [ref=e1420]: "7"
+                      - generic [ref=e1424]:
+                        - generic [ref=e1425]: "69"
+                        - generic [ref=e1431]:
+                          - generic [ref=e1433]: "1"
+                          - generic [ref=e1435]: "5"
+                          - generic [ref=e1437]: "6"
+                      - generic [ref=e1441]:
+                        - generic [ref=e1442]: "86"
+                        - generic [ref=e1448]:
+                          - generic [ref=e1450]: "1"
+                          - generic [ref=e1452]: "9"
+                          - generic [ref=e1454]: "3"
+                      - generic [ref=e1458]:
+                        - generic [ref=e1459]: "99"
+                        - generic [ref=e1465]:
+                          - generic [ref=e1467]: "2"
+                          - generic [ref=e1469]: "2"
+                          - generic [ref=e1471]: "2"
+                      - generic [ref=e1475]:
+                        - generic [ref=e1476]: "90"
+                        - generic [ref=e1482]:
+                          - generic [ref=e1484]: "2"
+                          - generic [ref=e1486]: "0"
+                          - generic [ref=e1488]: "2"
+                      - generic [ref=e1492]:
+                        - generic [ref=e1493]: "71"
+                        - generic [ref=e1499]:
+                          - generic [ref=e1501]: "1"
+                          - generic [ref=e1503]: "5"
+                          - generic [ref=e1505]: "9"
+                      - generic [ref=e1509]:
+                        - generic [ref=e1510]: "85"
+                        - generic [ref=e1516]:
+                          - generic [ref=e1518]: "1"
+                          - generic [ref=e1520]: "9"
+                          - generic [ref=e1522]: "2"
+                      - generic [ref=e1526]:
+                        - generic [ref=e1527]: "99"
+                        - generic [ref=e1533]:
+                          - generic [ref=e1535]: "2"
+                          - generic [ref=e1537]: "2"
+                          - generic [ref=e1539]: "2"
+                      - generic [ref=e1543]:
+                        - generic [ref=e1544]: "88"
+                        - generic [ref=e1550]:
+                          - generic [ref=e1552]: "1"
+                          - generic [ref=e1554]: "9"
+                          - generic [ref=e1556]: "7"
+                      - generic [ref=e1560]:
+                        - generic [ref=e1561]: "68"
+                        - generic [ref=e1567]:
+                          - generic [ref=e1569]: "1"
+                          - generic [ref=e1571]: "5"
+                          - generic [ref=e1573]: "3"
+                      - generic [ref=e1577]:
+                        - generic [ref=e1578]: "84"
+                        - generic [ref=e1584]:
+                          - generic [ref=e1586]: "1"
+                          - generic [ref=e1588]: "8"
+                          - generic [ref=e1590]: "9"
+                      - generic [ref=e1594]:
+                        - generic [ref=e1595]: "96"
+                        - generic [ref=e1601]:
+                          - generic [ref=e1603]: "2"
+                          - generic [ref=e1605]: "1"
+                          - generic [ref=e1607]: "7"
+                      - generic [ref=e1611]:
+                        - generic [ref=e1612]: "85"
+                        - generic [ref=e1618]:
+                          - generic [ref=e1620]: "1"
+                          - generic [ref=e1622]: "9"
+                          - generic [ref=e1624]: "2"
+                      - generic [ref=e1628]:
+                        - generic [ref=e1629]: "64"
+                        - generic [ref=e1635]:
+                          - generic [ref=e1637]: "1"
+                          - generic [ref=e1639]: "4"
+                          - generic [ref=e1641]: "4"
+                      - generic [ref=e1645]:
+                        - generic [ref=e1646]: "80"
+                        - generic [ref=e1652]:
+                          - generic [ref=e1654]: "1"
+                          - generic [ref=e1656]: "8"
+                          - generic [ref=e1658]: "1"
+                      - generic [ref=e1662]:
+                        - generic [ref=e1663]: "96"
+                        - generic [ref=e1669]:
+                          - generic [ref=e1671]: "2"
+                          - generic [ref=e1673]: "1"
+                          - generic [ref=e1675]: "7"
+                      - generic [ref=e1679]:
+                        - generic [ref=e1680]: "85"
+                        - generic [ref=e1686]:
+                          - generic [ref=e1688]: "1"
+                          - generic [ref=e1690]: "9"
+                          - generic [ref=e1692]: "2"
+                      - generic [ref=e1696]:
+                        - generic [ref=e1697]: "60"
+                        - generic [ref=e1703]:
+                          - generic [ref=e1705]: "1"
+                          - generic [ref=e1707]: "3"
+                          - generic [ref=e1709]: "6"
+                      - generic [ref=e1713]:
+                        - generic [ref=e1714]: "74"
+                        - generic [ref=e1720]:
+                          - generic [ref=e1722]: "1"
+                          - generic [ref=e1724]: "6"
+                          - generic [ref=e1726]: "7"
+                      - generic [ref=e1730]:
+                        - generic [ref=e1731]: "95"
+                        - generic [ref=e1737]:
+                          - generic [ref=e1739]: "2"
+                          - generic [ref=e1741]: "1"
+                          - generic [ref=e1743]: "4"
+                      - generic [ref=e1747]:
+                        - generic [ref=e1748]: "85"
+                        - generic [ref=e1754]:
+                          - generic [ref=e1756]: "1"
+                          - generic [ref=e1758]: "9"
+                          - generic [ref=e1760]: "0"
+                      - generic [ref=e1764]:
+                        - generic [ref=e1765]: "60"
+                        - generic [ref=e1771]:
+                          - generic [ref=e1773]: "1"
+                          - generic [ref=e1775]: "3"
+                          - generic [ref=e1777]: "4"
+                      - generic [ref=e1781]:
+                        - generic [ref=e1782]: "75"
+                        - generic [ref=e1788]:
+                          - generic [ref=e1790]: "1"
+                          - generic [ref=e1792]: "6"
+                          - generic [ref=e1794]: "8"
+                      - generic [ref=e1798]:
+                        - generic [ref=e1799]: "91"
+                        - generic [ref=e1805]:
+                          - generic [ref=e1807]: "2"
+                          - generic [ref=e1809]: "0"
+                          - generic [ref=e1811]: "5"
+                      - generic [ref=e1815]:
+                        - generic [ref=e1816]: "80"
+                        - generic [ref=e1822]:
+                          - generic [ref=e1824]: "1"
+                          - generic [ref=e1826]: "8"
+                          - generic [ref=e1828]: "1"
+                    - generic [ref=e1830]:
+                      - generic [ref=e1831]: 低负荷
+                      - generic [ref=e1833]: 高负荷
+            - generic [ref=e1834]:
+              - generic [ref=e1836]:
+                - generic [ref=e1838]:
+                  - img [ref=e1841]
+                  - heading "时段负荷关系" [level=2] [ref=e1846]
+                - generic [ref=e1851]:
+                  - generic [ref=e1852]:
+                    - generic [ref=e1853]: 电耗高峰
+                    - generic [ref=e1854]: 12:00
+                  - generic [ref=e1855]:
+                    - generic [ref=e1856]: 低谷时段
+                    - generic [ref=e1857]: 00:00
+                  - generic [ref=e1858]:
+                    - generic [ref=e1859]: 峰谷差值
+                    - generic [ref=e1860]: "69"
+                  - generic [ref=e1861]:
+                    - generic [ref=e1862]: 人流峰值
+                    - generic [ref=e1863]: "93"
+                - img [ref=e1865]
+                - generic [ref=e1875]:
+                  - generic [ref=e1876]:
+                    - generic [ref=e1878]: 00:00
+                    - generic [ref=e1883]:
+                      - generic [ref=e1885]: "1"
+                      - generic [ref=e1887]: "4"
+                      - generic [ref=e1889]: "7"
+                    - generic [ref=e1890]: kWh
+                  - generic [ref=e1891]:
+                    - generic [ref=e1893]: 06:00
+                    - generic [ref=e1898]:
+                      - generic [ref=e1900]: "1"
+                      - generic [ref=e1902]: "8"
+                      - generic [ref=e1904]: "1"
+                    - generic [ref=e1905]: kWh
+                  - generic [ref=e1906]:
+                    - generic [ref=e1907]:
+                      - generic [ref=e1908]: 12:00
+                      - generic [ref=e1909]: 当前
+                    - generic [ref=e1914]:
+                      - generic [ref=e1916]: "2"
+                      - generic [ref=e1918]: "1"
+                      - generic [ref=e1920]: "6"
+                    - generic [ref=e1921]: kWh
+                  - generic [ref=e1922]:
+                    - generic [ref=e1924]: 18:00
+                    - generic [ref=e1929]:
+                      - generic [ref=e1931]: "1"
+                      - generic [ref=e1933]: "9"
+                      - generic [ref=e1935]: "4"
+                    - generic [ref=e1936]: kWh
+                - generic [ref=e1937]:
+                  - generic [ref=e1938]:
+                    - generic [ref=e1939]: 峰值负荷
+                    - generic [ref=e1940]: 216 kWh
+                  - generic [ref=e1943]:
+                    - generic [ref=e1944]: 低谷负荷
+                    - generic [ref=e1945]: 147 kWh
+                  - generic [ref=e1948]:
+                    - generic [ref=e1949]: 人流高峰
+                    - generic [ref=e1950]: 12:00
+              - generic [ref=e1954]:
+                - generic [ref=e1956]:
+                  - img [ref=e1959]
+                  - heading "本月构成占比" [level=2] [ref=e1966]
+                - generic [ref=e1971]:
+                  - generic [ref=e1973]:
+                    - img [ref=e1974]
+                    - generic [ref=e2004]:
+                      - generic [ref=e2009]:
+                        - generic [ref=e2011]: "4"
+                        - generic [ref=e2013]: "6"
+                        - generic [ref=e2015]: ","
+                        - generic [ref=e2017]: "1"
+                        - generic [ref=e2019]: "0"
+                        - generic [ref=e2021]: "6"
+                      - generic [ref=e2022]: 本月累计
+                  - generic [ref=e2023]:
+                    - generic [ref=e2024]:
+                      - generic [ref=e2025]:
+                        - generic [ref=e2028]: 暖通系统
+                        - generic [ref=e2029]: "19780"
+                      - generic [ref=e2033]: 42.9%
+                    - generic [ref=e2034]:
+                      - generic [ref=e2035]:
+                        - generic [ref=e2038]: 照明系统
+                        - generic [ref=e2039]: "8437"
+                      - generic [ref=e2043]: 18.3%
+                    - generic [ref=e2044]:
+                      - generic [ref=e2045]:
+                        - generic [ref=e2048]: 插座与设备
+                        - generic [ref=e2049]: "6685"
+                      - generic [ref=e2053]: 14.5%
+                    - generic [ref=e2054]:
+                      - generic [ref=e2055]:
+                        - generic [ref=e2058]: 公共区域
+                        - generic [ref=e2059]: "4611"
+                      - generic [ref=e2063]: 10.0%
+                    - generic [ref=e2064]:
+                      - generic [ref=e2065]:
+                        - generic [ref=e2068]: 实验与专用负荷
+                        - generic [ref=e2069]: "3458"
+                      - generic [ref=e2073]: 7.5%
+                    - generic [ref=e2074]:
+                      - generic [ref=e2075]:
+                        - generic [ref=e2078]: 其他损耗
+                        - generic [ref=e2079]: "3135"
+                      - generic [ref=e2083]: 6.8%
+                  - generic [ref=e2084]:
+                    - generic [ref=e2085]:
+                      - generic [ref=e2086]: 正常
+                      - generic [ref=e2088]: "101"
+                    - generic [ref=e2089]:
+                      - generic [ref=e2090]: 预警
+                      - generic [ref=e2092]: "194"
+                    - generic [ref=e2093]:
+                      - generic [ref=e2094]: 维护中
+                      - generic [ref=e2096]: "2"
+                    - generic [ref=e2097]:
+                      - generic [ref=e2098]: 离线
+                      - generic [ref=e2100]: "2"
+          - generic [ref=e2101]:
+            - generic [ref=e2103]:
+              - generic [ref=e2105]:
+                - img [ref=e2108]
+                - heading "能耗与人流关系" [level=2] [ref=e2115]
+              - generic [ref=e2120]:
+                - generic [ref=e2121]:
+                  - generic [ref=e2123]: 强正相关
+                  - generic [ref=e2125]: 样本 48
+                  - generic [ref=e2127]: 风险点 24
+                - generic [ref=e2129]: "0.80"
+              - generic [ref=e2130]:
+                - generic [ref=e2131]:
+                  - button "办公" [ref=e2132] [cursor=pointer]: 办公
+                  - button "教学" [ref=e2134] [cursor=pointer]: 教学
+                  - button "实验" [ref=e2136] [cursor=pointer]: 实验
+                  - button "预警" [ref=e2138] [cursor=pointer]: 预警
+                - img [ref=e2140]:
+                  - generic [ref=e2292]: 能耗 kWh
+                  - generic [ref=e2293]: 人流指数
+                - generic [ref=e2294]:
+                  - generic [ref=e2295]:
+                    - generic [ref=e2296]: 样本数
+                    - generic [ref=e2301]:
+                      - generic [ref=e2303]: "4"
+                      - generic [ref=e2305]: "8"
+                  - generic [ref=e2306]:
+                    - generic [ref=e2307]: 风险点
+                    - generic [ref=e2312]:
+                      - generic [ref=e2314]: "2"
+                      - generic [ref=e2316]: "4"
+            - generic [ref=e2318]:
+              - generic [ref=e2320]:
+                - img [ref=e2323]
+                - heading "能耗与温度关系" [level=2] [ref=e2330]
+              - generic [ref=e2335]:
+                - generic [ref=e2336]:
+                  - generic [ref=e2338]: 中等正相关
+                  - generic [ref=e2340]: 样本 48
+                  - generic [ref=e2342]: 风险点 24
+                - generic [ref=e2344]: "0.64"
+              - generic [ref=e2345]:
+                - generic [ref=e2346]:
+                  - button "办公" [ref=e2347] [cursor=pointer]: 办公
+                  - button "教学" [ref=e2349] [cursor=pointer]: 教学
+                  - button "实验" [ref=e2351] [cursor=pointer]: 实验
+                  - button "预警" [ref=e2353] [cursor=pointer]: 预警
+                - img [ref=e2355]:
+                  - generic [ref=e2507]: 能耗 kWh
+                  - generic [ref=e2508]: 温度 °C
+                - generic [ref=e2509]:
+                  - generic [ref=e2510]:
+                    - generic [ref=e2511]: 样本数
+                    - generic [ref=e2516]:
+                      - generic [ref=e2518]: "4"
+                      - generic [ref=e2520]: "8"
+                  - generic [ref=e2521]:
+                    - generic [ref=e2522]: 风险点
+                    - generic [ref=e2527]:
+                      - generic [ref=e2529]: "2"
+                      - generic [ref=e2531]: "4"
+          - generic [ref=e2533]:
+            - generic [ref=e2535]:
+              - img [ref=e2538]
+              - heading "近期监测明细" [level=2] [ref=e2544]
+            - generic [ref=e2549]:
+              - generic [ref=e2550]: 实时
+              - generic [ref=e2552]:
+                - text: 今日已采集
+                - generic [ref=e2557]:
+                  - generic [ref=e2559]: "1"
+                  - generic [ref=e2561]: ","
+                  - generic [ref=e2563]: "2"
+                  - generic [ref=e2565]: "8"
+                  - generic [ref=e2567]: "6"
+                - text: 条 · 当前速率
+                - generic [ref=e2572]:
+                  - generic [ref=e2574]: "2"
+                  - generic [ref=e2576]: "8"
+                - text: 条/分钟
+            - table [ref=e2578]:
+              - rowgroup [ref=e2590]:
+                - row "楼栋⇅ 时间⇅ 电耗⇅ 暖通⇅ 用水⇅ 温度⇅ 湿度⇅ 人流⇅ 设备⇅ 状态⇅" [ref=e2591]:
+                  - columnheader "楼栋⇅" [ref=e2592]
+                  - columnheader "时间⇅" [ref=e2593]
+                  - columnheader "电耗⇅" [ref=e2594]
+                  - columnheader "暖通⇅" [ref=e2595]
+                  - columnheader "用水⇅" [ref=e2596]
+                  - columnheader "温度⇅" [ref=e2597]
+                  - columnheader "湿度⇅" [ref=e2598]
+                  - columnheader "人流⇅" [ref=e2599]
+                  - columnheader "设备⇅" [ref=e2600]
+                  - columnheader "状态⇅" [ref=e2601]
+              - rowgroup [ref=e2602]:
+                - row "BLDG-A-03 2026-05-25 18:00 1 8 2 . 5 8 1 . 9 2 3 . 2 2 6 . 4 °C 4 8 . 1 % 9 2 . 0 BLDG-A-03-DEV-21 预警" [ref=e2603]:
+                  - cell "BLDG-A-03" [ref=e2604]
+                  - cell "2026-05-25 18:00" [ref=e2605]:
+                    - generic [ref=e2606]: 2026-05-25 18:00
+                  - cell "1 8 2 . 5" [ref=e2608]:
+                    - generic [ref=e2612]:
+                      - generic [ref=e2613]:
+                        - generic [ref=e2615]: "1"
+                        - generic [ref=e2617]: "8"
+                        - generic [ref=e2619]: "2"
+                      - generic [ref=e2620]:
+                        - generic [ref=e2622]: .
+                        - generic [ref=e2624]: "5"
+                  - cell "8 1 . 9" [ref=e2625]:
+                    - generic [ref=e2629]:
+                      - generic [ref=e2630]:
+                        - generic [ref=e2632]: "8"
+                        - generic [ref=e2634]: "1"
+                      - generic [ref=e2635]:
+                        - generic [ref=e2637]: .
+                        - generic [ref=e2639]: "9"
+                  - cell "2 3 . 2" [ref=e2640]:
+                    - generic [ref=e2644]:
+                      - generic [ref=e2645]:
+                        - generic [ref=e2647]: "2"
+                        - generic [ref=e2649]: "3"
+                      - generic [ref=e2650]:
+                        - generic [ref=e2652]: .
+                        - generic [ref=e2654]: "2"
+                  - cell "2 6 . 4 °C" [ref=e2655]:
+                    - generic [ref=e2656]:
+                      - generic [ref=e2659]:
+                        - generic [ref=e2660]:
+                          - generic [ref=e2662]: "2"
+                          - generic [ref=e2664]: "6"
+                        - generic [ref=e2665]:
+                          - generic [ref=e2667]: .
+                          - generic [ref=e2669]: "4"
+                      - generic [ref=e2670]: °C
+                  - cell "4 8 . 1 %" [ref=e2671]:
+                    - generic [ref=e2672]:
+                      - generic [ref=e2675]:
+                        - generic [ref=e2676]:
+                          - generic [ref=e2678]: "4"
+                          - generic [ref=e2680]: "8"
+                        - generic [ref=e2681]:
+                          - generic [ref=e2683]: .
+                          - generic [ref=e2685]: "1"
+                      - generic [ref=e2686]: "%"
+                  - cell "9 2 . 0" [ref=e2687]:
+                    - generic [ref=e2691]:
+                      - generic [ref=e2692]:
+                        - generic [ref=e2694]: "9"
+                        - generic [ref=e2696]: "2"
+                      - generic [ref=e2697]:
+                        - generic [ref=e2699]: .
+                        - generic [ref=e2701]: "0"
+                  - cell "BLDG-A-03-DEV-21" [ref=e2702]
+                  - cell "预警" [ref=e2703]:
+                    - generic [ref=e2704]: 预警
+                - row "BLDG-B-01 2026-05-25 18:00 1 6 1 . 5 6 9 . 7 1 8 . 5 2 6 . 2 °C 5 2 . 1 % 7 3 . 0 BLDG-B-01-DEV-05 预警" [ref=e2705]:
+                  - cell "BLDG-B-01" [ref=e2706]
+                  - cell "2026-05-25 18:00" [ref=e2707]:
+                    - generic [ref=e2708]: 2026-05-25 18:00
+                  - cell "1 6 1 . 5" [ref=e2709]:
+                    - generic [ref=e2713]:
+                      - generic [ref=e2714]:
+                        - generic [ref=e2716]: "1"
+                        - generic [ref=e2718]: "6"
+                        - generic [ref=e2720]: "1"
+                      - generic [ref=e2721]:
+                        - generic [ref=e2723]: .
+                        - generic [ref=e2725]: "5"
+                  - cell "6 9 . 7" [ref=e2726]:
+                    - generic [ref=e2730]:
+                      - generic [ref=e2731]:
+                        - generic [ref=e2733]: "6"
+                        - generic [ref=e2735]: "9"
+                      - generic [ref=e2736]:
+                        - generic [ref=e2738]: .
+                        - generic [ref=e2740]: "7"
+                  - cell "1 8 . 5" [ref=e2741]:
+                    - generic [ref=e2745]:
+                      - generic [ref=e2746]:
+                        - generic [ref=e2748]: "1"
+                        - generic [ref=e2750]: "8"
+                      - generic [ref=e2751]:
+                        - generic [ref=e2753]: .
+                        - generic [ref=e2755]: "5"
+                  - cell "2 6 . 2 °C" [ref=e2756]:
+                    - generic [ref=e2757]:
+                      - generic [ref=e2760]:
+                        - generic [ref=e2761]:
+                          - generic [ref=e2763]: "2"
+                          - generic [ref=e2765]: "6"
+                        - generic [ref=e2766]:
+                          - generic [ref=e2768]: .
+                          - generic [ref=e2770]: "2"
+                      - generic [ref=e2771]: °C
+                  - cell "5 2 . 1 %" [ref=e2772]:
+                    - generic [ref=e2773]:
+                      - generic [ref=e2776]:
+                        - generic [ref=e2777]:
+                          - generic [ref=e2779]: "5"
+                          - generic [ref=e2781]: "2"
+                        - generic [ref=e2782]:
+                          - generic [ref=e2784]: .
+                          - generic [ref=e2786]: "1"
+                      - generic [ref=e2787]: "%"
+                  - cell "7 3 . 0" [ref=e2788]:
+                    - generic [ref=e2792]:
+                      - generic [ref=e2793]:
+                        - generic [ref=e2795]: "7"
+                        - generic [ref=e2797]: "3"
+                      - generic [ref=e2798]:
+                        - generic [ref=e2800]: .
+                        - generic [ref=e2802]: "0"
+                  - cell "BLDG-B-01-DEV-05" [ref=e2803]
+                  - cell "预警" [ref=e2804]:
+                    - generic [ref=e2805]: 预警
+                - row "BLDG-C-07 2026-05-25 18:00 1 9 3 . 8 9 1 . 8 2 4 . 0 2 5 . 8 °C 4 6 . 9 % 7 5 . 0 BLDG-C-07-DEV-06 预警" [ref=e2806]:
+                  - cell "BLDG-C-07" [ref=e2807]
+                  - cell "2026-05-25 18:00" [ref=e2808]:
+                    - generic [ref=e2809]: 2026-05-25 18:00
+                  - cell "1 9 3 . 8" [ref=e2810]:
+                    - generic [ref=e2814]:
+                      - generic [ref=e2815]:
+                        - generic [ref=e2817]: "1"
+                        - generic [ref=e2819]: "9"
+                        - generic [ref=e2821]: "3"
+                      - generic [ref=e2822]:
+                        - generic [ref=e2824]: .
+                        - generic [ref=e2826]: "8"
+                  - cell "9 1 . 8" [ref=e2827]:
+                    - generic [ref=e2831]:
+                      - generic [ref=e2832]:
+                        - generic [ref=e2834]: "9"
+                        - generic [ref=e2836]: "1"
+                      - generic [ref=e2837]:
+                        - generic [ref=e2839]: .
+                        - generic [ref=e2841]: "8"
+                  - cell "2 4 . 0" [ref=e2842]:
+                    - generic [ref=e2846]:
+                      - generic [ref=e2847]:
+                        - generic [ref=e2849]: "2"
+                        - generic [ref=e2851]: "4"
+                      - generic [ref=e2852]:
+                        - generic [ref=e2854]: .
+                        - generic [ref=e2856]: "0"
+                  - cell "2 5 . 8 °C" [ref=e2857]:
+                    - generic [ref=e2858]:
+                      - generic [ref=e2861]:
+                        - generic [ref=e2862]:
+                          - generic [ref=e2864]: "2"
+                          - generic [ref=e2866]: "5"
+                        - generic [ref=e2867]:
+                          - generic [ref=e2869]: .
+                          - generic [ref=e2871]: "8"
+                      - generic [ref=e2872]: °C
+                  - cell "4 6 . 9 %" [ref=e2873]:
+                    - generic [ref=e2874]:
+                      - generic [ref=e2877]:
+                        - generic [ref=e2878]:
+                          - generic [ref=e2880]: "4"
+                          - generic [ref=e2882]: "6"
+                        - generic [ref=e2883]:
+                          - generic [ref=e2885]: .
+                          - generic [ref=e2887]: "9"
+                      - generic [ref=e2888]: "%"
+                  - cell "7 5 . 0" [ref=e2889]:
+                    - generic [ref=e2893]:
+                      - generic [ref=e2894]:
+                        - generic [ref=e2896]: "7"
+                        - generic [ref=e2898]: "5"
+                      - generic [ref=e2899]:
+                        - generic [ref=e2901]: .
+                        - generic [ref=e2903]: "0"
+                  - cell "BLDG-C-07-DEV-06" [ref=e2904]
+                  - cell "预警" [ref=e2905]:
+                    - generic [ref=e2906]: 预警
+                - row "BLDG-D-02 2026-05-25 18:00 1 8 5 . 4 8 0 . 0 2 1 . 1 2 5 . 4 °C 5 3 . 7 % 8 8 . 0 BLDG-D-02-DEV-01 预警" [ref=e2907]:
+                  - cell "BLDG-D-02" [ref=e2908]
+                  - cell "2026-05-25 18:00" [ref=e2909]:
+                    - generic [ref=e2910]: 2026-05-25 18:00
+                  - cell "1 8 5 . 4" [ref=e2911]:
+                    - generic [ref=e2915]:
+                      - generic [ref=e2916]:
+                        - generic [ref=e2918]: "1"
+                        - generic [ref=e2920]: "8"
+                        - generic [ref=e2922]: "5"
+                      - generic [ref=e2923]:
+                        - generic [ref=e2925]: .
+                        - generic [ref=e2927]: "4"
+                  - cell "8 0 . 0" [ref=e2928]:
+                    - generic [ref=e2932]:
+                      - generic [ref=e2933]:
+                        - generic [ref=e2935]: "8"
+                        - generic [ref=e2937]: "0"
+                      - generic [ref=e2938]:
+                        - generic [ref=e2940]: .
+                        - generic [ref=e2942]: "0"
+                  - cell "2 1 . 1" [ref=e2943]:
+                    - generic [ref=e2947]:
+                      - generic [ref=e2948]:
+                        - generic [ref=e2950]: "2"
+                        - generic [ref=e2952]: "1"
+                      - generic [ref=e2953]:
+                        - generic [ref=e2955]: .
+                        - generic [ref=e2957]: "1"
+                  - cell "2 5 . 4 °C" [ref=e2958]:
+                    - generic [ref=e2959]:
+                      - generic [ref=e2962]:
+                        - generic [ref=e2963]:
+                          - generic [ref=e2965]: "2"
+                          - generic [ref=e2967]: "5"
+                        - generic [ref=e2968]:
+                          - generic [ref=e2970]: .
+                          - generic [ref=e2972]: "4"
+                      - generic [ref=e2973]: °C
+                  - cell "5 3 . 7 %" [ref=e2974]:
+                    - generic [ref=e2975]:
+                      - generic [ref=e2978]:
+                        - generic [ref=e2979]:
+                          - generic [ref=e2981]: "5"
+                          - generic [ref=e2983]: "3"
+                        - generic [ref=e2984]:
+                          - generic [ref=e2986]: .
+                          - generic [ref=e2988]: "7"
+                      - generic [ref=e2989]: "%"
+                  - cell "8 8 . 0" [ref=e2990]:
+                    - generic [ref=e2994]:
+                      - generic [ref=e2995]:
+                        - generic [ref=e2997]: "8"
+                        - generic [ref=e2999]: "8"
+                      - generic [ref=e3000]:
+                        - generic [ref=e3002]: .
+                        - generic [ref=e3004]: "0"
+                  - cell "BLDG-D-02-DEV-01" [ref=e3005]
+                  - cell "预警" [ref=e3006]:
+                    - generic [ref=e3007]: 预警
+                - row "BLDG-A-03 2026-05-25 12:00 2 0 8 . 2 1 0 0 . 8 2 4 . 4 2 8 . 4 °C 4 8 . 1 % 9 8 . 0 BLDG-A-03-DEV-15 预警" [ref=e3008]:
+                  - cell "BLDG-A-03" [ref=e3009]
+                  - cell "2026-05-25 12:00" [ref=e3010]:
+                    - generic [ref=e3011]: 2026-05-25 12:00
+                  - cell "2 0 8 . 2" [ref=e3012]:
+                    - generic [ref=e3016]:
+                      - generic [ref=e3017]:
+                        - generic [ref=e3019]: "2"
+                        - generic [ref=e3021]: "0"
+                        - generic [ref=e3023]: "8"
+                      - generic [ref=e3024]:
+                        - generic [ref=e3026]: .
+                        - generic [ref=e3028]: "2"
+                  - cell "1 0 0 . 8" [ref=e3029]:
+                    - generic [ref=e3033]:
+                      - generic [ref=e3034]:
+                        - generic [ref=e3036]: "1"
+                        - generic [ref=e3038]: "0"
+                        - generic [ref=e3040]: "0"
+                      - generic [ref=e3041]:
+                        - generic [ref=e3043]: .
+                        - generic [ref=e3045]: "8"
+                  - cell "2 4 . 4" [ref=e3046]:
+                    - generic [ref=e3050]:
+                      - generic [ref=e3051]:
+                        - generic [ref=e3053]: "2"
+                        - generic [ref=e3055]: "4"
+                      - generic [ref=e3056]:
+                        - generic [ref=e3058]: .
+                        - generic [ref=e3060]: "4"
+                  - cell "2 8 . 4 °C" [ref=e3061]:
+                    - generic [ref=e3062]:
+                      - generic [ref=e3065]:
+                        - generic [ref=e3066]:
+                          - generic [ref=e3068]: "2"
+                          - generic [ref=e3070]: "8"
+                        - generic [ref=e3071]:
+                          - generic [ref=e3073]: .
+                          - generic [ref=e3075]: "4"
+                      - generic [ref=e3076]: °C
+                  - cell "4 8 . 1 %" [ref=e3077]:
+                    - generic [ref=e3078]:
+                      - generic [ref=e3081]:
+                        - generic [ref=e3082]:
+                          - generic [ref=e3084]: "4"
+                          - generic [ref=e3086]: "8"
+                        - generic [ref=e3087]:
+                          - generic [ref=e3089]: .
+                          - generic [ref=e3091]: "1"
+                      - generic [ref=e3092]: "%"
+                  - cell "9 8 . 0" [ref=e3093]:
+                    - generic [ref=e3097]:
+                      - generic [ref=e3098]:
+                        - generic [ref=e3100]: "9"
+                        - generic [ref=e3102]: "8"
+                      - generic [ref=e3103]:
+                        - generic [ref=e3105]: .
+                        - generic [ref=e3107]: "0"
+                  - cell "BLDG-A-03-DEV-15" [ref=e3108]
+                  - cell "预警" [ref=e3109]:
+                    - generic [ref=e3110]: 预警
+                - row "BLDG-B-01 2026-05-25 12:00 1 8 7 . 3 8 8 . 6 1 9 . 7 2 8 . 2 °C 5 2 . 1 % 8 7 . 0 BLDG-B-01-DEV-26 预警" [ref=e3111]:
+                  - cell "BLDG-B-01" [ref=e3112]
+                  - cell "2026-05-25 12:00" [ref=e3113]:
+                    - generic [ref=e3114]: 2026-05-25 12:00
+                  - cell "1 8 7 . 3" [ref=e3115]:
+                    - generic [ref=e3119]:
+                      - generic [ref=e3120]:
+                        - generic [ref=e3122]: "1"
+                        - generic [ref=e3124]: "8"
+                        - generic [ref=e3126]: "7"
+                      - generic [ref=e3127]:
+                        - generic [ref=e3129]: .
+                        - generic [ref=e3131]: "3"
+                  - cell "8 8 . 6" [ref=e3132]:
+                    - generic [ref=e3136]:
+                      - generic [ref=e3137]:
+                        - generic [ref=e3139]: "8"
+                        - generic [ref=e3141]: "8"
+                      - generic [ref=e3142]:
+                        - generic [ref=e3144]: .
+                        - generic [ref=e3146]: "6"
+                  - cell "1 9 . 7" [ref=e3147]:
+                    - generic [ref=e3151]:
+                      - generic [ref=e3152]:
+                        - generic [ref=e3154]: "1"
+                        - generic [ref=e3156]: "9"
+                      - generic [ref=e3157]:
+                        - generic [ref=e3159]: .
+                        - generic [ref=e3161]: "7"
+                  - cell "2 8 . 2 °C" [ref=e3162]:
+                    - generic [ref=e3163]:
+                      - generic [ref=e3166]:
+                        - generic [ref=e3167]:
+                          - generic [ref=e3169]: "2"
+                          - generic [ref=e3171]: "8"
+                        - generic [ref=e3172]:
+                          - generic [ref=e3174]: .
+                          - generic [ref=e3176]: "2"
+                      - generic [ref=e3177]: °C
+                  - cell "5 2 . 1 %" [ref=e3178]:
+                    - generic [ref=e3179]:
+                      - generic [ref=e3182]:
+                        - generic [ref=e3183]:
+                          - generic [ref=e3185]: "5"
+                          - generic [ref=e3187]: "2"
+                        - generic [ref=e3188]:
+                          - generic [ref=e3190]: .
+                          - generic [ref=e3192]: "1"
+                      - generic [ref=e3193]: "%"
+                  - cell "8 7 . 0" [ref=e3194]:
+                    - generic [ref=e3198]:
+                      - generic [ref=e3199]:
+                        - generic [ref=e3201]: "8"
+                        - generic [ref=e3203]: "7"
+                      - generic [ref=e3204]:
+                        - generic [ref=e3206]: .
+                        - generic [ref=e3208]: "0"
+                  - cell "BLDG-B-01-DEV-26" [ref=e3209]
+                  - cell "预警" [ref=e3210]:
+                    - generic [ref=e3211]: 预警
+                - row "BLDG-C-07 2026-05-25 12:00 2 1 6 . 8 1 0 9 . 2 2 5 . 0 2 7 . 8 °C 4 6 . 0 % 8 6 . 0 BLDG-C-07-DEV-27 预警" [ref=e3212]:
+                  - cell "BLDG-C-07" [ref=e3213]
+                  - cell "2026-05-25 12:00" [ref=e3214]:
+                    - generic [ref=e3215]: 2026-05-25 12:00
+                  - cell "2 1 6 . 8" [ref=e3216]:
+                    - generic [ref=e3220]:
+                      - generic [ref=e3221]:
+                        - generic [ref=e3223]: "2"
+                        - generic [ref=e3225]: "1"
+                        - generic [ref=e3227]: "6"
+                      - generic [ref=e3228]:
+                        - generic [ref=e3230]: .
+                        - generic [ref=e3232]: "8"
+                  - cell "1 0 9 . 2" [ref=e3233]:
+                    - generic [ref=e3237]:
+                      - generic [ref=e3238]:
+                        - generic [ref=e3240]: "1"
+                        - generic [ref=e3242]: "0"
+                        - generic [ref=e3244]: "9"
+                      - generic [ref=e3245]:
+                        - generic [ref=e3247]: .
+                        - generic [ref=e3249]: "2"
+                  - cell "2 5 . 0" [ref=e3250]:
+                    - generic [ref=e3254]:
+                      - generic [ref=e3255]:
+                        - generic [ref=e3257]: "2"
+                        - generic [ref=e3259]: "5"
+                      - generic [ref=e3260]:
+                        - generic [ref=e3262]: .
+                        - generic [ref=e3264]: "0"
+                  - cell "2 7 . 8 °C" [ref=e3265]:
+                    - generic [ref=e3266]:
+                      - generic [ref=e3269]:
+                        - generic [ref=e3270]:
+                          - generic [ref=e3272]: "2"
+                          - generic [ref=e3274]: "7"
+                        - generic [ref=e3275]:
+                          - generic [ref=e3277]: .
+                          - generic [ref=e3279]: "8"
+                      - generic [ref=e3280]: °C
+                  - cell "4 6 . 0 %" [ref=e3281]:
+                    - generic [ref=e3282]:
+                      - generic [ref=e3285]:
+                        - generic [ref=e3286]:
+                          - generic [ref=e3288]: "4"
+                          - generic [ref=e3290]: "6"
+                        - generic [ref=e3291]:
+                          - generic [ref=e3293]: .
+                          - generic [ref=e3295]: "0"
+                      - generic [ref=e3296]: "%"
+                  - cell "8 6 . 0" [ref=e3297]:
+                    - generic [ref=e3301]:
+                      - generic [ref=e3302]:
+                        - generic [ref=e3304]: "8"
+                        - generic [ref=e3306]: "6"
+                      - generic [ref=e3307]:
+                        - generic [ref=e3309]: .
+                        - generic [ref=e3311]: "0"
+                  - cell "BLDG-C-07-DEV-27" [ref=e3312]
+                  - cell "预警" [ref=e3313]:
+                    - generic [ref=e3314]: 预警
+                - row "BLDG-D-02 2026-05-25 12:00 2 0 9 . 4 9 8 . 3 2 2 . 2 2 7 . 4 °C 5 3 . 7 % 9 8 . 0 BLDG-D-02-DEV-22 预警" [ref=e3315]:
+                  - cell "BLDG-D-02" [ref=e3316]
+                  - cell "2026-05-25 12:00" [ref=e3317]:
+                    - generic [ref=e3318]: 2026-05-25 12:00
+                  - cell "2 0 9 . 4" [ref=e3319]:
+                    - generic [ref=e3323]:
+                      - generic [ref=e3324]:
+                        - generic [ref=e3326]: "2"
+                        - generic [ref=e3328]: "0"
+                        - generic [ref=e3330]: "9"
+                      - generic [ref=e3331]:
+                        - generic [ref=e3333]: .
+                        - generic [ref=e3335]: "4"
+                  - cell "9 8 . 3" [ref=e3336]:
+                    - generic [ref=e3340]:
+                      - generic [ref=e3341]:
+                        - generic [ref=e3343]: "9"
+                        - generic [ref=e3345]: "8"
+                      - generic [ref=e3346]:
+                        - generic [ref=e3348]: .
+                        - generic [ref=e3350]: "3"
+                  - cell "2 2 . 2" [ref=e3351]:
+                    - generic [ref=e3355]:
+                      - generic [ref=e3356]:
+                        - generic [ref=e3358]: "2"
+                        - generic [ref=e3360]: "2"
+                      - generic [ref=e3361]:
+                        - generic [ref=e3363]: .
+                        - generic [ref=e3365]: "2"
+                  - cell "2 7 . 4 °C" [ref=e3366]:
+                    - generic [ref=e3367]:
+                      - generic [ref=e3370]:
+                        - generic [ref=e3371]:
+                          - generic [ref=e3373]: "2"
+                          - generic [ref=e3375]: "7"
+                        - generic [ref=e3376]:
+                          - generic [ref=e3378]: .
+                          - generic [ref=e3380]: "4"
+                      - generic [ref=e3381]: °C
+                  - cell "5 3 . 7 %" [ref=e3382]:
+                    - generic [ref=e3383]:
+                      - generic [ref=e3386]:
+                        - generic [ref=e3387]:
+                          - generic [ref=e3389]: "5"
+                          - generic [ref=e3391]: "3"
+                        - generic [ref=e3392]:
+                          - generic [ref=e3394]: .
+                          - generic [ref=e3396]: "7"
+                      - generic [ref=e3397]: "%"
+                  - cell "9 8 . 0" [ref=e3398]:
+                    - generic [ref=e3402]:
+                      - generic [ref=e3403]:
+                        - generic [ref=e3405]: "9"
+                        - generic [ref=e3407]: "8"
+                      - generic [ref=e3408]:
+                        - generic [ref=e3410]: .
+                        - generic [ref=e3412]: "0"
+                  - cell "BLDG-D-02-DEV-22" [ref=e3413]
+                  - cell "预警" [ref=e3414]:
+                    - generic [ref=e3415]: 预警
+                - row "BLDG-A-03 2026-05-25 06:00 1 7 1 . 9 9 1 . 9 2 2 . 4 2 6 . 9 °C 5 0 . 8 % 9 2 . 0 BLDG-A-03-DEV-16 预警" [ref=e3416]:
+                  - cell "BLDG-A-03" [ref=e3417]
+                  - cell "2026-05-25 06:00" [ref=e3418]:
+                    - generic [ref=e3419]: 2026-05-25 06:00
+                  - cell "1 7 1 . 9" [ref=e3420]:
+                    - generic [ref=e3424]:
+                      - generic [ref=e3425]:
+                        - generic [ref=e3427]: "1"
+                        - generic [ref=e3429]: "7"
+                        - generic [ref=e3431]: "1"
+                      - generic [ref=e3432]:
+                        - generic [ref=e3434]: .
+                        - generic [ref=e3436]: "9"
+                  - cell "9 1 . 9" [ref=e3437]:
+                    - generic [ref=e3441]:
+                      - generic [ref=e3442]:
+                        - generic [ref=e3444]: "9"
+                        - generic [ref=e3446]: "1"
+                      - generic [ref=e3447]:
+                        - generic [ref=e3449]: .
+                        - generic [ref=e3451]: "9"
+                  - cell "2 2 . 4" [ref=e3452]:
+                    - generic [ref=e3456]:
+                      - generic [ref=e3457]:
+                        - generic [ref=e3459]: "2"
+                        - generic [ref=e3461]: "2"
+                      - generic [ref=e3462]:
+                        - generic [ref=e3464]: .
+                        - generic [ref=e3466]: "4"
+                  - cell "2 6 . 9 °C" [ref=e3467]:
+                    - generic [ref=e3468]:
+                      - generic [ref=e3471]:
+                        - generic [ref=e3472]:
+                          - generic [ref=e3474]: "2"
+                          - generic [ref=e3476]: "6"
+                        - generic [ref=e3477]:
+                          - generic [ref=e3479]: .
+                          - generic [ref=e3481]: "9"
+                      - generic [ref=e3482]: °C
+                  - cell "5 0 . 8 %" [ref=e3483]:
+                    - generic [ref=e3484]:
+                      - generic [ref=e3487]:
+                        - generic [ref=e3488]:
+                          - generic [ref=e3490]: "5"
+                          - generic [ref=e3492]: "0"
+                        - generic [ref=e3493]:
+                          - generic [ref=e3495]: .
+                          - generic [ref=e3497]: "8"
+                      - generic [ref=e3498]: "%"
+                  - cell "9 2 . 0" [ref=e3499]:
+                    - generic [ref=e3503]:
+                      - generic [ref=e3504]:
+                        - generic [ref=e3506]: "9"
+                        - generic [ref=e3508]: "2"
+                      - generic [ref=e3509]:
+                        - generic [ref=e3511]: .
+                        - generic [ref=e3513]: "0"
+                  - cell "BLDG-A-03-DEV-16" [ref=e3514]
+                  - cell "预警" [ref=e3515]:
+                    - generic [ref=e3516]: 预警
+                - row "BLDG-B-01 2026-05-25 06:00 1 4 7 . 7 5 8 . 2 1 7 . 1 2 5 . 8 °C 5 3 . 9 % 6 1 . 0 BLDG-B-01-DEV-24 正常" [ref=e3517]:
+                  - cell "BLDG-B-01" [ref=e3518]
+                  - cell "2026-05-25 06:00" [ref=e3519]:
+                    - generic [ref=e3520]: 2026-05-25 06:00
+                  - cell "1 4 7 . 7" [ref=e3521]:
+                    - generic [ref=e3525]:
+                      - generic [ref=e3526]:
+                        - generic [ref=e3528]: "1"
+                        - generic [ref=e3530]: "4"
+                        - generic [ref=e3532]: "7"
+                      - generic [ref=e3533]:
+                        - generic [ref=e3535]: .
+                        - generic [ref=e3537]: "7"
+                  - cell "5 8 . 2" [ref=e3538]:
+                    - generic [ref=e3542]:
+                      - generic [ref=e3543]:
+                        - generic [ref=e3545]: "5"
+                        - generic [ref=e3547]: "8"
+                      - generic [ref=e3548]:
+                        - generic [ref=e3550]: .
+                        - generic [ref=e3552]: "2"
+                  - cell "1 7 . 1" [ref=e3553]:
+                    - generic [ref=e3557]:
+                      - generic [ref=e3558]:
+                        - generic [ref=e3560]: "1"
+                        - generic [ref=e3562]: "7"
+                      - generic [ref=e3563]:
+                        - generic [ref=e3565]: .
+                        - generic [ref=e3567]: "1"
+                  - cell "2 5 . 8 °C" [ref=e3568]:
+                    - generic [ref=e3569]:
+                      - generic [ref=e3572]:
+                        - generic [ref=e3573]:
+                          - generic [ref=e3575]: "2"
+                          - generic [ref=e3577]: "5"
+                        - generic [ref=e3578]:
+                          - generic [ref=e3580]: .
+                          - generic [ref=e3582]: "8"
+                      - generic [ref=e3583]: °C
+                  - cell "5 3 . 9 %" [ref=e3584]:
+                    - generic [ref=e3585]:
+                      - generic [ref=e3588]:
+                        - generic [ref=e3589]:
+                          - generic [ref=e3591]: "5"
+                          - generic [ref=e3593]: "3"
+                        - generic [ref=e3594]:
+                          - generic [ref=e3596]: .
+                          - generic [ref=e3598]: "9"
+                      - generic [ref=e3599]: "%"
+                  - cell "6 1 . 0" [ref=e3600]:
+                    - generic [ref=e3604]:
+                      - generic [ref=e3605]:
+                        - generic [ref=e3607]: "6"
+                        - generic [ref=e3609]: "1"
+                      - generic [ref=e3610]:
+                        - generic [ref=e3612]: .
+                        - generic [ref=e3614]: "0"
+                  - cell "BLDG-B-01-DEV-24" [ref=e3615]
+                  - cell "正常" [ref=e3616]:
+                    - generic [ref=e3617]: 正常
+        - generic [ref=e3618]:
+          - generic [ref=e3619]: "1"
+          - generic [ref=e3620]: Issue
+      - generic:
+        - generic:
+          - generic: 0101 1100 0011 1010 0110 1001 0101 0010 1110 0101 1001 0011
+          - generic:
+            - generic:
+              - generic:
+                - heading "智慧运维" [level=1]
+                - generic: 公寓楼(BLDG-APT) / 全部设备
+              - generic:
+                - generic:
+                  - img
+                  - generic: 筛选范围
+                  - combobox "筛选范围":
+                    - option "全部设备" [selected]
+                    - option "暖通设备"
+                    - option "电气回路"
+                    - option "给排水设备"
+                  - img
+                - generic: 健康运行
+                - generic: 15:03:20
+                - generic:
+                  - img
+                  - text: 多云 26°C
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 站点健康度
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "7"
+                          - generic: 分
+                    - generic:
+                      - img
+                  - generic: 较昨日 +2
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 活跃告警
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "5"
+                          - generic: 条
+                    - generic:
+                      - img
+                  - generic: 高优 1 · 中优 3 · 低优 1
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 待处理工单
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "2"
+                          - generic: 条
+                    - generic:
+                      - img
+                  - generic: 超期 0 · 即将到期 1
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 巡检覆盖率
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: "9"
+                          - generic: "%"
+                    - generic:
+                      - img
+                  - generic: 本月累计 412 次
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 智能体状态
+                      - generic: 已接入
+                    - generic:
+                      - img
+                  - generic: 平均响应 1.2s · v2.4.1
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "优先事项" [level=3]: 优先事项
+                    - generic:
+                      - generic: 优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。处置重点是过滤器压差、阀门开度和送回风温差,责任人为暖通运维一组;今天 16:30 前完成现场复核,若负荷 30 分钟内未回落,同步调整新风策略并升级为值班长复核。
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "告警中心" [level=3]: 告警中心
+                      - generic:
+                        - generic: 5 条活跃
+                    - generic:
+                      - generic:
+                        - article:
+                          - generic:
+                            - generic:
+                              - heading "BLDG-APT-3F 新风机组 负荷偏高" [level=4]
+                              - generic:
+                                - generic:
+                                  - generic: 位置
+                                  - text: Level 3 西侧设备间
+                                - generic:
+                                  - generic: 当前值
+                                  - text: 112.4 kWh
+                                - generic:
+                                  - generic: 基线偏差
+                                  - text: +29.8%
+                                - generic:
+                                  - generic: 发生时间
+                                  - text: 19:42
+                            - generic:
+                              - generic: 高优
+                              - generic: 处理中
+                          - generic: 优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。暖通运维一组需先核查过滤器压差、阀门开度和送回风温差,今晚复核后回填处理记录。
+                          - generic:
+                            - button "查看详情"
+                        - article:
+                          - generic:
+                            - generic:
+                              - heading "BLDG-APT-2F 公区照明回路 夜间未闭锁" [level=4]
+                              - generic:
+                                - generic:
+                                  - generic: 位置
+                                  - text: Level 2 公区走廊
+                                - generic:
+                                  - generic: 当前值
+                                  - text: 78.8 kWh
+                                - generic:
+                                  - generic: 基线偏差
+                                  - text: +16.4%
+                                - generic:
+                                  - generic: 发生时间
+                                  - text: 19:18
+                            - generic:
+                              - generic: 中优
+                              - generic: 已派单
+                          - generic: 已派单给电气运维二组，复核 21:00-06:00 定时闭锁与人体感应阈值。
+                          - generic:
+                            - button "查看详情"
+                        - article:
+                          - generic:
+                            - generic:
+                              - heading "BLDG-APT-B1 水泵 频繁启停" [level=4]
+                              - generic:
+                                - generic:
+                                  - generic: 位置
+                                  - text: 地下设备层
+                                - generic:
+                                  - generic: 当前值
+                                  - text: 11 次/小时
+                                - generic:
+                                  - generic: 基线偏差
+                                  - text: 较基线 +6 次/小时
+                                - generic:
+                                  - generic: 发生时间
+                                  - text: 18:55
+                            - generic:
+                              - generic: 中优
+                              - generic: 待处理
+                          - generic: 待给排水组现场复核止回阀状态、压差传感器采样和启停阈值。
+                          - generic:
+                            - button "查看详情"
+                        - article:
+                          - generic:
+                            - generic:
+                              - heading "BLDG-APT-5F 空调机组 回风温度异常" [level=4]
+                              - generic:
+                                - generic:
+                                  - generic: 位置
+                                  - text: Level 5
+                                - generic:
+                                  - generic: 当前值
+                                  - text: 28.6°C
+                                - generic:
+                                  - generic: 基线偏差
+                                  - text: +3.2°C
+                                - generic:
+                                  - generic: 发生时间
+                                  - text: 17:30
+                            - generic:
+                              - generic: 中优
+                              - generic: 待处理
+                          - generic: 待暖通值班员检查回风传感器、冷冻水阀门开度和末端风量。
+                          - generic:
+                            - button "查看详情"
+                        - article:
+                          - generic:
+                            - generic:
+                              - heading "BLDG-APT-RF 屋顶冷却塔 风机振动告警" [level=4]
+                              - generic:
+                                - generic:
+                                  - generic: 位置
+                                  - text: 屋面
+                                - generic:
+                                  - generic: 当前值
+                                  - text: 4.8 mm/s
+                                - generic:
+                                  - generic: 基线偏差
+                                  - text: 较阈值 +0.6 mm/s
+                                - generic:
+                                  - generic: 发生时间
+                                  - text: 16:12
+                            - generic:
+                              - generic: 低优
+                              - generic: 已确认
+                          - generic: 已确认并纳入本周巡检，优先检查风机轴承、紧固件和基础减振状态。
+                          - generic:
+                            - button "查看详情"
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "巡检与工单" [level=3]: 巡检与工单
+                      - generic:
+                        - generic: 待办 2 · 处理中 1 · 超期 0
+                    - generic:
+                      - generic:
+                        - article:
+                          - generic:
+                            - generic:
+                              - generic: WO-BUILDING-031
+                              - heading "处置 3F 新风机组负荷偏高" [level=4]
+                              - generic:
+                                - generic: 责任人 暖通运维一组
+                                - generic: 截止 今天 16:30
+                                - generic: 处理中
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "6"
+                                        - generic:
+                                          - generic: "5"
+                                - text: "%"
+                        - article:
+                          - generic:
+                            - generic:
+                              - generic: WO-BUILDING-032
+                              - heading "复核 2F 公区照明回路夜间未闭锁" [level=4]
+                              - generic:
+                                - generic: 责任人 电气运维二组
+                                - generic: 截止 明天 10:00
+                                - generic: 待复核
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: "3"
+                                        - generic:
+                                          - generic: "0"
+                                - text: "%"
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "待优化项" [level=3]: 待优化项
+                    - generic:
+                      - generic:
+                        - button "1 完成 3F 新风机组过滤器更换 查看 暖通组负责，本周内完成并回填复核记录。":
+                          - generic:
+                            - generic: "1"
+                            - generic: 完成 3F 新风机组过滤器更换
+                            - generic: 查看
+                          - generic: 暖通组负责，本周内完成并回填复核记录。
+                        - button "2 复核 2F 公区照明感应阈值 查看":
+                          - generic:
+                            - generic: "2"
+                            - generic: 复核 2F 公区照明感应阈值
+                            - generic: 查看
+                        - button "3 校准 B1 水泵压差报警阈值 查看":
+                          - generic:
+                            - generic: "3"
+                            - generic: 校准 B1 水泵压差报警阈值
+                            - generic: 查看
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "当前运维焦点" [level=3]: 当前运维焦点
+                    - generic:
+                      - generic:
+                        - button "BLDG-APT-3F 新风机组 负荷偏高 Level 3 西侧设备间 · 112.4 kWh":
+                          - generic:
+                            - generic: BLDG-APT-3F 新风机组 负荷偏高
+                          - generic: Level 3 西侧设备间 · 112.4 kWh
+                        - button "BLDG-APT-2F 公区照明回路 夜间未闭锁 Level 2 公区走廊 · 78.8 kWh":
+                          - generic:
+                            - generic: BLDG-APT-2F 公区照明回路 夜间未闭锁
+                          - generic: Level 2 公区走廊 · 78.8 kWh
+                        - button "BLDG-APT-B1 水泵 频繁启停 地下设备层 · 11 次/小时":
+                          - generic:
+                            - generic: BLDG-APT-B1 水泵 频繁启停
+                          - generic: 地下设备层 · 11 次/小时
+                        - button "BLDG-APT-5F 空调机组 回风温度异常 Level 5 · 28.6°C":
+                          - generic:
+                            - generic: BLDG-APT-5F 空调机组 回风温度异常
+                          - generic: Level 5 · 28.6°C
+                - generic:
+                  - generic:
+                    - generic: ///
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - heading "智能体问答" [level=3]: 智能体问答
+                      - generic:
+                        - generic: 已接入
+                    - generic:
+                      - generic:
+                        - generic:
+                          - button "总结当前能耗情况"
+                          - button "峰值出现在什么时段?"
+                          - button "给我三条优化建议"
+                          - button "列出当前高能耗设备"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: 总结当前能耗情况
+                          - generic:
+                            - generic:
+                              - generic: AI
+                              - generic: "【问题理解】 快速掌握公寓楼当前整体能耗状况与异常点。 【核心结论】 整体能耗在合理区间,但有 2 个重点异常:BLDG-APT-3F 新风机组负荷 高于基线 29.8%,需优先处置;2F 公区照明夜间未按计划闭锁,产生 16.4% 的无效负荷。 【分析依据】 ● 数据依据:近 1 小时新风机组负荷 112.4 kWh(基线 86.6 kWh); 2F 公区照明夜间负荷 78.8 kWh(基线 67.7 kWh)。 ● 知识依据:基线取自过去 30 天同时段加权平均。 【原因分析】 ● 新风机组:阀门开度异常或过滤器压差超标,导致风机长时间高频运转 (可能性高)。 ● 公区照明:人体感应阈值过低或定时控制策略失效,触发夜间常亮 (可能性中)。 【排查与优化建议】 ● 排查步骤: 1. 现场核查 3F 新风机组过滤器压差与送回风温差 2. 调取 2F 照明回路 21:00–06:00 控制日志 ● 优化措施: - 短期:推进工单 WO-BUILDING-031,今晚前完成新风机组复核; 调整 2F 公区照明定时策略至 22:00 强制闭锁 - 中长期:为新风机组增配振动传感器,接入预测性维护模型; 统一公区照明人体感应阈值标准"
+                            - generic:
+                              - button "新风机组的能耗趋势怎么样?"
+                              - button "怎么排查照明回路夜间未闭锁?"
+                        - generic:
+                          - generic:
+                            - generic: 输入问题
+                            - textbox "输入问题":
+                              - /placeholder: 例如:3F 新风机组为什么负荷偏高?
+                          - button "发送":
+                            - img
+            - generic:
+              - generic:
+                - generic:
+                  - generic: 上次同步 0s 前
+                  - generic: 在线运维人员 7 人
+                  - generic: 今日已处理工单 8 件
+                  - generic: 今日新增告警 237 条
+  - alert [ref=e3621]

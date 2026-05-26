@@ -411,8 +411,13 @@
     height: 22px;
   }
 
+  .contain-layout-paint {
+    contain: layout paint style;
+  }
+
   .data-analysis-card-frame {
     position: relative;
+    contain: layout paint style;
     filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.2));
   }
 
@@ -1258,6 +1263,7 @@
 
   .data-analysis-heatmap-panel,
   .data-analysis-composition-panel {
+    contain: layout paint style;
     min-height: 720px;
   }
 
@@ -1471,6 +1477,7 @@
   }
 
   .operations-main-grid {
+    contain: layout paint style;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
@@ -1687,6 +1694,7 @@
   .operations-task-card,
   .operations-strategy-item,
   .operations-focus-card {
+    contain: layout paint style;
     position: relative;
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     transition:
@@ -1930,6 +1938,7 @@
   }
 
   .operations-chat-feed {
+    contain: layout paint style;
     min-height: 360px;
     max-height: 520px;
     clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
