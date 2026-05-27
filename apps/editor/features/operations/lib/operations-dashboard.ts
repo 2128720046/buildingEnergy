@@ -30,6 +30,34 @@ export interface OperationsTask {
   title: string
 }
 
+export interface MobileAlertReport {
+  detail: string
+  deviceId: string
+  id: string
+  location: string
+  photoCount: number
+  reporter: string
+  severity: 'high' | 'low' | 'medium'
+  status: '待接收' | '已推送待处理' | '已受理'
+  submittedAt: string
+  title: string
+}
+
+export interface MobileUploadedWorkOrder {
+  anomaly: string
+  code: string
+  deviceId: string
+  due: string
+  id: string
+  location: string
+  photoCount: number
+  resultNote: string
+  resultStatus: string
+  source: string
+  status: '待手机处理' | '待电脑端审阅' | '已审阅'
+  title: string
+}
+
 export interface OperationsStrategy {
   description: string
   title: string
@@ -38,6 +66,8 @@ export interface OperationsStrategy {
 export interface OperationsDashboardData {
   alerts: OperationsAlert[]
   metrics: OperationsMetric[]
+  mobileAlerts: MobileAlertReport[]
+  mobileWorkOrders: MobileUploadedWorkOrder[]
   strategies: OperationsStrategy[]
   summary: string
   tasks: OperationsTask[]
@@ -145,6 +175,64 @@ export function buildOperationsDashboardData({
     },
   ]
 
+  const mobileAlerts: MobileAlertReport[] = [
+    {
+      detail: '巡检时发现 1A 配电箱附近有轻微焦糊味，柜门温度偏高。',
+      deviceId: 'panel-1a',
+      id: 'report-1',
+      location: '思源楼 / 1F 配电间',
+      photoCount: 2,
+      reporter: '值班员 王工',
+      severity: 'high',
+      status: '已推送待处理',
+      submittedAt: '今天 10:18',
+      title: '配电间有焦糊味',
+    },
+    {
+      detail: '现场确认无人通行时照明仍保持常亮，疑似时控策略未生效。',
+      deviceId: 'light-2e',
+      id: 'report-2',
+      location: '思源楼 / 2F 东侧走廊',
+      photoCount: 1,
+      reporter: '值班员 李工',
+      severity: 'medium',
+      status: '已受理',
+      submittedAt: '今天 09:35',
+      title: '走廊照明常亮',
+    },
+  ]
+
+  const mobileWorkOrders: MobileUploadedWorkOrder[] = [
+    {
+      anomaly: '过去 2 小时电流波动幅度较大，需复核采样稳定性。',
+      code: 'WO-MOBILE-041',
+      deviceId: 'panel-1a',
+      due: '今天 18:00',
+      id: 'wo-mobile-041',
+      location: '思源楼 / 1F 配电间',
+      photoCount: 3,
+      resultNote: '紧固二次端子，复测电流曲线已恢复稳定。',
+      resultStatus: '已检修',
+      source: '电脑端能耗监测',
+      status: '待电脑端审阅',
+      title: '配电箱电流波动异常工单',
+    },
+    {
+      anomaly: '低人流时段能耗未下降，存在待机设备未关闭。',
+      code: 'WO-MOBILE-042',
+      deviceId: 'meeting-5f',
+      due: '昨天 15:10',
+      id: 'wo-mobile-042',
+      location: '思源楼 / 5F 会议区',
+      photoCount: 2,
+      resultNote: '关闭投影和插座待机负载，已提交等待电脑端审阅。',
+      resultStatus: '已关闭异常',
+      source: '电脑端能耗监测',
+      status: '待电脑端审阅',
+      title: '会议区待机能耗复核工单',
+    },
+  ]
+
   const metrics = [
     {
       label: '站点健康度',
@@ -158,8 +246,8 @@ export function buildOperationsDashboardData({
     },
     {
       label: '待处理工单',
-      value: '2',
-      detail: '超期 0 · 即将到期 1',
+      value: '4',
+      detail: '手机端待审 2 · 即将到期 1',
     },
     {
       label: '巡检覆盖率',
@@ -189,6 +277,8 @@ export function buildOperationsDashboardData({
   return {
     alerts,
     metrics,
+    mobileAlerts,
+    mobileWorkOrders,
     strategies,
     summary,
     tasks,

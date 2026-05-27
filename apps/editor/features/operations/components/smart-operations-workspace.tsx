@@ -4,15 +4,19 @@ import NumberFlow from '@number-flow/react'
 import {
   AlertTriangle,
   Bot,
+  Camera,
   ChevronDown,
   ClipboardList,
   CloudSun,
   Cpu,
   Filter,
+  Image as ImageIcon,
   Lightbulb,
   Radar,
   Send,
+  SendToBack,
   ShieldCheck,
+  Smartphone,
   Sparkles,
 } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
@@ -31,6 +35,8 @@ import { useNow } from '@/features/host-shell/lib/time-store'
 import {
   buildOperationsDashboardData,
   type OperationsAlert,
+  type MobileAlertReport,
+  type MobileUploadedWorkOrder,
   type OperationsStrategy,
   type OperationsTask,
 } from '@/features/operations/lib/operations-dashboard'
@@ -51,6 +57,21 @@ interface LiveTask extends OperationsTask {
   steps: string[]
   tools: string
 }
+
+type MobileDetailState =
+  | { item: MobileAlertReport; kind: 'alert' }
+  | { item: MobileUploadedWorkOrder; kind: 'work-order' }
+  | null
+
+const OPERATIONS_ASSIGNEES = [
+  '暖通运维一组',
+  '电气运维二组',
+  '给排水运维组',
+  '综合值班长',
+  '楼宇自控工程师',
+]
+
+type MobileDispatchStatus = '待派发' | '已发至手机端' | '手机端处理中'
 
 interface AgentMessage {
   content: string
@@ -509,15 +530,19 @@ const FocusSummary = memo(function FocusSummary({
 const AlertCard = memo(function AlertCard({
   alert,
   highlighted,
+  onDispatchWorkOrder,
   onHighlightTask,
   pulse,
 }: {
   alert: LiveAlert
   highlighted: boolean
+  onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
   pulse: boolean
 }) {
   const tone = severityTone(alert.severity)
+  const [selectedAssignee, setSelectedAssignee] = useState(OPERATIONS_ASSIGNEES[0] ?? '')
+  const dispatched = Boolean(alert.linkedTaskId)
 
   return (
     <article
@@ -571,6 +596,27 @@ const AlertCard = memo(function AlertCard({
         {alert.recommendation}
       </div>
       <div className="operations-alert-actions mt-3 flex justify-end gap-2">
+        <label className="operations-dispatch-control">
+          <span>处理人员</span>
+          <select
+            disabled={dispatched}
+            onChange={(event) => setSelectedAssignee(event.target.value)}
+            value={selectedAssignee}
+          >
+            {OPERATIONS_ASSIGNEES.map((assignee) => (
+              <option key={assignee} value={assignee}>
+                {assignee}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          disabled={dispatched}
+          onClick={() => onDispatchWorkOrder(alert, selectedAssignee)}
+          type="button"
+        >
+          {dispatched ? '已派单' : '派发工单'}
+        </button>
         <button type="button">查看详情</button>
       </div>
     </article>
@@ -580,11 +626,13 @@ const AlertCard = memo(function AlertCard({
 const AlertCenter = memo(function AlertCenter({
   alerts,
   highlightedAlertId,
+  onDispatchWorkOrder,
   onHighlightTask,
   pulseAlertId,
 }: {
   alerts: LiveAlert[]
   highlightedAlertId: string | null
+  onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
   pulseAlertId: string | null
 }) {
@@ -600,6 +648,7 @@ const AlertCenter = memo(function AlertCenter({
             alert={alert}
             highlighted={highlightedAlertId === alert.id}
             key={alert.id}
+            onDispatchWorkOrder={onDispatchWorkOrder}
             onHighlightTask={onHighlightTask}
             pulse={pulseAlertId === alert.id}
           />
@@ -709,6 +758,297 @@ const TaskList = memo(function TaskList({
         {tasks.map((task) => (
           <TaskCard highlighted={highlightedTaskId === task.id} key={task.id} task={task} />
         ))}
+      </div>
+    </OperationsPanel>
+  )
+})
+
+function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: number) {
+  const safeCount = Math.max(1, count)
+  const labels =
+    kind === 'alert'
+      ? ['现场全景', '设备铭牌', '异常特写', '位置环境']
+      : ['处理前', '处理过程', '处理后', '复测记录']
+
+  return Array.from({ length: safeCount }, (_, index) => ({
+    id: `${kind}-${id}-photo-${index}`,
+    label: labels[index % labels.length],
+  }))
+}
+
+function MobileMaterialDetailDialog({
+  detail,
+  onClose,
+  onReviewWorkOrder,
+  reviewedOrderIds,
+}: {
+  detail: MobileDetailState
+  onClose: () => void
+  onReviewWorkOrder: (id: string) => void
+  reviewedOrderIds: Set<string>
+}) {
+  if (!detail) return null
+
+  const isAlert = detail.kind === 'alert'
+  const item = detail.item
+  const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount)
+  const reviewed = !isAlert && reviewedOrderIds.has(item.id)
+
+  return (
+    <div className="operations-mobile-detail-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        aria-modal="true"
+        className="operations-mobile-detail-dialog"
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <header className="operations-mobile-detail-header">
+          <div>
+            <div className="operations-mobile-sync-label">{isAlert ? '现场上报材料' : '工单处理材料'}</div>
+            <h3>{isAlert ? '上报现场异常' : '工单处理'}</h3>
+          </div>
+          <button aria-label="关闭" className="operations-detail-close" onClick={onClose} type="button">
+            ×
+          </button>
+        </header>
+
+        {isAlert ? (
+          <div className="operations-detail-section">
+            <div className="operations-detail-title">{item.title}</div>
+            <div className="operations-detail-meta">
+              {item.location} · {item.reporter} · {item.submittedAt}
+            </div>
+            <div className="operations-detail-grid">
+              <span>
+                <b>严重程度</b>
+                {severityLabel(item.severity)}
+              </span>
+              <span>
+                <b>设备编号</b>
+                {item.deviceId}
+              </span>
+              <span>
+                <b>当前状态</b>
+                {item.status}
+              </span>
+              <span>
+                <b>材料数量</b>
+                {item.photoCount} 张照片
+              </span>
+            </div>
+            <div className="operations-detail-note">
+              <b>现场说明</b>
+              <p>{item.detail}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="operations-detail-section">
+            <div className="operations-detail-title">{item.title}</div>
+            <div className="operations-detail-meta">
+              {item.code} · {item.location} · 截止 {item.due}
+            </div>
+            <div className="operations-detail-grid">
+              <span>
+                <b>异常来源</b>
+                {item.source}
+              </span>
+              <span>
+                <b>设备编号</b>
+                {item.deviceId}
+              </span>
+              <span>
+                <b>检修结果</b>
+                {item.resultStatus}
+              </span>
+              <span>
+                <b>电脑端状态</b>
+                {reviewed ? '已审阅' : item.status}
+              </span>
+            </div>
+            <div className="operations-detail-note">
+              <b>异常说明</b>
+              <p>{item.anomaly}</p>
+            </div>
+            <div className="operations-detail-note">
+              <b>处理说明</b>
+              <p>{item.resultNote}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="operations-detail-photo-block">
+          <div className="operations-detail-subtitle">
+            <Camera className="h-4 w-4" strokeWidth={1.9} />
+            现场照片
+          </div>
+          <div className="operations-detail-photo-grid">
+            {photos.map((photo, index) => (
+              <div className="operations-detail-photo" key={photo.id}>
+                <ImageIcon className="h-6 w-6" strokeWidth={1.8} />
+                <span>{photo.label}</span>
+                <small>{String(index + 1).padStart(2, '0')}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <footer className="operations-mobile-detail-footer">
+          <button className="operations-mobile-mini-btn" onClick={onClose} type="button">
+            关闭
+          </button>
+          {!isAlert ? (
+            <button
+              className="operations-mobile-mini-btn"
+              disabled={reviewed}
+              onClick={() => {
+                onReviewWorkOrder(item.id)
+                onClose()
+              }}
+              type="button"
+            >
+              {reviewed ? '已审阅' : '确认审阅'}
+            </button>
+          ) : null}
+        </footer>
+      </section>
+    </div>
+  )
+}
+
+const MobileOpsBridge = memo(function MobileOpsBridge({
+  alerts,
+  dispatchStatus,
+  mobileWorkOrders,
+  onAcceptAlert,
+  onOpenAlertDetail,
+  onOpenWorkOrderDetail,
+  onDispatchWorkOrder,
+  onReviewWorkOrder,
+  reviewedOrderIds,
+}: {
+  alerts: MobileAlertReport[]
+  dispatchStatus: MobileDispatchStatus
+  mobileWorkOrders: MobileUploadedWorkOrder[]
+  onAcceptAlert: (id: string) => void
+  onOpenAlertDetail: (alert: MobileAlertReport) => void
+  onOpenWorkOrderDetail: (order: MobileUploadedWorkOrder) => void
+  onDispatchWorkOrder: () => void
+  onReviewWorkOrder: (id: string) => void
+  reviewedOrderIds: Set<string>
+}) {
+  const pendingReviewCount = mobileWorkOrders.filter(
+    (order) => order.status === '待电脑端审阅' && !reviewedOrderIds.has(order.id),
+  ).length
+  const pendingAlertCount = alerts.filter((alert) => alert.status !== '已受理').length
+
+  return (
+    <OperationsPanel
+      icon={<Smartphone className="h-5 w-5" strokeWidth={1.8} />}
+      rightSlot={<StatusBadge tone="emerald">Android 已联动</StatusBadge>}
+      title="移动端协同工单"
+    >
+      <div className="operations-mobile-sync-grid">
+        <div className="operations-mobile-sync-card hidden">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="operations-mobile-sync-label">电脑端派发</div>
+              <h4 className="operations-mobile-sync-title">向手机端发放异常工单</h4>
+            </div>
+            <StatusBadge tone={dispatchStatus === '待派发' ? 'amber' : 'emerald'}>{dispatchStatus}</StatusBadge>
+          </div>
+          <div className="mt-3 text-[13px] leading-6 text-cyan-100/66">
+            工单包含设备、位置、异常说明、截止时间和处理要求，手机端巡检页可直接接收并回填结果。
+          </div>
+          <button className="operations-mobile-action mt-4" onClick={onDispatchWorkOrder} type="button">
+            <SendToBack className="h-4 w-4" strokeWidth={1.9} />
+            {dispatchStatus === '待派发' ? '派发至手机端' : '重新同步'}
+          </button>
+        </div>
+
+        <div className="operations-mobile-sync-card">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="operations-mobile-sync-label">手机端报警</div>
+              <h4 className="operations-mobile-sync-title">接收现场上报预警</h4>
+            </div>
+            <StatusBadge tone={pendingAlertCount > 0 ? 'rose' : 'emerald'}>{pendingAlertCount} 条待受理</StatusBadge>
+          </div>
+          <div className="mt-3 space-y-2.5">
+            {alerts.map((alert) => (
+              <div className="operations-mobile-row" data-severity={alert.severity} key={alert.id}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-black text-cyan-50">{alert.title}</span>
+                    <StatusBadge tone={severityTone(alert.severity)}>{severityLabel(alert.severity)}</StatusBadge>
+                  </div>
+                  <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                    {alert.location} · {alert.reporter} · 照片 {alert.photoCount} 张 · {alert.submittedAt}
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">{alert.detail}</div>
+                </div>
+                <div className="operations-mobile-row-actions">
+                  <button className="operations-mobile-mini-btn" onClick={() => onOpenAlertDetail(alert)} type="button">
+                    查看详细
+                  </button>
+                <button
+                  className="operations-mobile-mini-btn"
+                  disabled={alert.status === '已受理'}
+                  onClick={() => onAcceptAlert(alert.id)}
+                  type="button"
+                >
+                  {alert.status === '已受理' ? '已受理' : '受理'}
+                </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="operations-mobile-sync-card operations-mobile-review-card">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="operations-mobile-sync-label">手机端上传</div>
+              <h4 className="operations-mobile-sync-title">审阅已处理工单</h4>
+            </div>
+            <StatusBadge tone={pendingReviewCount > 0 ? 'amber' : 'emerald'}>{pendingReviewCount} 条待审</StatusBadge>
+          </div>
+          <div className="mt-3 space-y-2.5">
+            {mobileWorkOrders.map((order) => {
+              const reviewed = reviewedOrderIds.has(order.id)
+              return (
+                <div className="operations-mobile-row" data-reviewed={reviewed ? 'true' : undefined} key={order.id}>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="operations-task-code font-black text-[#7AF7FF]">{order.code}</span>
+                      <span className="font-black text-cyan-50">{order.title}</span>
+                    </div>
+                    <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                      {order.location} · {order.resultStatus} · 照片 {order.photoCount} 张
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">{order.resultNote}</div>
+                  </div>
+                  <div className="operations-mobile-row-actions">
+                    <button
+                      className="operations-mobile-mini-btn"
+                      onClick={() => onOpenWorkOrderDetail(order)}
+                      type="button"
+                    >
+                      查看详细
+                    </button>
+                  <button
+                    className="operations-mobile-mini-btn"
+                    disabled={reviewed}
+                    onClick={() => onReviewWorkOrder(order.id)}
+                    type="button"
+                  >
+                    {reviewed ? '已审阅' : '确认处理'}
+                  </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </OperationsPanel>
   )
@@ -1234,10 +1574,15 @@ export default function SmartOperationsWorkspace({
   const [highlightedAlertId, setHighlightedAlertId] = useState<string | null>(null)
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null)
   const [agentPulse, setAgentPulse] = useState(false)
+  const [mobileDispatchStatus, setMobileDispatchStatus] = useState<MobileDispatchStatus>('待派发')
+  const [acceptedMobileAlertIds, setAcceptedMobileAlertIds] = useState<string[]>([])
+  const [reviewedMobileOrderIds, setReviewedMobileOrderIds] = useState<string[]>([])
+  const [manualTasks, setManualTasks] = useState<LiveTask[]>([])
+  const [mobileDetail, setMobileDetail] = useState<MobileDetailState>(null)
 
   const liveTasks = useMemo<LiveTask[]>(
-    () =>
-      dashboard.tasks.map((task, index) => ({
+    () => [
+      ...dashboard.tasks.map((task, index) => ({
         ...task,
         code: taskCode(task, index),
         linkedAlertId: dashboard.alerts[index]?.id,
@@ -1246,17 +1591,36 @@ export default function SmartOperationsWorkspace({
         steps: taskSteps(task),
         tools: taskTools(task),
       })),
-    [dashboard.alerts, dashboard.tasks],
+      ...manualTasks,
+    ],
+    [dashboard.alerts, dashboard.tasks, manualTasks],
   )
 
   const liveAlerts = useMemo<LiveAlert[]>(
     () =>
       dashboard.alerts.map((alert, index) => ({
         ...alert,
-        linkedTaskId: index < 2 ? liveTasks[index]?.code : undefined,
+        status:
+          manualTasks.some((task) => task.linkedAlertId === alert.id) || index < 2
+            ? '已派单'
+            : alert.status,
+        linkedTaskId:
+          manualTasks.find((task) => task.linkedAlertId === alert.id)?.id ??
+          (index < 2 ? liveTasks[index]?.id : undefined),
       })),
-    [dashboard.alerts, liveTasks],
+    [dashboard.alerts, liveTasks, manualTasks],
   )
+
+  const mobileAlerts = useMemo(
+    () =>
+      dashboard.mobileAlerts.map((alert) => ({
+        ...alert,
+        status: acceptedMobileAlertIds.includes(alert.id) ? ('已受理' as const) : alert.status,
+      })),
+    [acceptedMobileAlertIds, dashboard.mobileAlerts],
+  )
+
+  const reviewedOrderIdSet = useMemo(() => new Set(reviewedMobileOrderIds), [reviewedMobileOrderIds])
 
   useIntervalTick(() => {
     setLastSyncSeconds((seconds) => (seconds >= 5 ? 0 : seconds + 1))
@@ -1265,6 +1629,57 @@ export default function SmartOperationsWorkspace({
   useIntervalTick(() => {
     setOperators(randomInt(6, 9))
   }, 5000)
+
+  const dispatchMobileWorkOrder = () => {
+    setMobileDispatchStatus('已发至手机端')
+    setAgentPulse(true)
+    window.setTimeout(() => setMobileDispatchStatus('手机端处理中'), 1200)
+    window.setTimeout(() => setAgentPulse(false), 1600)
+  }
+
+  const acceptMobileAlert = (id: string) => {
+    setAcceptedMobileAlertIds((current) => (current.includes(id) ? current : [...current, id]))
+    setAgentPulse(true)
+    window.setTimeout(() => setAgentPulse(false), 1400)
+  }
+
+  const reviewMobileWorkOrder = (id: string) => {
+    setReviewedMobileOrderIds((current) => (current.includes(id) ? current : [...current, id]))
+    setAgentPulse(true)
+    window.setTimeout(() => setAgentPulse(false), 1400)
+  }
+
+  const dispatchAlertWorkOrder = (alert: LiveAlert, assignee: string) => {
+    if (liveTasks.some((task) => task.linkedAlertId === alert.id)) return
+
+    const sequence = liveTasks.length + 31
+    const task: LiveTask = {
+      assignee,
+      code: `WO-MANUAL-${String(sequence).padStart(3, '0')}`,
+      due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
+      id: `manual-work-order-${alert.id}`,
+      linkedAlertId: alert.id,
+      progress: 0,
+      status: '待接单',
+      steps: ['接收工单', '现场复核', '处理异常', '回填结果'],
+      title: `处置 ${alert.title}`,
+      tools: '移动工单 / 巡检终端 / 现场照片',
+    }
+
+    setManualTasks((current) => [...current, task])
+    setHighlightedAlertId(alert.id)
+    setHighlightedTaskId(task.id)
+    setPulseAlertId(alert.id)
+    setAgentPulse(true)
+    window.setTimeout(() => {
+      setPulseAlertId(null)
+      setAgentPulse(false)
+    }, 1800)
+  }
+
+  const activeAlertCount = liveAlerts.length + mobileAlerts.filter((alert) => alert.status !== '已受理').length
+  const pendingTaskCount =
+    liveTasks.length + dashboard.mobileWorkOrders.filter((order) => !reviewedOrderIdSet.has(order.id)).length
 
   const kpis = [
     {
@@ -1279,7 +1694,7 @@ export default function SmartOperationsWorkspace({
       detail: dashboard.metrics.find((metric) => metric.label === '活跃告警')?.detail ?? '高优 1 · 中优 3 · 低优 1',
       icon: <AlertTriangle className="h-7 w-7" strokeWidth={1.7} />,
       label: '活跃告警',
-      numeric: liveAlerts.length,
+      numeric: activeAlertCount,
       suffix: '条',
       tone: 'rose' as const,
     },
@@ -1287,7 +1702,7 @@ export default function SmartOperationsWorkspace({
       detail: dashboard.metrics.find((metric) => metric.label === '待处理工单')?.detail ?? '超期 0 · 即将到期 1',
       icon: <ClipboardList className="h-7 w-7" strokeWidth={1.7} />,
       label: '待处理工单',
-      numeric: liveTasks.length,
+      numeric: pendingTaskCount,
       suffix: '条',
       tone: 'amber' as const,
     },
@@ -1316,6 +1731,12 @@ export default function SmartOperationsWorkspace({
       <VideoBackground />
       <div className="cockpit-atmosphere" />
       <DashboardTooltipLayer />
+      <MobileMaterialDetailDialog
+        detail={mobileDetail}
+        onClose={() => setMobileDetail(null)}
+        onReviewWorkOrder={reviewMobileWorkOrder}
+        reviewedOrderIds={reviewedOrderIdSet}
+      />
 
       <div className="relative z-10 flex w-full flex-col gap-6 px-5 pb-6 pt-4">
         <header className="operations-page-hero flex flex-wrap items-center justify-between gap-4 border border-cyan-300/24 bg-cyan-950/18 px-5 py-4">
@@ -1390,10 +1811,22 @@ export default function SmartOperationsWorkspace({
             <AlertCenter
               alerts={liveAlerts}
               highlightedAlertId={highlightedAlertId}
+              onDispatchWorkOrder={dispatchAlertWorkOrder}
               onHighlightTask={setHighlightedTaskId}
               pulseAlertId={pulseAlertId}
             />
             <TaskList highlightedTaskId={highlightedTaskId} tasks={liveTasks} />
+            <MobileOpsBridge
+              alerts={mobileAlerts}
+              dispatchStatus={mobileDispatchStatus}
+              mobileWorkOrders={dashboard.mobileWorkOrders}
+              onAcceptAlert={acceptMobileAlert}
+              onDispatchWorkOrder={dispatchMobileWorkOrder}
+              onOpenAlertDetail={(alert) => setMobileDetail({ item: alert, kind: 'alert' })}
+              onOpenWorkOrderDetail={(order) => setMobileDetail({ item: order, kind: 'work-order' })}
+              onReviewWorkOrder={reviewMobileWorkOrder}
+              reviewedOrderIds={reviewedOrderIdSet}
+            />
             <StrategyList strategies={dashboard.strategies} />
           </div>
 
@@ -1408,10 +1841,10 @@ export default function SmartOperationsWorkspace({
         </div>
 
         <OperationsStatusBar
-          doneTasks={8}
+          doneTasks={8 + reviewedOrderIdSet.size}
           lastSyncSeconds={lastSyncSeconds}
           operators={operators}
-          todayAlerts={237}
+          todayAlerts={237 + dashboard.mobileAlerts.length}
         />
       </div>
     </div>
