@@ -30,10 +30,18 @@ export interface OperationsTask {
   title: string
 }
 
+export interface OperationsOperator {
+  name: string
+  phone: string
+  role: string
+  site: string
+}
+
 export interface MobileAlertReport {
   detail: string
   deviceId: string
   id: string
+  imageUrls: string[]
   location: string
   photoCount: number
   reporter: string
@@ -49,6 +57,7 @@ export interface MobileUploadedWorkOrder {
   deviceId: string
   due: string
   id: string
+  imageUrls: string[]
   location: string
   photoCount: number
   resultNote: string
@@ -67,6 +76,7 @@ export interface OperationsDashboardData {
   alerts: OperationsAlert[]
   metrics: OperationsMetric[]
   mobileAlerts: MobileAlertReport[]
+  mobileOperators: OperationsOperator[]
   mobileWorkOrders: MobileUploadedWorkOrder[]
   strategies: OperationsStrategy[]
   summary: string
@@ -161,7 +171,7 @@ export function buildOperationsDashboardData({
       progress: 65,
       status: '处理中',
       title: '处置 3F 新风机组负荷偏高',
-      assignee: '暖通运维一组',
+      assignee: '赵工 · 暖通运维组',
       due: '今天 16:30',
     },
     {
@@ -170,9 +180,16 @@ export function buildOperationsDashboardData({
       progress: 30,
       status: '待复核',
       title: '复核 2F 公区照明回路夜间未闭锁',
-      assignee: '电气运维二组',
+      assignee: '李工 · 照明巡检组',
       due: '明天 10:00',
     },
+  ]
+
+  const mobileOperators: OperationsOperator[] = [
+    { name: '王工', phone: '13800010001', role: '电气运维组', site: '思源楼' },
+    { name: '李工', phone: '13800010002', role: '照明巡检组', site: '思源楼' },
+    { name: '赵工', phone: '13800010003', role: '暖通运维组', site: '思源楼' },
+    { name: '陈工', phone: '13800010004', role: '综合维修组', site: '思源楼' },
   ]
 
   const mobileAlerts: MobileAlertReport[] = [
@@ -180,6 +197,7 @@ export function buildOperationsDashboardData({
       detail: '巡检时发现 1A 配电箱附近有轻微焦糊味，柜门温度偏高。',
       deviceId: 'panel-1a',
       id: 'report-1',
+      imageUrls: ['/mobile-ops/panel-inspection.png', '/mobile-ops/meter-review.png'],
       location: '思源楼 / 1F 配电间',
       photoCount: 2,
       reporter: '值班员 王工',
@@ -192,6 +210,7 @@ export function buildOperationsDashboardData({
       detail: '现场确认无人通行时照明仍保持常亮，疑似时控策略未生效。',
       deviceId: 'light-2e',
       id: 'report-2',
+      imageUrls: ['/mobile-ops/site-risk.png'],
       location: '思源楼 / 2F 东侧走廊',
       photoCount: 1,
       reporter: '值班员 李工',
@@ -209,6 +228,11 @@ export function buildOperationsDashboardData({
       deviceId: 'panel-1a',
       due: '今天 18:00',
       id: 'wo-mobile-041',
+      imageUrls: [
+        '/mobile-ops/panel-inspection.png',
+        '/mobile-ops/meter-review.png',
+        '/mobile-ops/electric-safety.png',
+      ],
       location: '思源楼 / 1F 配电间',
       photoCount: 3,
       resultNote: '紧固二次端子，复测电流曲线已恢复稳定。',
@@ -223,6 +247,7 @@ export function buildOperationsDashboardData({
       deviceId: 'meeting-5f',
       due: '昨天 15:10',
       id: 'wo-mobile-042',
+      imageUrls: ['/mobile-ops/hvac-repair.png', '/mobile-ops/maintenance-team.png'],
       location: '思源楼 / 5F 会议区',
       photoCount: 2,
       resultNote: '关闭投影和插座待机负载，已提交等待电脑端审阅。',
@@ -278,6 +303,7 @@ export function buildOperationsDashboardData({
     alerts,
     metrics,
     mobileAlerts,
+    mobileOperators,
     mobileWorkOrders,
     strategies,
     summary,

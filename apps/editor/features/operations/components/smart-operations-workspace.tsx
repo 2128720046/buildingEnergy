@@ -37,6 +37,7 @@ import {
   type OperationsAlert,
   type MobileAlertReport,
   type MobileUploadedWorkOrder,
+  type OperationsOperator,
   type OperationsStrategy,
   type OperationsTask,
 } from '@/features/operations/lib/operations-dashboard'
@@ -62,14 +63,6 @@ type MobileDetailState =
   | { item: MobileAlertReport; kind: 'alert' }
   | { item: MobileUploadedWorkOrder; kind: 'work-order' }
   | null
-
-const OPERATIONS_ASSIGNEES = [
-  '暖通运维一组',
-  '电气运维二组',
-  '给排水运维组',
-  '综合值班长',
-  '楼宇自控工程师',
-]
 
 type MobileDispatchStatus = '待派发' | '已发至手机端' | '手机端处理中'
 
@@ -532,17 +525,25 @@ const AlertCard = memo(function AlertCard({
   highlighted,
   onDispatchWorkOrder,
   onHighlightTask,
+  operatorOptions,
   pulse,
 }: {
   alert: LiveAlert
   highlighted: boolean
   onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
+  operatorOptions: OperationsOperator[]
   pulse: boolean
 }) {
   const tone = severityTone(alert.severity)
-  const [selectedAssignee, setSelectedAssignee] = useState(OPERATIONS_ASSIGNEES[0] ?? '')
+  const formattedOperators = operatorOptions.map((operator) => `${operator.name} · ${operator.role}`)
+  const [selectedAssignee, setSelectedAssignee] = useState(formattedOperators[0] ?? '')
   const dispatched = Boolean(alert.linkedTaskId)
+
+  useEffect(() => {
+    if (!formattedOperators.length || formattedOperators.includes(selectedAssignee)) return
+    setSelectedAssignee(formattedOperators[0] ?? '')
+  }, [formattedOperators, selectedAssignee])
 
   return (
     <article
@@ -603,7 +604,7 @@ const AlertCard = memo(function AlertCard({
             onChange={(event) => setSelectedAssignee(event.target.value)}
             value={selectedAssignee}
           >
-            {OPERATIONS_ASSIGNEES.map((assignee) => (
+            {formattedOperators.map((assignee) => (
               <option key={assignee} value={assignee}>
                 {assignee}
               </option>
@@ -628,12 +629,14 @@ const AlertCenter = memo(function AlertCenter({
   highlightedAlertId,
   onDispatchWorkOrder,
   onHighlightTask,
+  operatorOptions,
   pulseAlertId,
 }: {
   alerts: LiveAlert[]
   highlightedAlertId: string | null
   onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
+  operatorOptions: OperationsOperator[]
   pulseAlertId: string | null
 }) {
   return (
@@ -650,6 +653,7 @@ const AlertCenter = memo(function AlertCenter({
             key={alert.id}
             onDispatchWorkOrder={onDispatchWorkOrder}
             onHighlightTask={onHighlightTask}
+            operatorOptions={operatorOptions}
             pulse={pulseAlertId === alert.id}
           />
         ))}
@@ -763,8 +767,8 @@ const TaskList = memo(function TaskList({
   )
 })
 
-function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: number) {
-  const safeCount = Math.max(1, count)
+function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: number, imageUrls: string[]) {
+  const safeCount = Math.max(1, imageUrls.length || count)
   const labels =
     kind === 'alert'
       ? ['现场全景', '设备铭牌', '异常特写', '位置环境']
@@ -772,6 +776,7 @@ function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: n
 
   return Array.from({ length: safeCount }, (_, index) => ({
     id: `${kind}-${id}-photo-${index}`,
+    imageUrl: imageUrls[index],
     label: labels[index % labels.length],
   }))
 }
@@ -791,7 +796,7 @@ function MobileMaterialDetailDialog({
 
   const isAlert = detail.kind === 'alert'
   const item = detail.item
-  const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount)
+  const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount, item.imageUrls)
   const reviewed = !isAlert && reviewedOrderIds.has(item.id)
 
   return (
@@ -884,7 +889,11 @@ function MobileMaterialDetailDialog({
           <div className="operations-detail-photo-grid">
             {photos.map((photo, index) => (
               <div className="operations-detail-photo" key={photo.id}>
-                <ImageIcon className="h-6 w-6" strokeWidth={1.8} />
+                {photo.imageUrl ? (
+                  <img alt={photo.label} src={photo.imageUrl} />
+                ) : (
+                  <ImageIcon className="h-6 w-6" strokeWidth={1.8} />
+                )}
                 <span>{photo.label}</span>
                 <small>{String(index + 1).padStart(2, '0')}</small>
               </div>
@@ -924,6 +933,7 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
   onOpenWorkOrderDetail,
   onDispatchWorkOrder,
   onReviewWorkOrder,
+  operatorOptions,
   reviewedOrderIds,
 }: {
   alerts: MobileAlertReport[]
@@ -932,14 +942,22 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
   onAcceptAlert: (id: string) => void
   onOpenAlertDetail: (alert: MobileAlertReport) => void
   onOpenWorkOrderDetail: (order: MobileUploadedWorkOrder) => void
-  onDispatchWorkOrder: () => void
+  onDispatchWorkOrder: (assignee: string) => void
   onReviewWorkOrder: (id: string) => void
+  operatorOptions: OperationsOperator[]
   reviewedOrderIds: Set<string>
 }) {
+  const formattedOperators = operatorOptions.map((operator) => `${operator.name} · ${operator.role}`)
+  const [selectedAssignee, setSelectedAssignee] = useState(formattedOperators[0] ?? '')
   const pendingReviewCount = mobileWorkOrders.filter(
     (order) => order.status === '待电脑端审阅' && !reviewedOrderIds.has(order.id),
   ).length
   const pendingAlertCount = alerts.filter((alert) => alert.status !== '已受理').length
+
+  useEffect(() => {
+    if (!formattedOperators.length || formattedOperators.includes(selectedAssignee)) return
+    setSelectedAssignee(formattedOperators[0] ?? '')
+  }, [formattedOperators, selectedAssignee])
 
   return (
     <OperationsPanel
@@ -948,7 +966,7 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
       title="移动端协同工单"
     >
       <div className="operations-mobile-sync-grid">
-        <div className="operations-mobile-sync-card hidden">
+        <div className="operations-mobile-sync-card">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="operations-mobile-sync-label">电脑端派发</div>
@@ -959,7 +977,17 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
           <div className="mt-3 text-[13px] leading-6 text-cyan-100/66">
             工单包含设备、位置、异常说明、截止时间和处理要求，手机端巡检页可直接接收并回填结果。
           </div>
-          <button className="operations-mobile-action mt-4" onClick={onDispatchWorkOrder} type="button">
+          <label className="operations-mobile-select mt-3">
+            <span>维护人员</span>
+            <select onChange={(event) => setSelectedAssignee(event.target.value)} value={selectedAssignee}>
+              {formattedOperators.map((assignee) => (
+                <option key={assignee} value={assignee}>
+                  {assignee}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="operations-mobile-action mt-4" onClick={() => onDispatchWorkOrder(selectedAssignee)} type="button">
             <SendToBack className="h-4 w-4" strokeWidth={1.9} />
             {dispatchStatus === '待派发' ? '派发至手机端' : '重新同步'}
           </button>
@@ -976,6 +1004,9 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
           <div className="mt-3 space-y-2.5">
             {alerts.map((alert) => (
               <div className="operations-mobile-row" data-severity={alert.severity} key={alert.id}>
+                {alert.imageUrls[0] ? (
+                  <img alt={alert.title} className="operations-mobile-thumb" src={alert.imageUrls[0]} />
+                ) : null}
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-black text-cyan-50">{alert.title}</span>
@@ -1017,6 +1048,9 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
               const reviewed = reviewedOrderIds.has(order.id)
               return (
                 <div className="operations-mobile-row" data-reviewed={reviewed ? 'true' : undefined} key={order.id}>
+                  {order.imageUrls[0] ? (
+                    <img alt={order.title} className="operations-mobile-thumb" src={order.imageUrls[0]} />
+                  ) : null}
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="operations-task-code font-black text-[#7AF7FF]">{order.code}</span>
@@ -1630,8 +1664,26 @@ export default function SmartOperationsWorkspace({
     setOperators(randomInt(6, 9))
   }, 5000)
 
-  const dispatchMobileWorkOrder = () => {
+  const dispatchMobileWorkOrder = (assignee: string) => {
     setMobileDispatchStatus('已发至手机端')
+    setManualTasks((current) =>
+      current.some((task) => task.id === 'manual-mobile-dispatch')
+        ? current
+        : [
+            ...current,
+            {
+              assignee,
+              code: 'WO-MOBILE-043',
+              due: '今天 20:00',
+              id: 'manual-mobile-dispatch',
+              progress: 0,
+              status: '已发至手机端',
+              steps: ['手机端接收', '现场核验', '拍照回传', '电脑端审阅'],
+              title: '移动端综合巡检协同工单',
+              tools: '移动工单 / 现场照片 / 处理记录',
+            },
+          ],
+    )
     setAgentPulse(true)
     window.setTimeout(() => setMobileDispatchStatus('手机端处理中'), 1200)
     window.setTimeout(() => setAgentPulse(false), 1600)
@@ -1813,6 +1865,7 @@ export default function SmartOperationsWorkspace({
               highlightedAlertId={highlightedAlertId}
               onDispatchWorkOrder={dispatchAlertWorkOrder}
               onHighlightTask={setHighlightedTaskId}
+              operatorOptions={dashboard.mobileOperators}
               pulseAlertId={pulseAlertId}
             />
             <TaskList highlightedTaskId={highlightedTaskId} tasks={liveTasks} />
@@ -1825,6 +1878,7 @@ export default function SmartOperationsWorkspace({
               onOpenAlertDetail={(alert) => setMobileDetail({ item: alert, kind: 'alert' })}
               onOpenWorkOrderDetail={(order) => setMobileDetail({ item: order, kind: 'work-order' })}
               onReviewWorkOrder={reviewMobileWorkOrder}
+              operatorOptions={dashboard.mobileOperators}
               reviewedOrderIds={reviewedOrderIdSet}
             />
             <StrategyList strategies={dashboard.strategies} />
