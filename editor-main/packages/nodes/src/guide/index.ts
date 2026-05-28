@@ -1,1 +1,0 @@
-export { guideDefinition } from './definition'
