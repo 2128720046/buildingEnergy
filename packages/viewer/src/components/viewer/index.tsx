@@ -22,6 +22,7 @@ import { ScanSystem } from '../../systems/scan/scan-system'
 import { WallCutout } from '../../systems/wall/wall-cutout'
 import { ZoneSystem } from '../../systems/zone/zone-system'
 import { SceneRenderer } from '../renderers/scene-renderer'
+import FrameLimiter from './frame-limiter'
 import { Lights } from './lights'
 import { PerfMonitor } from './perf-monitor'
 import PostProcessing from './post-processing'
@@ -48,7 +49,7 @@ extend(THREE as any)
 // We cache the in-flight Promise (not just the resolved renderer) so two
 // concurrent configure() calls await the same init instead of creating two
 // renderers in parallel.
-const WEBGPU_RENDERER_CACHE = new WeakMap<HTMLCanvasElement, THREE.WebGPURenderer>()
+const WEBGPU_RENDERER_CACHE = new WeakMap<HTMLCanvasElement, Promise<THREE.WebGPURenderer>>()
 
 /**
  * Monitors the WebGPU device for loss and uncaptured error events.
@@ -118,20 +119,35 @@ const Viewer: React.FC<ViewerProps> = ({
       camera={{ position: [50, 50, 50], fov: 50 }}
       className={`transition-colors duration-700 ${theme === 'dark' ? 'bg-[#0C0E14]' : 'bg-[#fafafa]'}`}
       dpr={[1, maxDpr]}
-      gl={((props: { canvas?: HTMLCanvasElement }) => {
-        const canvas = props.canvas
-        if (canvas) {
-          const cached = WEBGPU_RENDERER_CACHE.get(canvas) as THREE.WebGPURenderer | undefined
+      frameloop="never"
+      gl={
+        ((props: { canvas?: HTMLCanvasElement }) => {
+          const canvas = props.canvas
+          const cached = canvas ? WEBGPU_RENDERER_CACHE.get(canvas) : undefined
           if (cached) return cached
-        }
-        const renderer = new THREE.WebGPURenderer(props as any)
-        renderer.toneMapping = THREE.ACESFilmicToneMapping
-        renderer.toneMappingExposure = 0.9
-        if (canvas) {
-          WEBGPU_RENDERER_CACHE.set(canvas, renderer)
-        }
-        return renderer
-      }) as any}
+
+          const promise = (async () => {
+            try {
+              const renderer = new THREE.WebGPURenderer(props as any)
+              renderer.toneMapping = THREE.ACESFilmicToneMapping
+              renderer.toneMappingExposure = 0.9
+              await renderer.init()
+              return renderer
+            } catch (error) {
+              if (canvas) {
+                WEBGPU_RENDERER_CACHE.delete(canvas)
+              }
+              console.error('[viewer] WebGPURenderer init failed', error)
+              throw error
+            }
+          })()
+
+          if (canvas) {
+            WEBGPU_RENDERER_CACHE.set(canvas, promise)
+          }
+          return promise
+        }) as any
+      }
       resize={{
         debounce: 100,
       }}
@@ -140,6 +156,7 @@ const Viewer: React.FC<ViewerProps> = ({
         enabled: true,
       }}
     >
+      <FrameLimiter fps={50} />
       <ViewerCamera />
 
       <Lights />

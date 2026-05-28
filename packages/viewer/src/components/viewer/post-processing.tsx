@@ -21,9 +21,9 @@ import {
   vec4,
 } from 'three/tsl'
 import { RenderPipeline, type WebGPURenderer } from 'three/webgpu'
+import { PERF_OVERLAY_ENABLED, pushGpuSample } from '../../lib/gpu-perf'
 import { GRID_LAYER, OVERLAY_LAYER, SCENE_LAYER, ZONE_LAYER } from '../../lib/layers'
 import { mergedOutline } from '../../lib/merged-outline-node'
-import { PERF_OVERLAY_ENABLED, pushGpuSample } from '../../lib/gpu-perf'
 import useViewer from '../../store/use-viewer'
 
 // SSGI Parameters - adjust these to fine-tune global illumination and ambient occlusion
@@ -140,37 +140,6 @@ const PostProcessingPasses = () => {
     setPipelineVersion((v) => v + 1)
   }, [])
 
-  // ─── Renderer initialization ──────────────────────────────────────────
-  // R3F calls setSize / setDpr on the renderer BEFORE we call init(), which
-  // is critical for WebGPU — the swap chain must match the canvas size.
-  const [isInitialized, setIsInitialized] = useState(false)
-
-  useEffect(() => {
-    let mounted = true
-
-    const initRenderer = async () => {
-      try {
-        if (renderer && (renderer as any).init) {
-          await (renderer as any).init()
-        }
-        if (mounted) {
-          setIsInitialized(true)
-        }
-      } catch (error) {
-        console.error('[viewer] Failed to initialize renderer for post-processing.', error)
-        if (mounted) {
-          setIsInitialized(false)
-        }
-      }
-    }
-
-    initRenderer()
-
-    return () => {
-      mounted = false
-    }
-  }, [renderer])
-
   // Reset retry state when project changes
   useEffect(() => {
     if (lastProjectIdRef.current === projectId) return
@@ -196,7 +165,7 @@ const PostProcessingPasses = () => {
     const width = Math.floor(size.width)
     const height = Math.floor(size.height)
 
-    if (!(renderer && scene && camera && isInitialized)) {
+    if (!(renderer && scene && camera)) {
       return
     }
 
@@ -379,6 +348,10 @@ const PostProcessingPasses = () => {
       hasPipelineErrorRef.current = true
       console.error(
         '[viewer] Failed to set up post-processing pipeline. Rendering without post FX.',
+        {
+          projectId,
+          version: pipelineVersion,
+        },
         error,
       )
       if (renderPipelineRef.current) {
@@ -396,7 +369,6 @@ const PostProcessingPasses = () => {
   }, [
     camera,
     hoverHighlightMode,
-    isInitialized,
     pipelineVersion,
     projectId,
     renderer,

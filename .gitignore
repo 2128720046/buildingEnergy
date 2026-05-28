@@ -47,3 +47,4 @@ og-test
 .env*.local
 
 .tmp_run/
+editor-main/
