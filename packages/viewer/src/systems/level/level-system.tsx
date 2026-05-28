@@ -1,16 +1,31 @@
 import { type LevelNode, sceneRegistry, useScene } from '@pascal-app/core'
 import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
 import { lerp } from 'three/src/math/MathUtils.js'
 import useViewer from '../../store/use-viewer'
 import { getLevelHeight } from './level-utils'
 
 const EXPLODED_GAP = 5
+const LEVEL_VISIBILITY_TRANSITION_SECONDS = 0.45
 
 export const LevelSystem = () => {
-  useFrame((_, delta) => {
+  const previousViewRef = useRef<{ levelMode: string; selectedLevel: string | null } | null>(null)
+  const transitionUntilRef = useRef(0)
+
+  useFrame((state, delta) => {
     const nodes = useScene.getState().nodes
     const levelMode = useViewer.getState().levelMode
     const selectedLevel = useViewer.getState().selection.levelId
+    const previousView = previousViewRef.current
+    if (
+      !previousView ||
+      previousView.levelMode !== levelMode ||
+      previousView.selectedLevel !== selectedLevel
+    ) {
+      previousViewRef.current = { levelMode, selectedLevel }
+      transitionUntilRef.current = state.clock.elapsedTime + LEVEL_VISIBILITY_TRANSITION_SECONDS
+    }
+    const keepLevelsVisible = state.clock.elapsedTime < transitionUntilRef.current
 
     // Collect and sort levels by floor index so we can compute cumulative offsets.
     // Level 0 → Y=0, Level 1 → Y=height(0), Level 2 → Y=height(0)+height(1), etc.
@@ -39,7 +54,8 @@ export const LevelSystem = () => {
 
       const t = Math.min(delta * 12, 1)
       obj.position.y = lerp(obj.position.y, targetY, t) // Smoothly animate to new Y position
-      obj.visible = levelMode !== 'solo' || level?.id === selectedLevel || !selectedLevel
+      obj.visible =
+        keepLevelsVisible || levelMode !== 'solo' || level?.id === selectedLevel || !selectedLevel
 
       cumulativeY += getLevelHeight(levelId, nodes)
     }

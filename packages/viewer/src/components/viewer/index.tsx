@@ -95,6 +95,26 @@ function GPUDeviceWatcher() {
   return null
 }
 
+function InteractionDprScaler({ maxDpr }: { maxDpr: number }) {
+  const cameraDragging = useViewer((s) => s.cameraDragging)
+  const setDpr = useThree((s) => s.setDpr)
+
+  useEffect(() => {
+    if (cameraDragging) {
+      setDpr(1)
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setDpr(maxDpr)
+    }, 150)
+
+    return () => window.clearTimeout(timeout)
+  }, [cameraDragging, maxDpr, setDpr])
+
+  return null
+}
+
 interface ViewerProps {
   children?: React.ReactNode
   selectionManager?: 'default' | 'custom'
@@ -156,7 +176,7 @@ const Viewer: React.FC<ViewerProps> = ({
         enabled: true,
       }}
     >
-      <FrameLimiter fps={50} />
+      <FrameLimiter fps={60} />
       <ViewerCamera />
 
       <Lights />
@@ -181,6 +201,7 @@ const Viewer: React.FC<ViewerProps> = ({
       <ZoneSystem />
       <PostProcessing />
       <GPUDeviceWatcher />
+      <InteractionDprScaler maxDpr={maxDpr} />
 
       <ItemLightSystem />
       {selectionManager === 'default' && <SelectionManager />}

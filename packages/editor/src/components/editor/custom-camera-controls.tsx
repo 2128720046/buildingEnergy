@@ -1,7 +1,7 @@
 'use client'
 
 import { type CameraControlEvent, emitter, sceneRegistry, useScene } from '@pascal-app/core'
-import { useViewer, WalkthroughControls, ZONE_LAYER } from '@pascal-app/viewer'
+import { getStackedLevelY, useViewer, WalkthroughControls, ZONE_LAYER } from '@pascal-app/viewer'
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -16,6 +16,8 @@ const tempDelta = new Vector3()
 const tempPosition = new Vector3()
 const tempSize = new Vector3()
 const tempTarget = new Vector3()
+const nextPosition = new Vector3()
+const nextTarget = new Vector3()
 const DEFAULT_MAX_POLAR_ANGLE = Math.PI / 2 - 0.1
 const DEBUG_MAX_POLAR_ANGLE = Math.PI - 0.05
 
@@ -42,18 +44,26 @@ export const CustomCameraControls = () => {
     if (isPreviewMode) return // Preview mode uses auto-navigate instead
     let targetY = 0
     if (currentLevelId) {
-      const levelMesh = sceneRegistry.nodes.get(currentLevelId)
-      if (levelMesh) {
-        targetY = levelMesh.position.y
-      }
+      targetY = getStackedLevelY(currentLevelId, useScene.getState().nodes)
     }
     if (!controls.current) return
     if (firstLoad.current) {
       firstLoad.current = false
       controls.current.setLookAt(20, 20, 20, 0, 0, 0, true)
     }
+    controls.current.getPosition(tempPosition)
     controls.current.getTarget(currentTarget)
-    controls.current.moveTo(currentTarget.x, targetY, currentTarget.z, true)
+    nextTarget.set(currentTarget.x, targetY, currentTarget.z)
+    nextPosition.copy(tempPosition).add(nextTarget).sub(currentTarget)
+    controls.current.setLookAt(
+      nextPosition.x,
+      nextPosition.y,
+      nextPosition.z,
+      nextTarget.x,
+      nextTarget.y,
+      nextTarget.z,
+      true,
+    )
   }, [currentLevelId, isPreviewMode])
 
   useEffect(() => {

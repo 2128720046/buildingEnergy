@@ -17,15 +17,41 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { memo, type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  type ComponentProps,
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
-import EnergyTimelineStrip, { type TimelineState } from '@/features/energy-insights/components/energy-timeline-strip'
+import EnergyTimelineStrip, {
+  type TimelineState,
+} from '@/features/energy-insights/components/energy-timeline-strip'
 import FloorHeatmapOverlay from '@/features/energy-insights/components/floor-heatmap-overlay'
-import type { EnergyApiResponse, ZoneEnergyResponse } from '@/features/energy-insights/lib/energy-api'
-import type { CompositionData, RankingItem, WeeklyTrendData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import {
+  buildAnomalyFocusFromHeatmap,
+  buildBestAnomalyFocus,
+  type EnergyAssistantAction,
+} from '@/features/energy-insights/lib/anomaly-focus'
+import type {
+  EnergyApiResponse,
+  ZoneEnergyResponse,
+} from '@/features/energy-insights/lib/energy-api'
+import type {
+  CompositionData,
+  RankingItem,
+  WeeklyTrendData,
+} from '@/features/energy-insights/lib/energy-dashboard-data'
 import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
-import { buildPrediction, type EditImpact, type PredictionPoint } from '@/features/energy-insights/lib/energy-prediction'
+import {
+  buildPrediction,
+  type EditImpact,
+  type PredictionPoint,
+} from '@/features/energy-insights/lib/energy-prediction'
 import {
   applyEnergyHighlights,
   resetAllEnergyHighlights,
@@ -50,7 +76,15 @@ const COCKPIT_SIDE_RAIL_WIDTH = 'clamp(280px, 22vw, 360px)'
 const BOTTOM_CENTER_OVERLAY_WIDTH = `calc(100% - ${COCKPIT_SIDE_RAIL_WIDTH} - ${COCKPIT_SIDE_RAIL_WIDTH} - 80px)`
 
 const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
-  return <ReactEChartsCore echarts={echarts} {...props} />
+  return (
+    <ReactEChartsCore
+      echarts={echarts}
+      lazyUpdate
+      notMerge={false}
+      opts={{ renderer: 'canvas' }}
+      {...props}
+    />
+  )
 })
 
 interface EnergyTwinDashboardProps {
@@ -61,7 +95,7 @@ interface EnergyTwinDashboardProps {
   filters: HostQueryFilters
   hasQueried: boolean
   levelOptions: HostFilterOption[]
-  onJumpToLevel3HighlightZones?: () => void
+  onAgentAction?: (action: EnergyAssistantAction) => void
   onFiltersChange: (nextFilters: HostQueryFilters) => void
   onQuery: () => void
   projectId: string
@@ -98,7 +132,8 @@ function hudTooltip(trigger: 'axis' | 'item' = 'axis') {
       fontSize: 11,
       lineHeight: 18,
     },
-    extraCssText: 'box-shadow:0 0 18px rgba(0,212,255,0.24);backdrop-filter:blur(10px);border-radius:3px;',
+    extraCssText:
+      'box-shadow:0 0 18px rgba(0,212,255,0.24);backdrop-filter:blur(10px);border-radius:3px;',
   }
 }
 
@@ -132,13 +167,17 @@ function splitLine(): Record<string, unknown> {
 }
 
 function buildDualLineOption(
-  today: number[], yesterday: number[],
+  today: number[],
+  yesterday: number[],
   peak: { hour: number; value: number },
   _valley: { hour: number; value: number },
 ): EChartsOption {
   const labels = today.map((_, i) => `${String(i).padStart(2, '0')}:00`)
   return {
     backgroundColor: 'transparent',
+    animation: true,
+    animationDurationUpdate: 520,
+    animationEasingUpdate: 'cubicOut',
     grid: { top: 28, right: 14, bottom: 24, left: 42 },
     tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
     legend: {
@@ -195,7 +234,14 @@ function buildDualLineOption(
           },
         },
         markPoint: {
-          data: [{ coord: [peak.hour, peak.value], value: peak.value.toFixed(1), symbol: 'pin', symbolSize: 28 }],
+          data: [
+            {
+              coord: [peak.hour, peak.value],
+              value: peak.value.toFixed(1),
+              symbol: 'pin',
+              symbolSize: 28,
+            },
+          ],
           itemStyle: { color: RED as any, shadowBlur: 12, shadowColor: 'rgba(255,51,51,0.5)' },
           label: { color: '#fff', fontFamily: DASHBOARD_FONTS.num, fontSize: 11, fontWeight: 700 },
         },
@@ -207,7 +253,14 @@ function buildDualLineOption(
         smooth: true,
         symbol: 'none',
         emphasis: { focus: 'series' },
-        lineStyle: { color: AMBER, opacity: 0.78, shadowBlur: 8, shadowColor: 'rgba(255,179,0,0.32)', type: 'dashed', width: 2 },
+        lineStyle: {
+          color: AMBER,
+          opacity: 0.78,
+          shadowBlur: 8,
+          shadowColor: 'rgba(255,179,0,0.32)',
+          type: 'dashed',
+          width: 2,
+        },
       },
     ],
   } as unknown as EChartsOption
@@ -215,13 +268,18 @@ function buildDualLineOption(
 
 function buildCompositionDonut(c: CompositionData): EChartsOption {
   const data = [
-    { name: 'HVAC', value: c.hvac }, { name: '照明', value: c.lighting },
-    { name: '插座', value: c.socket }, { name: '其他', value: c.other },
+    { name: 'HVAC', value: c.hvac },
+    { name: '照明', value: c.lighting },
+    { name: '插座', value: c.socket },
+    { name: '其他', value: c.other },
   ].filter((d) => d.value > 0)
   const total = data.reduce((sum, item) => sum + item.value, 0)
   const compositionCenter = ['50%', '43%']
   return {
     backgroundColor: 'transparent',
+    animation: true,
+    animationDurationUpdate: 520,
+    animationEasingUpdate: 'cubicOut',
     tooltip: hudTooltip('item'),
     legend: {
       bottom: 0,
@@ -308,7 +366,10 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
         y: 0,
         x2: 1,
         y2: 1,
-        colorStops: [{ offset: 0, color: '#7AF7FF' }, { offset: 1, color: CYAN }],
+        colorStops: [
+          { offset: 0, color: '#7AF7FF' },
+          { offset: 1, color: CYAN },
+        ],
       },
       {
         type: 'linear',
@@ -316,7 +377,10 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
         y: 0,
         x2: 1,
         y2: 1,
-        colorStops: [{ offset: 0, color: BLUE }, { offset: 1, color: '#00D4FF' }],
+        colorStops: [
+          { offset: 0, color: BLUE },
+          { offset: 1, color: '#00D4FF' },
+        ],
       },
       {
         type: 'linear',
@@ -324,7 +388,10 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
         y: 0,
         x2: 1,
         y2: 1,
-        colorStops: [{ offset: 0, color: '#FFE08A' }, { offset: 1, color: AMBER }],
+        colorStops: [
+          { offset: 0, color: '#FFE08A' },
+          { offset: 1, color: AMBER },
+        ],
       },
       'rgba(226,244,255,0.3)',
     ],
@@ -335,6 +402,9 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
   if (items.length === 0) return {}
   return {
     backgroundColor: 'transparent',
+    animation: true,
+    animationDurationUpdate: 520,
+    animationEasingUpdate: 'cubicOut',
     grid: { top: 8, right: 18, bottom: 8, left: 78 },
     xAxis: {
       type: 'value',
@@ -346,11 +416,19 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
     yAxis: {
       type: 'category',
       data: items.map((r) => r.name),
-      axisLabel: { ...chartAxisLabel(DASHBOARD_FONTS.cn), color: LABEL, width: 68, overflow: 'truncate' },
+      axisLabel: {
+        ...chartAxisLabel(DASHBOARD_FONTS.cn),
+        color: LABEL,
+        width: 68,
+        overflow: 'truncate',
+      },
       axisTick: { show: false },
       axisLine: { show: false },
     },
-    tooltip: { ...hudTooltip('axis'), axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,212,255,0.08)' } } },
+    tooltip: {
+      ...hudTooltip('axis'),
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(0,212,255,0.08)' } },
+    },
     series: [
       {
         type: 'bar',
@@ -386,8 +464,14 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
 function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
   return {
     backgroundColor: 'transparent',
+    animation: true,
+    animationDurationUpdate: 520,
+    animationEasingUpdate: 'cubicOut',
     grid: { top: 30, right: 14, bottom: 22, left: 42 },
-    tooltip: { ...hudTooltip('axis'), axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(122,247,255,0.08)' } } },
+    tooltip: {
+      ...hudTooltip('axis'),
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(122,247,255,0.08)' } },
+    },
     legend: {
       right: 2,
       top: 0,
@@ -426,7 +510,11 @@ function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
             y: 0,
             x2: 0,
             y2: 1,
-            colorStops: [{ offset: 0, color: '#A7FFFF' }, { offset: 0.45, color: CYAN }, { offset: 1, color: 'rgba(0,116,255,0.24)' }],
+            colorStops: [
+              { offset: 0, color: '#A7FFFF' },
+              { offset: 0.45, color: CYAN },
+              { offset: 1, color: 'rgba(0,116,255,0.24)' },
+            ],
           },
         },
       },
@@ -443,7 +531,10 @@ function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
             y: 0,
             x2: 0,
             y2: 1,
-            colorStops: [{ offset: 0, color: 'rgba(255,255,255,0.28)' }, { offset: 1, color: 'rgba(255,255,255,0.05)' }],
+            colorStops: [
+              { offset: 0, color: 'rgba(255,255,255,0.28)' },
+              { offset: 1, color: 'rgba(255,255,255,0.05)' },
+            ],
           },
         },
       },
@@ -535,6 +626,9 @@ function buildPredictionOption(
 
   return {
     backgroundColor: 'transparent',
+    animation: true,
+    animationDurationUpdate: 520,
+    animationEasingUpdate: 'cubicOut',
     grid: { top: 30, right: 16, bottom: 24, left: 44 },
     tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
     legend: {
@@ -564,12 +658,23 @@ function buildPredictionOption(
 }
 
 /** 数字过渡动画包装 */
-const AnimatedValue = memo(function AnimatedValue({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
+const AnimatedValue = memo(function AnimatedValue({
+  value,
+  suffix = '',
+  className = '',
+}: {
+  value: number
+  suffix?: string
+  className?: string
+}) {
   return (
     <span className={cn('inline-flex items-baseline gap-0.5', className)}>
       <NumberFlow
         value={value}
-        format={{ notation: 'compact', maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2 }}
+        format={{
+          notation: 'compact',
+          maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2,
+        }}
         locales="zh-CN"
         willChange
       />
@@ -610,17 +715,36 @@ const CardHeader = memo(function CardHeader({
   )
 })
 
-const GlassCard = memo(function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
+const GlassCard = memo(function GlassCard({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <section className={cn('contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3', className)}>
+    <section
+      className={cn(
+        'contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3',
+        className,
+      )}
+    >
       <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
       {children}
     </section>
   )
 })
 
-const ChartFrame = memo(function ChartFrame({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
+const ChartFrame = memo(function ChartFrame({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
+  )
 })
 
 const DockedViewModeSwitch = memo(function DockedViewModeSwitch() {
@@ -666,7 +790,7 @@ export default function EnergyTwinDashboard({
   filters,
   hasQueried,
   levelOptions,
-  onJumpToLevel3HighlightZones,
+  onAgentAction,
   onFiltersChange,
   onQuery,
   projectId,
@@ -703,6 +827,16 @@ export default function EnergyTwinDashboard({
       targetHour: timelineHour,
     })
   }, [sceneNodes, filters.levelId, queryResults, timelineDate, timelineHour])
+
+  const anomalyFocus = useMemo(() => {
+    const currentFloorFocus = buildAnomalyFocusFromHeatmap(floorHeatmapData)
+    if (currentFloorFocus) return currentFloorFocus
+
+    return buildBestAnomalyFocus(sceneNodes, levelOptions, queryResults, {
+      targetDate: timelineDate,
+      targetHour: timelineHour,
+    })
+  }, [floorHeatmapData, sceneNodes, levelOptions, queryResults, timelineDate, timelineHour])
 
   // 联动 3D 场景 zone 颜色：高能耗区变红
   useEffect(() => {
@@ -750,7 +884,14 @@ export default function EnergyTwinDashboard({
   )
 
   const predictionData = useMemo(
-    () => buildPrediction(sceneNodes, filters.levelId || '', filters.zoneId || '', timelineDate, editSnapshot),
+    () =>
+      buildPrediction(
+        sceneNodes,
+        filters.levelId || '',
+        filters.zoneId || '',
+        timelineDate,
+        editSnapshot,
+      ),
     [sceneNodes, filters.levelId, filters.zoneId, timelineDate, editSnapshot],
   )
 
@@ -793,7 +934,12 @@ export default function EnergyTwinDashboard({
         predictionData.predicted,
         predictionData.editImpact,
       ),
-    [predictionData.labels, predictionData.actual, predictionData.predicted, predictionData.editImpact],
+    [
+      predictionData.labels,
+      predictionData.actual,
+      predictionData.predicted,
+      predictionData.editImpact,
+    ],
   )
 
   return (
@@ -817,8 +963,7 @@ export default function EnergyTwinDashboard({
       >
         <div className="pointer-events-auto min-h-0 w-full max-w-[360px]">
           <div className="h-full">
-            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1">
-
+            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
               {/* 1. 告警状态 — 脉冲动画 + 占比条 */}
               <GlassCard>
                 <CardHeader
@@ -828,41 +973,89 @@ export default function EnergyTwinDashboard({
                 {dashboardData.left.alert.total > 0 ? (
                   <>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className={cn(
-                        'rounded-lg p-2 text-center border',
-                        dashboardData.left.alert.high > 0
-                          ? 'animate-pulse border-red-400/40 bg-red-500/20'
-                          : 'border-red-400/15 bg-red-500/8',
-                      )}>
-                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>高</div>
-                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-[#FF3333]" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.high} /></div>
+                      <div
+                        className={cn(
+                          'rounded-lg p-2 text-center border',
+                          dashboardData.left.alert.high > 0
+                            ? 'animate-pulse border-red-400/40 bg-red-500/20'
+                            : 'border-red-400/15 bg-red-500/8',
+                        )}
+                      >
+                        <div
+                          className="text-[12px] uppercase tracking-[0.1em] text-slate-400"
+                          style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                        >
+                          高
+                        </div>
+                        <div
+                          className="mt-0.5 text-3xl font-bold tabular-nums text-[#FF3333]"
+                          style={{ fontFamily: DASHBOARD_FONTS.num }}
+                        >
+                          <NumberFlow value={dashboardData.left.alert.high} />
+                        </div>
                       </div>
-                      <div className={cn(
-                        'rounded-lg p-2 text-center border',
-                        dashboardData.left.alert.medium > 0
-                          ? 'border-amber-400/30 bg-amber-500/12'
-                          : 'border-amber-300/10 bg-amber-500/5',
-                      )}>
-                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>中</div>
-                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.medium} /></div>
+                      <div
+                        className={cn(
+                          'rounded-lg p-2 text-center border',
+                          dashboardData.left.alert.medium > 0
+                            ? 'border-amber-400/30 bg-amber-500/12'
+                            : 'border-amber-300/10 bg-amber-500/5',
+                        )}
+                      >
+                        <div
+                          className="text-[12px] uppercase tracking-[0.1em] text-slate-400"
+                          style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                        >
+                          中
+                        </div>
+                        <div
+                          className="mt-0.5 text-3xl font-bold tabular-nums text-white/80"
+                          style={{ fontFamily: DASHBOARD_FONTS.num }}
+                        >
+                          <NumberFlow value={dashboardData.left.alert.medium} />
+                        </div>
                       </div>
                       <div className="rounded-lg border border-slate-300/10 bg-slate-500/8 p-2 text-center">
-                        <div className="text-[12px] uppercase tracking-[0.1em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>总计</div>
-                        <div className="mt-0.5 text-3xl font-bold tabular-nums text-slate-300" style={{ fontFamily: DASHBOARD_FONTS.num }}><NumberFlow value={dashboardData.left.alert.total} /></div>
+                        <div
+                          className="text-[12px] uppercase tracking-[0.1em] text-slate-400"
+                          style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                        >
+                          总计
+                        </div>
+                        <div
+                          className="mt-0.5 text-3xl font-bold tabular-nums text-slate-300"
+                          style={{ fontFamily: DASHBOARD_FONTS.num }}
+                        >
+                          <NumberFlow value={dashboardData.left.alert.total} />
+                        </div>
                       </div>
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
                       <div
                         className="h-full rounded-full bg-[#FF3333]/70 transition-all duration-500"
-                        style={{ width: `${Math.min(100, (dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%` }}
+                        style={{
+                          width: `${Math.min(100, (dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%`,
+                        }}
                       />
                     </div>
-                    <div className="mt-1 text-right text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
-                      高优先级占比 {Math.round((dashboardData.left.alert.high / Math.max(1, dashboardData.left.alert.total)) * 100)}%
+                    <div
+                      className="mt-1 text-right text-[12px] text-slate-500"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      高优先级占比{' '}
+                      {Math.round(
+                        (dashboardData.left.alert.high /
+                          Math.max(1, dashboardData.left.alert.total)) *
+                          100,
+                      )}
+                      %
                     </div>
                   </>
                 ) : (
-                  <div className="py-3 text-center text-[14px] text-[rgba(0,245,255,0.7)]" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
+                  <div
+                    className="py-3 text-center text-[14px] text-[rgba(0,245,255,0.7)]"
+                    style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                  >
                     ✓ 当前无告警，系统运行正常
                   </div>
                 )}
@@ -874,21 +1067,35 @@ export default function EnergyTwinDashboard({
                 <div className="flex items-end justify-between">
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold tabular-nums text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>
-                        <NumberFlow value={dashboardData.left.realtimePower.currentKw} format={{ maximumFractionDigits: 1 }} />
+                      <span
+                        className="text-3xl font-bold tabular-nums text-white/95 kpi-glow"
+                        style={{ fontFamily: DASHBOARD_FONTS.num }}
+                      >
+                        <NumberFlow
+                          value={dashboardData.left.realtimePower.currentKw}
+                          format={{ maximumFractionDigits: 1 }}
+                        />
                       </span>
-                      <span className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kW</span>
+                      <span
+                        className="text-[12px] text-slate-400"
+                        style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                      >
+                        kW
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {/* 迷你趋势条 */}
                       <div className="mt-1 flex h-5 items-end gap-px">
-                        {(dashboardData.left.hourlyCurve.today).slice(0, 12).map((v, i) => (
+                        {dashboardData.left.hourlyCurve.today.slice(0, 12).map((v, i) => (
                           <span
                             key={i}
                             className="w-1.5 rounded-sm"
                             style={{
                               height: `${Math.max(4, (v / Math.max(...dashboardData.left.hourlyCurve.today, 1)) * 20)}px`,
-                              backgroundColor: i === dashboardData.left.hourlyCurve.peak.hour ? 'rgba(255,159,26,0.9)' : 'rgba(0,229,255,0.6)',
+                              backgroundColor:
+                                i === dashboardData.left.hourlyCurve.peak.hour
+                                  ? 'rgba(255,159,26,0.9)'
+                                  : 'rgba(0,229,255,0.6)',
                             }}
                           />
                         ))}
@@ -896,76 +1103,130 @@ export default function EnergyTwinDashboard({
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={cn(
-                      'text-lg font-semibold tabular-nums',
-                      dashboardData.left.realtimePower.trend === 'up' ? 'text-[#FF3333]' :
-                        dashboardData.left.realtimePower.trend === 'down' ? 'text-[rgba(0,245,255,0.7)]' : 'text-white/50',
-                    )}
-                    style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    <div
+                      className={cn(
+                        'text-lg font-semibold tabular-nums',
+                        dashboardData.left.realtimePower.trend === 'up'
+                          ? 'text-[#FF3333]'
+                          : dashboardData.left.realtimePower.trend === 'down'
+                            ? 'text-[rgba(0,245,255,0.7)]'
+                            : 'text-white/50',
+                      )}
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
                     >
-                      {dashboardData.left.realtimePower.trend === 'up' ? '↑' : dashboardData.left.realtimePower.trend === 'down' ? '↓' : '→'}
-                      {dashboardData.left.realtimePower.changePct > 0 ? '+' : ''}{dashboardData.left.realtimePower.changePct}%
+                      {dashboardData.left.realtimePower.trend === 'up'
+                        ? '↑'
+                        : dashboardData.left.realtimePower.trend === 'down'
+                          ? '↓'
+                          : '→'}
+                      {dashboardData.left.realtimePower.changePct > 0 ? '+' : ''}
+                      {dashboardData.left.realtimePower.changePct}%
                     </div>
-                    <div className="text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>vs 昨日同时刻</div>
+                    <div
+                      className="text-[12px] text-slate-500"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      vs 昨日同时刻
+                    </div>
                   </div>
                 </div>
               </GlassCard>
 
               {/* 3. 能耗强度 */}
               <GlassCard>
-                <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="能耗强度" />
+                <CardHeader
+                  icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />}
+                  title="能耗强度"
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                    <div className="text-[14px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>总电耗</div>
-                    <div className="mt-1 text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.left.energyIntensity.todayKwh.toFixed(0)}</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kWh</div>
+                    <div
+                      className="text-[14px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      总电耗
+                    </div>
+                    <div
+                      className="mt-1 text-3xl font-bold text-white/95 kpi-glow"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.left.energyIntensity.todayKwh.toFixed(0)}
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      kWh
+                    </div>
                   </div>
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
-                    <div className="text-[14px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>能耗强度</div>
-                    <div className="mt-1 text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.left.energyIntensity.todayKwhPerM2.toFixed(2)}</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kWh/m²</div>
+                    <div
+                      className="text-[14px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      能耗强度
+                    </div>
+                    <div
+                      className="mt-1 text-3xl font-bold text-white/95 kpi-glow"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.left.energyIntensity.todayKwhPerM2.toFixed(2)}
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      kWh/m²
+                    </div>
                   </div>
                 </div>
                 <div className="mt-2 text-right">
-                  <span className={cn(
-                    'text-[14px]',
-                    dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? 'text-[#FF3333]' : 'text-[rgba(0,245,255,0.7)]',
-                  )}
-                  style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                  <span
+                    className={cn(
+                      'text-[14px]',
+                      dashboardData.left.energyIntensity.vsYesterdayPct > 0
+                        ? 'text-[#FF3333]'
+                        : 'text-[rgba(0,245,255,0.7)]',
+                    )}
+                    style={{ fontFamily: DASHBOARD_FONTS.cn }}
                   >
-                    {dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? '+' : ''}{dashboardData.left.energyIntensity.vsYesterdayPct}% vs 昨日
+                    {dashboardData.left.energyIntensity.vsYesterdayPct > 0 ? '+' : ''}
+                    {dashboardData.left.energyIntensity.vsYesterdayPct}% vs 昨日
                   </span>
                 </div>
               </GlassCard>
 
               {/* 4. 24h 负荷曲线 */}
               <GlassCard>
-                <CardHeader icon={<Clock3 className="h-4 w-4" strokeWidth={1.8} />} title="24h 负荷曲线" />
+                <CardHeader
+                  icon={<Clock3 className="h-4 w-4" strokeWidth={1.8} />}
+                  title="24h 负荷曲线"
+                />
                 <div className="h-36">
                   <ChartFrame>
-                  <ReactECharts
-                    key={`dual-${timelineDate}`}
-                    option={dualLineOption}
-                    style={{ height: '144px', width: '100%' }}
-                  />
+                    <ReactECharts
+                      option={dualLineOption}
+                      style={{ height: '144px', width: '100%' }}
+                    />
                   </ChartFrame>
                 </div>
               </GlassCard>
 
               {/* 5. 分项占比 */}
               <GlassCard>
-                <CardHeader icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />} title="分项占比" />
+                <CardHeader
+                  icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />}
+                  title="分项占比"
+                />
                 <div className="h-36">
                   <ChartFrame>
-                  <ReactECharts
-                    key={`comp-${timelineDate}`}
-                    option={compositionDonutOption}
-                    style={{ height: '144px', width: '100%' }}
-                  />
+                    <ReactECharts
+                      option={compositionDonutOption}
+                      style={{ height: '144px', width: '100%' }}
+                    />
                   </ChartFrame>
                 </div>
               </GlassCard>
-
             </div>
           </div>
         </div>
@@ -980,37 +1241,55 @@ export default function EnergyTwinDashboard({
 
         <div className="pointer-events-auto min-h-0 w-full max-w-[360px] justify-self-end">
           <div className="h-full">
-            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1">
-
+            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
               {/* 6. 能耗排行 */}
               <GlassCard>
-                <CardHeader icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />} title={filters.levelId ? '房间能耗排行' : '楼层能耗排行'} />
+                <CardHeader
+                  icon={<Building2 className="h-4 w-4" strokeWidth={1.8} />}
+                  title={filters.levelId ? '房间能耗排行' : '楼层能耗排行'}
+                />
                 <div className="h-36">
                   <ChartFrame>
-                  <ReactECharts
-                    key={`rank-${timelineDate}`}
-                    option={rankingBarOption}
-                    style={{ height: '144px', width: '100%' }}
-                  />
+                    <ReactECharts
+                      option={rankingBarOption}
+                      style={{ height: '144px', width: '100%' }}
+                    />
                   </ChartFrame>
                 </div>
               </GlassCard>
 
               {/* 7. 峰值功率 — 仪表盘样式 */}
               <GlassCard>
-                <CardHeader icon={<Siren className="h-4 w-4" strokeWidth={1.8} />} title="今日峰值" />
+                <CardHeader
+                  icon={<Siren className="h-4 w-4" strokeWidth={1.8} />}
+                  title="今日峰值"
+                />
                 <div className="space-y-2">
                   <div className="flex items-end justify-between">
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>
-                          <NumberFlow value={dashboardData.right.peakPower.value} format={{ maximumFractionDigits: 1 }} />
+                        <span
+                          className="text-3xl font-bold text-white/95 kpi-glow"
+                          style={{ fontFamily: DASHBOARD_FONTS.num }}
+                        >
+                          <NumberFlow
+                            value={dashboardData.right.peakPower.value}
+                            format={{ maximumFractionDigits: 1 }}
+                          />
                         </span>
-                        <span className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>kW</span>
+                        <span
+                          className="text-[12px] text-slate-400"
+                          style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                        >
+                          kW
+                        </span>
                       </div>
                     </div>
                     <div className="rounded border border-white/8 bg-white/5 px-2 py-1">
-                      <span className="text-[12px] text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>
+                      <span
+                        className="text-[12px] text-white/80"
+                        style={{ fontFamily: DASHBOARD_FONTS.num }}
+                      >
                         {String(dashboardData.right.peakPower.hour).padStart(2, '0')}:00
                       </span>
                     </div>
@@ -1019,10 +1298,15 @@ export default function EnergyTwinDashboard({
                   <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-[#00F5FF]/60 via-[#00F5FF]/80 to-[#FF3333]/70 transition-all"
-                      style={{ width: `${Math.min(100, (dashboardData.right.peakPower.value / Math.max(1, dashboardData.left.realtimePower.currentKw + dashboardData.right.peakPower.value)) * 100)}%` }}
+                      style={{
+                        width: `${Math.min(100, (dashboardData.right.peakPower.value / Math.max(1, dashboardData.left.realtimePower.currentKw + dashboardData.right.peakPower.value)) * 100)}%`,
+                      }}
                     />
                   </div>
-                  <div className="flex justify-between text-[12px] text-slate-500" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
+                  <div
+                    className="flex justify-between text-[12px] text-slate-500"
+                    style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                  >
                     <span>当前 {dashboardData.left.realtimePower.currentKw.toFixed(1)} kW</span>
                     <span>峰值 {dashboardData.right.peakPower.value.toFixed(1)} kW</span>
                   </div>
@@ -1031,99 +1315,200 @@ export default function EnergyTwinDashboard({
 
               {/* 8. 室内外环境 — 与时间轴联动 */}
               <GlassCard>
-                <CardHeader icon={<Thermometer className="h-4 w-4" strokeWidth={1.8} />} title="室内外环境" />
+                <CardHeader
+                  icon={<Thermometer className="h-4 w-4" strokeWidth={1.8} />}
+                  title="室内外环境"
+                />
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
-                      <span className={cn(
-                        'h-1.5 w-1.5 rounded-full',
-                        dashboardData.right.indoorEnv.indoorTemp > 29 ? 'bg-red-400' :
-                          dashboardData.right.indoorEnv.indoorTemp > 27 ? 'bg-amber-400' : 'bg-emerald-400',
-                      )} />
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          dashboardData.right.indoorEnv.indoorTemp > 29
+                            ? 'bg-red-400'
+                            : dashboardData.right.indoorEnv.indoorTemp > 27
+                              ? 'bg-amber-400'
+                              : 'bg-emerald-400',
+                        )}
+                      />
                     </div>
-                    <div className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.indoorTemp}°</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室内温度</div>
+                    <div
+                      className="text-3xl font-bold text-white/95 kpi-glow"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.indoorTemp}°
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      室内温度
+                    </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
                     </div>
-                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.indoorHumidity}%</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室内湿度</div>
+                    <div
+                      className="text-3xl font-bold text-white/80"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.indoorHumidity}%
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      室内湿度
+                    </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                     </div>
-                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.co2}</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>CO₂</div>
+                    <div
+                      className="text-3xl font-bold text-white/80"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.co2}
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      CO₂
+                    </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
-                      <span className={cn(
-                        'h-1.5 w-1.5 rounded-full',
-                        dashboardData.right.indoorEnv.outdoorTemp > 35 ? 'bg-[#FF3333]' : 'bg-white/30',
-                      )} />
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          dashboardData.right.indoorEnv.outdoorTemp > 35
+                            ? 'bg-[#FF3333]'
+                            : 'bg-white/30',
+                        )}
+                      />
                     </div>
-                    <div className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.outdoorTemp}°</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室外温度</div>
+                    <div
+                      className="text-3xl font-bold text-white/95 kpi-glow"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.outdoorTemp}°
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      室外温度
+                    </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
                       <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                     </div>
-                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.outdoorHumidity}%</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>室外湿度</div>
+                    <div
+                      className="text-3xl font-bold text-white/80"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.outdoorHumidity}%
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      室外湿度
+                    </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2">
                     <div className="mb-1 flex justify-center">
-                      <span className={cn(
-                        'h-1.5 w-1.5 rounded-full',
-                        dashboardData.right.indoorEnv.pm25 > 50 ? 'bg-[#FF3333]' : 'bg-white/25',
-                      )} />
+                      <span
+                        className={cn(
+                          'h-1.5 w-1.5 rounded-full',
+                          dashboardData.right.indoorEnv.pm25 > 50 ? 'bg-[#FF3333]' : 'bg-white/25',
+                        )}
+                      />
                     </div>
-                    <div className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>{dashboardData.right.indoorEnv.pm25}</div>
-                    <div className="text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>PM2.5</div>
+                    <div
+                      className="text-3xl font-bold text-white/80"
+                      style={{ fontFamily: DASHBOARD_FONTS.num }}
+                    >
+                      {dashboardData.right.indoorEnv.pm25}
+                    </div>
+                    <div
+                      className="text-[12px] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      PM2.5
+                    </div>
                   </div>
                 </div>
               </GlassCard>
 
               {/* 9. 电费估算 — 带对比 */}
               <GlassCard>
-                <CardHeader icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />} title="电费估算" />
+                <CardHeader
+                  icon={<Gauge className="h-4 w-4" strokeWidth={1.8} />}
+                  title="电费估算"
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg border border-cyan-300/15 bg-black/25 p-2.5">
-                    <div className="text-[12px] uppercase tracking-[0.08em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>今日</div>
+                    <div
+                      className="text-[12px] uppercase tracking-[0.08em] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      今日
+                    </div>
                     <div className="mt-1">
-                      <span className="text-3xl font-bold text-white/95 kpi-glow" style={{ fontFamily: DASHBOARD_FONTS.num }}>¥<NumberFlow value={dashboardData.right.cost.today} /></span>
+                      <span
+                        className="text-3xl font-bold text-white/95 kpi-glow"
+                        style={{ fontFamily: DASHBOARD_FONTS.num }}
+                      >
+                        ¥<NumberFlow value={dashboardData.right.cost.today} />
+                      </span>
                     </div>
                   </div>
                   <div className="rounded-lg border border-white/8 bg-black/25 p-2.5">
-                    <div className="text-[12px] uppercase tracking-[0.08em] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>本月</div>
+                    <div
+                      className="text-[12px] uppercase tracking-[0.08em] text-slate-400"
+                      style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                    >
+                      本月
+                    </div>
                     <div className="mt-1">
-                      <span className="text-3xl font-bold text-white/80" style={{ fontFamily: DASHBOARD_FONTS.num }}>¥<NumberFlow value={dashboardData.right.cost.month} /></span>
+                      <span
+                        className="text-3xl font-bold text-white/80"
+                        style={{ fontFamily: DASHBOARD_FONTS.num }}
+                      >
+                        ¥<NumberFlow value={dashboardData.right.cost.month} />
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-center text-[12px] text-slate-400" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
+                <div
+                  className="mt-2 rounded-lg bg-slate-800/50 px-2 py-1.5 text-center text-[12px] text-slate-400"
+                  style={{ fontFamily: DASHBOARD_FONTS.cn }}
+                >
                   按 0.82 元/kWh 综合电价估算
                 </div>
               </GlassCard>
 
               {/* 10. 本周趋势 */}
               <GlassCard>
-                <CardHeader icon={<Leaf className="h-4 w-4" strokeWidth={1.8} />} title="本周趋势" />
+                <CardHeader
+                  icon={<Leaf className="h-4 w-4" strokeWidth={1.8} />}
+                  title="本周趋势"
+                />
                 <div className="h-36">
                   <ChartFrame>
-                  <ReactECharts
-                    key={`week-${timelineDate}`}
-                    option={weeklyTrendOption}
-                    style={{ height: '144px', width: '100%' }}
-                  />
+                    <ReactECharts
+                      option={weeklyTrendOption}
+                      style={{ height: '144px', width: '100%' }}
+                    />
                   </ChartFrame>
                 </div>
               </GlassCard>
-
             </div>
           </div>
         </div>
@@ -1143,17 +1528,15 @@ export default function EnergyTwinDashboard({
             >
               未来 24h 能耗预测
             </span>
-            <span className="ml-auto text-[12px] text-white/30" style={{ fontFamily: DASHBOARD_FONTS.cn }}>
+            <span
+              className="ml-auto text-[12px] text-white/30"
+              style={{ fontFamily: DASHBOARD_FONTS.cn }}
+            >
               {filters.zoneId ? '房间级' : filters.levelId ? '楼层级' : '整栋级'}
             </span>
           </div>
           <div className="h-[150px]">
-            <ReactECharts
-              key={`pred-${timelineDate}-${filters.levelId}-${filters.zoneId}`}
-              option={predictionOption}
-              opts={{ notMerge: true } as any}
-              style={{ height: '150px', width: '100%' }}
-            />
+            <ReactECharts option={predictionOption} style={{ height: '150px', width: '100%' }} />
           </div>
         </div>
       </div>
@@ -1211,8 +1594,9 @@ export default function EnergyTwinDashboard({
           }}
         >
           <EnergyAssistantChat
+            anomalyFocus={anomalyFocus}
             energyResult={energyResult}
-            onJumpToLevel3HighlightZones={onJumpToLevel3HighlightZones}
+            onAgentAction={onAgentAction}
             projectId={projectId}
             queryResults={queryResults}
             selectedComponentId={selectedComponentId}
