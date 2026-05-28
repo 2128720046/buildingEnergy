@@ -1,1 +1,0 @@
-export { zoneDefinition } from './definition'

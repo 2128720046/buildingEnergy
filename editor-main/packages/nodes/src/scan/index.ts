@@ -1,1 +1,0 @@
-export { scanDefinition } from './definition'

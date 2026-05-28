@@ -1,1 +1,0 @@
-export { siteDefinition } from './definition'

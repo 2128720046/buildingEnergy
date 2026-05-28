@@ -1,1 +1,0 @@
-export { buildingDefinition } from './definition'

@@ -1,1 +1,0 @@
-export { stairSegmentDefinition } from './definition'
