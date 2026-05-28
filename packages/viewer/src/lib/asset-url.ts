@@ -1,6 +1,11 @@
 import { loadAssetUrl } from '@pascal-app/core'
 
-export const ASSETS_CDN_URL = process.env.NEXT_PUBLIC_ASSETS_CDN_URL || 'https://editor.pascal.app'
+export const ASSETS_CDN_URL = process.env.NEXT_PUBLIC_ASSETS_CDN_URL || ''
+
+function resolveStaticUrl(url: string): string {
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`
+  return ASSETS_CDN_URL ? `${ASSETS_CDN_URL}${normalizedPath}` : normalizedPath
+}
 
 /**
  * Resolves an asset URL to the appropriate format:
@@ -12,8 +17,13 @@ export const ASSETS_CDN_URL = process.env.NEXT_PUBLIC_ASSETS_CDN_URL || 'https:/
 export async function resolveAssetUrl(url: string | undefined | null): Promise<string | null> {
   if (!url) return null
 
-  // External URL - use as-is
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  // External/blob/data URL - use as-is
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
     return url
   }
 
@@ -22,9 +32,8 @@ export async function resolveAssetUrl(url: string | undefined | null): Promise<s
     return loadAssetUrl(url)
   }
 
-  // Absolute or relative path - prepend CDN URL
-  const normalizedPath = url.startsWith('/') ? url : `/${url}`
-  return `${ASSETS_CDN_URL}${normalizedPath}`
+  // Absolute or relative path - use configured CDN or the app's public root.
+  return resolveStaticUrl(url)
 }
 
 /**
@@ -34,8 +43,13 @@ export async function resolveAssetUrl(url: string | undefined | null): Promise<s
 export function resolveCdnUrl(url: string | undefined | null): string | null {
   if (!url) return null
 
-  // External URL - use as-is
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  // External/blob/data URL - use as-is
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('blob:') ||
+    url.startsWith('data:')
+  ) {
     return url
   }
 
@@ -45,7 +59,6 @@ export function resolveCdnUrl(url: string | undefined | null): string | null {
     return null
   }
 
-  // Absolute or relative path - prepend CDN URL
-  const normalizedPath = url.startsWith('/') ? url : `/${url}`
-  return `${ASSETS_CDN_URL}${normalizedPath}`
+  // Absolute or relative path - use configured CDN or the app's public root.
+  return resolveStaticUrl(url)
 }

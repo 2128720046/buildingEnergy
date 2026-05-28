@@ -58669,7 +58669,7 @@
       "id": "zone_0mflfucaeqme4ndg",
       "name": "Kid bedroom 1",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -59301,7 +59301,7 @@
       "id": "zone_4ksvvnh8k4i85tr3",
       "name": "Lanai",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -59793,7 +59793,7 @@
       "id": "zone_79xb500p48eu9bec",
       "name": "Living room",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#ef4444",
       "object": "node",
       "polygon": [
         [
@@ -60705,7 +60705,7 @@
       "id": "zone_g3n9cravedqogu8i",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#FF3333",
       "object": "node",
       "polygon": [
         [
@@ -61793,7 +61793,7 @@
       "id": "zone_p0q1i6msi6egv4t3",
       "name": "Lanai",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -61845,7 +61845,7 @@
       "id": "zone_pw69r8raou7cqvi4",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -62417,7 +62417,7 @@
       "id": "zone_w9cq41mupk00bq2x",
       "name": "Garage 2",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -62585,7 +62585,7 @@
       "id": "zone_xwvi4lsckpyb2nt9",
       "name": "Master bedroom",
       "type": "zone",
-      "color": "#0066aa",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -62725,7 +62725,7 @@
       "id": "zone_ytvy68n6f2s9zbax",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#3b82f6",
       "object": "node",
       "polygon": [
         [
@@ -63653,7 +63653,8 @@
         "ceiling_fy2ng97kddnkugiu",
         "item_7gz8uq8dk96767h7",
         "stair_azzxbgcvx3u6l8q8",
-        "item_y8pdpgkjienj80gf"
+        "item_y8pdpgkjienj80gf",
+        "item_nju1tnatwcgvbr4h"
       ],
       "metadata": {},
       "parentId": "building_vh1z9chps72913h9"
@@ -71801,8 +71802,7 @@
         "level_fpjwtwn0d64aephd",
         "level_zzs0wcq6u3s7u3qg",
         "level_doiabsebkwamfczy",
-        "level_nyon2r8dt6tgvybl",
-        "level_5e6rjpmfksxal1ck"
+        "level_nyon2r8dt6tgvybl"
       ],
       "metadata": {},
       "parentId": null,
@@ -71854,109 +71854,61 @@
       "holes": [],
       "elevation": 0.15
     },
-    "level_5e6rjpmfksxal1ck": {
+    "item_nju1tnatwcgvbr4h": {
       "object": "node",
-      "id": "level_5e6rjpmfksxal1ck",
-      "type": "level",
-      "parentId": "building_vh1z9chps72913h9",
+      "id": "item_nju1tnatwcgvbr4h",
+      "type": "item",
+      "name": "Threadmill",
+      "parentId": "level_ndgi8zuyr8zfcbt6",
       "visible": true,
       "metadata": {},
-      "children": [
-        "scan_xox8kwnybbkeim7j",
-        "scan_y2ago4yqjkqosmva",
-        "scan_qiglm1sc9xrj5992",
-        "scan_zrndlcz0rbfqnaue"
-      ],
-      "level": 8,
-      "name": "环境"
-    },
-    "scan_xox8kwnybbkeim7j": {
-      "object": "node",
-      "id": "scan_xox8kwnybbkeim7j",
-      "type": "scan",
-      "name": "game_ready_city_building",
-      "parentId": "level_5e6rjpmfksxal1ck",
-      "visible": true,
-      "metadata": {},
-      "url": "http://localhost:3010/projects/building/assets/1779616295563-4bda6117.glb",
       "position": [
-        6.51,
-        -20,
-        -20.65
+        -9.25,
+        0,
+        -15
       ],
       "rotation": [
         0,
         0,
         0
       ],
-      "scale": 10,
-      "opacity": 100
-    },
-    "scan_y2ago4yqjkqosmva": {
-      "object": "node",
-      "id": "scan_y2ago4yqjkqosmva",
-      "type": "scan",
-      "name": "game_ready_city_buildings",
-      "parentId": "level_5e6rjpmfksxal1ck",
-      "visible": true,
-      "metadata": {},
-      "url": "http://localhost:3010/projects/building/assets/1779616305118-b0fa5c40.glb",
-      "position": [
-        -20.92,
-        -20.5,
-        10
+      "scale": [
+        1,
+        1,
+        1
       ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": 10,
-      "opacity": 100
-    },
-    "scan_qiglm1sc9xrj5992": {
-      "object": "node",
-      "id": "scan_qiglm1sc9xrj5992",
-      "type": "scan",
-      "name": "city",
-      "parentId": "level_5e6rjpmfksxal1ck",
-      "visible": true,
-      "metadata": {},
-      "url": "http://localhost:3010/projects/building/assets/1779617700655-725e566e.glb",
-      "position": [
-        -33.28301357033982,
-        -20,
-        -140.89933598941002
-      ],
-      "rotation": [
-        0,
-        0,
-        0
-      ],
-      "scale": 10,
-      "opacity": 100
-    },
-    "scan_zrndlcz0rbfqnaue": {
-      "object": "node",
-      "id": "scan_zrndlcz0rbfqnaue",
-      "type": "scan",
-      "name": "13_story_apartment_low_poly_cities_collection",
-      "parentId": "level_5e6rjpmfksxal1ck",
-      "visible": true,
-      "metadata": {},
-      "url": "http://localhost:3010/projects/building/assets/1779618473316-6bcf2707.glb",
-      "position": [
-        20,
-        -20,
-        0
-      ],
-      "rotation": [
-        0,
-        -1.5707963267948966,
-        0
-      ],
-      "scale": 1,
-      "opacity": 100
+      "children": [],
+      "asset": {
+        "id": "threadmill",
+        "category": "furniture",
+        "name": "Threadmill",
+        "thumbnail": "/items/threadmill/thumbnail.webp",
+        "src": "/items/threadmill/model.glb",
+        "dimensions": [
+          2.5,
+          1.5,
+          1
+        ],
+        "tags": [
+          "floor",
+          "fitness"
+        ],
+        "offset": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
     }
   },
   "rootNodeIds": [

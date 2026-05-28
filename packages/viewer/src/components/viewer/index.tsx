@@ -11,8 +11,8 @@ import {
   WindowSystem,
 } from '@pascal-app/core'
 import { Bvh } from '@react-three/drei'
-import { Canvas, extend, type ThreeToJSXElements, useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { Canvas, extend, type ThreeToJSXElements, useThree } from '@react-three/fiber'
+import { useEffect } from 'react'
 import * as THREE from 'three/webgpu'
 import useViewer from '../../store/use-viewer'
 import { GuideSystem } from '../../systems/guide/guide-system'
@@ -28,41 +28,30 @@ import PostProcessing from './post-processing'
 import { SelectionManager } from './selection-manager'
 import { ViewerCamera } from './viewer-camera'
 
-function AnimatedBackground({ isDark }: { isDark: boolean }) {
-  const targetColor = useMemo(() => new THREE.Color(), [])
-  const initialized = useRef(false)
-
-  useFrame(({ scene }, delta) => {
-    const dt = Math.min(delta, 0.1) * 4
-    const targetHex = isDark ? '#0C0E14' : '#ffffff'
-
-    if (!(scene.background && scene.background instanceof THREE.Color)) {
-      scene.background = new THREE.Color(targetHex)
-      initialized.current = true
-      return
-    }
-
-    if (!initialized.current) {
-      scene.background.set(targetHex)
-      initialized.current = true
-      return
-    }
-
-    targetColor.set(targetHex)
-    scene.background.lerp(targetColor, dt)
-  })
-
-  return null
-}
-
 declare module '@react-three/fiber' {
   interface ThreeElements extends ThreeToJSXElements<typeof THREE> {}
 }
 
 extend(THREE as any)
 
+// R3F's <Canvas> useLayoutEffect has no deps, so any re-render (theme switch,
+// parent re-render, StrictMode double-mount) re-invokes configure(). With a
+// sync gl factory that's harmless — the renderer is created once and reused.
+// With an async factory (WebGPURenderer needs await init()), two configure
+// calls can race: both see state.gl == null and both create a renderer. The
+// first to resolve gets setSize/setDpr called on it; the second overwrites
+// state.gl but R3F's store already holds the new size/dpr, so the new
+// renderer stays at the canvas's 300×150 default.
+//
+// Caching by canvas guarantees both branches return the same instance, so
+// "duplicate" configure calls become no-ops on an already-sized renderer.
+// We cache the in-flight Promise (not just the resolved renderer) so two
+// concurrent configure() calls await the same init instead of creating two
+// renderers in parallel.
+const WEBGPU_RENDERER_CACHE = new WeakMap<HTMLCanvasElement, THREE.WebGPURenderer>()
+
 /**
- * Monitors the WebGPU device for loss events and logs them.
+ * Monitors the WebGPU device for loss and uncaptured error events.
  * WebGPU device loss can happen when:
  *  - Tab is backgrounded and OS reclaims GPU
  *  - Driver crash or GPU reset
@@ -75,7 +64,12 @@ function GPUDeviceWatcher() {
     const backend = (gl as any).backend
     const device: GPUDevice | undefined = backend?.device
 
-    if (!device) return
+    if (!device) {
+      console.warn('[viewer] No WebGPU device on backend — running on a fallback renderer.', {
+        backend: backend?.constructor?.name ?? 'unknown',
+      })
+      return
+    }
 
     device.lost.then((info) => {
       console.error(
@@ -83,6 +77,18 @@ function GPUDeviceWatcher() {
           'The page must be reloaded to recover the GPU context.',
       )
     })
+
+    // Uncaptured errors are normally silent (only console-warned by Chrome at
+    // best). Pipe them to console.error so silent crashes show up in logs.
+    const onUncapturedError = (event: Event) => {
+      const gpuError = event as GPUUncapturedErrorEvent
+      console.error('[viewer] WebGPU uncaptured error:', gpuError.error?.message, gpuError.error)
+    }
+    device.addEventListener?.('uncapturederror', onUncapturedError)
+
+    return () => {
+      device.removeEventListener?.('uncapturederror', onUncapturedError)
+    }
   }, [gl])
 
   return null
@@ -101,18 +107,31 @@ const Viewer: React.FC<ViewerProps> = ({
 }) => {
   const theme = useViewer((state) => state.theme)
 
+  // Coarse-pointer devices (phones/tablets) get a tighter DPR ceiling to keep
+  // fragment-shader cost down — saves ~30% over 1.5x on high-DPI mobile.
+  // Desktops (fine pointer) keep the original 1.5 cap.
+  const maxDpr =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5
+
   return (
     <Canvas
       camera={{ position: [50, 50, 50], fov: 50 }}
       className={`transition-colors duration-700 ${theme === 'dark' ? 'bg-[#0C0E14]' : 'bg-[#fafafa]'}`}
-      dpr={[1, 1.5]}
-      gl={(props) => {
+      dpr={[1, maxDpr]}
+      gl={((props: { canvas?: HTMLCanvasElement }) => {
+        const canvas = props.canvas
+        if (canvas) {
+          const cached = WEBGPU_RENDERER_CACHE.get(canvas) as THREE.WebGPURenderer | undefined
+          if (cached) return cached
+        }
         const renderer = new THREE.WebGPURenderer(props as any)
         renderer.toneMapping = THREE.ACESFilmicToneMapping
         renderer.toneMappingExposure = 0.9
-        // renderer.init() // Only use when using <DebugRenderer />
+        if (canvas) {
+          WEBGPU_RENDERER_CACHE.set(canvas, renderer)
+        }
         return renderer
-      }}
+      }) as any}
       resize={{
         debounce: 100,
       }}
@@ -121,11 +140,8 @@ const Viewer: React.FC<ViewerProps> = ({
         enabled: true,
       }}
     >
-      {/* <AnimatedBackground isDark={theme === 'dark'} /> */}
       <ViewerCamera />
 
-      {/* <directionalLight position={[10, 10, 5]} intensity={0.5} castShadow
-        /> */}
       <Lights />
       <Bvh>
         <SceneRenderer />
@@ -147,7 +163,6 @@ const Viewer: React.FC<ViewerProps> = ({
       <WindowSystem />
       <ZoneSystem />
       <PostProcessing />
-      {/* <DebugRenderer /> */}
       <GPUDeviceWatcher />
 
       <ItemLightSystem />
@@ -156,13 +171,6 @@ const Viewer: React.FC<ViewerProps> = ({
       {children}
     </Canvas>
   )
-}
-
-const DebugRenderer = () => {
-  useFrame(({ gl, scene, camera }) => {
-    gl.render(scene, camera)
-  })
-  return null
 }
 
 export default Viewer
