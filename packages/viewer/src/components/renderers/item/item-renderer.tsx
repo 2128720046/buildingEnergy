@@ -12,15 +12,15 @@ import {
 } from '@pascal-app/core'
 import { useAnimations } from '@react-three/drei'
 import { Clone } from '@react-three/drei/core/Clone'
-import { useGLTF } from '@react-three/drei/core/Gltf'
 import { useFrame } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
-import type { AnimationAction, Group, Material, Mesh } from 'three'
+import type { AnimationAction, AnimationClip, Group, Material, Mesh, Object3D } from 'three'
 import { MathUtils } from 'three'
 import { positionLocal, smoothstep, time } from 'three/tsl'
 import { MeshStandardNodeMaterial } from 'three/webgpu'
+import { useAssetUrl } from '../../../hooks/use-asset-url'
+import { useGLTFKTX2 } from '../../../hooks/use-gltf-ktx2'
 import { useNodeEvents } from '../../../hooks/use-node-events'
-import { resolveCdnUrl } from '../../../lib/asset-url'
 import { useItemLightPool } from '../../../store/use-item-light-pool'
 import { ErrorBoundary } from '../../error-boundary'
 import { NodeRenderer } from '../node-renderer'
@@ -90,7 +90,21 @@ const multiplyScales = (
 ): [number, number, number] => [a[0] * b[0], a[1] * b[1], a[2] * b[2]]
 
 const ModelRenderer = ({ node }: { node: ItemNode }) => {
-  const { scene, nodes, animations } = useGLTF(resolveCdnUrl(node.asset.src) || '')
+  const url = useAssetUrl(node.asset.src)
+
+  if (!url) {
+    return <PreviewModel node={node} />
+  }
+
+  return <LoadedModel node={node} url={url} />
+}
+
+const LoadedModel = ({ node, url }: { node: ItemNode; url: string }) => {
+  const { scene, nodes, animations } = useGLTFKTX2(url) as {
+    scene: Group
+    nodes: Record<string, Object3D>
+    animations: AnimationClip[]
+  }
   const ref = useRef<Group>(null!)
   const { actions } = useAnimations(animations, ref)
   // Freeze the interactive definition at mount — asset schemas don't change at runtime
@@ -115,7 +129,7 @@ const ModelRenderer = ({ node }: { node: ItemNode }) => {
   }, [node.id])
 
   useMemo(() => {
-    scene.traverse((child) => {
+    scene.traverse((child: Object3D) => {
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh
         if (mesh.name === 'cutout') {

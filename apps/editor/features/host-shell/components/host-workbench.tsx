@@ -28,6 +28,10 @@ import EnergyTwinDashboard from '@/features/energy-insights/components/energy-tw
 import HostFilterBar from '@/features/energy-insights/components/host-filter-bar'
 import HostRightRail from '@/features/energy-insights/components/host-right-rail'
 import {
+  type EnergyAssistantAction,
+  validateAnomalyFocus,
+} from '@/features/energy-insights/lib/anomaly-focus'
+import {
   type EnergyApiResponse,
   loadComponentEnergy,
   type ZoneEnergyResponse,
@@ -781,6 +785,52 @@ export default function HostWorkbench({
     viewer.setLevelMode('solo')
   }, [handleWorkspaceChange, nodes])
 
+  const focusAnomalyZones = useCallback(
+    (focus: EnergyAssistantAction['focus']) => {
+      const validated = validateAnomalyFocus(focus, nodes)
+      if (!validated) return
+
+      const targetLevelId = validated.levelId as LevelNode['id']
+      const zoneIds = validated.zones.map((zone) => zone.zoneId as ZoneNode['id'])
+      pendingLevelZoneHighlightRef.current = {
+        levelId: targetLevelId,
+        zoneIds,
+      }
+
+      handleWorkspaceChange('energy-query')
+      setDraftFilters((prev) => ({
+        ...prev,
+        levelId: targetLevelId as string,
+        zoneId: '',
+      }))
+      setAppliedFilters((prev) => ({
+        ...prev,
+        levelId: targetLevelId as string,
+        zoneId: '',
+      }))
+      setHasQueried(true)
+
+      const viewer = useViewer.getState()
+      viewer.setSelection({
+        levelId: targetLevelId,
+        zoneId: null,
+        selectedIds: zoneIds,
+      })
+      viewer.setHoveredId(null)
+      viewer.setLevelMode('solo')
+    },
+    [handleWorkspaceChange, nodes],
+  )
+
+  const handleEnergyAssistantAction = useCallback(
+    (action: EnergyAssistantAction) => {
+      if (action.type === 'focus_anomaly_zones') {
+        focusAnomalyZones(action.focus)
+      }
+    },
+    [focusAnomalyZones],
+  )
+
   const handleCreateWorkOrder = useCallback((draft: AssistantWorkOrderDraft) => {
     const nextTask: OperationsTask = {
       assignee: draft.assignee,
@@ -1125,8 +1175,8 @@ export default function HostWorkbench({
         className={cn(
           'relative z-40 border-b px-4 backdrop-blur-md',
           activeWorkspace === 'energy-query' ||
-          activeWorkspace === 'data-analysis' ||
-          activeWorkspace === 'smart-operations'
+            activeWorkspace === 'data-analysis' ||
+            activeWorkspace === 'smart-operations'
             ? 'border-cyan-300/10 bg-[linear-gradient(180deg,rgba(2,8,23,0.18)_0%,rgba(2,8,23,0)_100%)] py-2 shadow-[0_8px_34px_rgba(0,212,255,0.08)]'
             : 'border-white/6 bg-transparent py-3',
         )}
@@ -1135,8 +1185,8 @@ export default function HostWorkbench({
           className={cn(
             'relative w-full',
             activeWorkspace === 'energy-query' ||
-            activeWorkspace === 'data-analysis' ||
-            activeWorkspace === 'smart-operations'
+              activeWorkspace === 'data-analysis' ||
+              activeWorkspace === 'smart-operations'
               ? 'flex min-h-[56px] items-center'
               : 'grid grid-cols-1',
           )}
@@ -1241,8 +1291,8 @@ export default function HostWorkbench({
                   filters={draftFilters}
                   hasQueried={hasQueried}
                   levelOptions={draftQueryModel.levelOptions}
+                  onAgentAction={handleEnergyAssistantAction}
                   onFiltersChange={setDraftFilters}
-                  onJumpToLevel3HighlightZones={handleJumpToLevel3HighlightZones}
                   onQuery={handleSubmitQuery}
                   projectId={projectId}
                   queryResults={queryResults}

@@ -17,4 +17,4 @@ export {
 export { mergedOutline } from './lib/merged-outline-node'
 export { default as useViewer } from './store/use-viewer'
 export { InteractiveSystem } from './systems/interactive/interactive-system'
-export { snapLevelsToTruePositions } from './systems/level/level-utils'
+export { getStackedLevelY, snapLevelsToTruePositions } from './systems/level/level-utils'

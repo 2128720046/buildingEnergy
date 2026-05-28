@@ -2,11 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
+  type EnergyAssistantAction,
+  formatAnomalyFocusForAssistant,
+  isAnomalyFocusPrompt,
+} from '@/features/energy-insights/lib/anomaly-focus'
+import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
+import {
   buildEnergyAssistantReply,
   type EnergyAssistantContext,
 } from '@/features/energy-insights/lib/energy-assistant'
-import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
-import { buildComponentEnergyFromDaily, buildDailySummary } from '@/features/energy-insights/lib/energy-mock-data'
+import {
+  buildComponentEnergyFromDaily,
+  buildDailySummary,
+} from '@/features/energy-insights/lib/energy-mock-data'
 import { cn } from '@/lib/utils'
 
 interface ChatMessage {
@@ -25,23 +33,20 @@ const QUICK_PROMPTS = [
   '总结当前能耗情况',
   '峰值出现在什么时间段？',
   '给我三条优化建议',
-  '列出当前高能耗对象',
+  '查询异常楼层并跳转',
 ]
 
 function SendIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
-      <path
-        d="M4 12.75 20 4l-4.18 16-4.98-5.04-4.3 2.57 1.31-5.38L4 12.75Z"
-        fill="currentColor"
-      />
+      <path d="M4 12.75 20 4l-4.18 16-4.98-5.04-4.3 2.57 1.31-5.38L4 12.75Z" fill="currentColor" />
     </svg>
   )
 }
 
 export interface EnergyAssistantChatProps extends EnergyAssistantContext {
+  onAgentAction?: (action: EnergyAssistantAction) => void
   onCreateWorkOrder?: (draft: AssistantWorkOrderDraft) => void
-  onJumpToLevel3HighlightZones?: () => void
   tone?: 'dark' | 'light'
   variant?: 'panel' | 'workspace'
 }
@@ -68,9 +73,23 @@ function buildSimulatedEnergyResult(context: EnergyAssistantContext): EnergyApiR
   )
 }
 
+function buildAnomalyFallbackReply(context: EnergyAssistantContext): string {
+  if (!context.anomalyFocus) {
+    return '我已经检查当前能耗查询页的模拟热力图数据，暂时没有发现超过标红阈值的异常 zone，因此不会执行自动跳转。'
+  }
+
+  const { floorName, topZone, zones } = context.anomalyFocus
+  const zoneNames = zones
+    .slice(0, 3)
+    .map((zone) => zone.zoneName)
+    .join('、')
+
+  return `已定位到异常楼层：${floorName}。当前首个聚焦位置是 ${topZone.zoneName}，归一化能耗 ${topZone.normalizedEnergy.toFixed(2)}。页面将自动跳转到该楼层并聚焦标红 zone；本次异常 zone 包括：${zoneNames}。`
+}
+
 export default function EnergyAssistantChat({
+  onAgentAction,
   onCreateWorkOrder,
-  onJumpToLevel3HighlightZones,
   tone = 'dark',
   variant = 'panel',
   ...context
@@ -83,11 +102,11 @@ export default function EnergyAssistantChat({
       id: 'assistant-welcome',
       role: 'assistant',
       content:
-        '我已经接入智能体。你可以直接问我当前构件的能耗趋势、峰值成因、节能建议，或者让我结合筛选结果做分析。',
+        '我已经接入智能体。你可以直接问我当前构件的能耗趋势、峰值成因、节能建议，也可以让我结合当前查询结果定位异常楼层。',
     },
   ])
   const scrollAnchorRef = useRef<HTMLDivElement>(null)
-  const pendingJumpTimerRef = useRef<number | null>(null)
+  const pendingActionTimerRef = useRef<number | null>(null)
   const pendingWorkOrderTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -96,8 +115,8 @@ export default function EnergyAssistantChat({
 
   useEffect(() => {
     return () => {
-      if (pendingJumpTimerRef.current !== null) {
-        window.clearTimeout(pendingJumpTimerRef.current)
+      if (pendingActionTimerRef.current !== null) {
+        window.clearTimeout(pendingActionTimerRef.current)
       }
       if (pendingWorkOrderTimerRef.current !== null) {
         window.clearTimeout(pendingWorkOrderTimerRef.current)
@@ -112,11 +131,18 @@ export default function EnergyAssistantChat({
       ? 'flex min-h-0 max-h-[calc(100dvh-180px)] flex-col overflow-hidden rounded-sm p-4'
       : 'flex h-full min-h-0 max-h-[calc(100dvh-220px)] flex-col overflow-hidden rounded-sm p-4'
     : ''
-  const messageAreaClass = isWorkspace
-    ? isLight
-      ? 'h-[600px]'
-      : 'min-h-0 flex-1'
-    : 'h-[300px]'
+  const messageAreaClass = isWorkspace ? (isLight ? 'h-[600px]' : 'min-h-0 flex-1') : 'h-[300px]'
+
+  const scheduleAgentAction = (action: EnergyAssistantAction | null) => {
+    if (!(action && onAgentAction)) return
+
+    if (pendingActionTimerRef.current !== null) {
+      window.clearTimeout(pendingActionTimerRef.current)
+    }
+    pendingActionTimerRef.current = window.setTimeout(() => {
+      onAgentAction(action)
+    }, 800)
+  }
 
   const submitPrompt = async (rawPrompt: string) => {
     const prompt = rawPrompt.trim()
@@ -125,7 +151,22 @@ export default function EnergyAssistantChat({
     const compactPrompt = prompt.replace(/\s+/g, '')
     const shouldInjectSimulatedEnergy = compactPrompt.includes('总结当前能耗情况')
     const shouldCreateWorkOrder = compactPrompt.includes('把这个能耗异常生成工单')
-    const shouldJumpToLevel3 = compactPrompt.includes('那层楼有问题')
+    const shouldFocusAnomaly = isAnomalyFocusPrompt(prompt)
+    const pendingAction =
+      shouldFocusAnomaly && context.anomalyFocus
+        ? ({
+            focus: context.anomalyFocus,
+            type: 'focus_anomaly_zones',
+          } satisfies EnergyAssistantAction)
+        : null
+    const actionAwarePrompt = shouldFocusAnomaly
+      ? [
+          prompt,
+          '',
+          '系统已基于当前能耗查询页面的模拟热力图数据计算出可跳转的异常位置。请只引用下面的异常位置摘要，回答完后前端会自动跳转到首个标红 zone。',
+          formatAnomalyFocusForAssistant(context.anomalyFocus ?? null),
+        ].join('\n')
+      : prompt
 
     const requestContext: EnergyAssistantContext =
       shouldInjectSimulatedEnergy && !context.energyResult
@@ -155,15 +196,6 @@ export default function EnergyAssistantChat({
       }, 3000)
     }
 
-    if (shouldJumpToLevel3 && onJumpToLevel3HighlightZones) {
-      if (pendingJumpTimerRef.current !== null) {
-        window.clearTimeout(pendingJumpTimerRef.current)
-      }
-      pendingJumpTimerRef.current = window.setTimeout(() => {
-        onJumpToLevel3HighlightZones()
-      }, 5000)
-    }
-
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -181,7 +213,7 @@ export default function EnergyAssistantChat({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt,
+          prompt: actionAwarePrompt,
           sessionId,
           context: requestContext,
         }),
@@ -202,18 +234,26 @@ export default function EnergyAssistantChat({
           content: payload.reply ?? '',
         },
       ])
+      scheduleAgentAction(pendingAction)
     } catch (error) {
-      const fallback = buildEnergyAssistantReply(prompt, requestContext)
+      const fallback = shouldFocusAnomaly
+        ? buildAnomalyFallbackReply(requestContext)
+        : buildEnergyAssistantReply(actionAwarePrompt, requestContext)
       const errorText = error instanceof Error ? error.message : '未知错误'
+      const actionHint =
+        shouldFocusAnomaly && context.anomalyFocus
+          ? `\n\n${formatAnomalyFocusForAssistant(context.anomalyFocus)}`
+          : ''
 
       setMessages((current) => [
         ...current,
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: `智能体暂时不可用，我先用本地分析兜底。\n错误原因：${errorText}\n\n${fallback}`,
+          content: `智能体暂时不可用，我先用本地分析兜底。\n错误原因：${errorText}\n\n${fallback}${actionHint}`,
         },
       ])
+      scheduleAgentAction(pendingAction)
     } finally {
       setIsSubmitting(false)
     }
@@ -358,7 +398,7 @@ export default function EnergyAssistantChat({
                 void submitPrompt(draft)
               }
             }}
-            placeholder="例如：帮我解释这个构件为什么峰值偏高，或者给我三条节能建议。"
+            placeholder="例如：查询异常楼层并跳转，或给我三条节能建议"
             value={draft}
           />
         </label>

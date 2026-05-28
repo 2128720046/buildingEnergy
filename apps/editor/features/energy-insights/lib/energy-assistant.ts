@@ -1,7 +1,9 @@
+import type { EnergyAnomalyFocus } from './anomaly-focus'
 import type { EnergyApiResponse } from './energy-api'
 import type { HostQueryResult } from './host-query'
 
 export interface EnergyAssistantContext {
+  anomalyFocus?: EnergyAnomalyFocus | null
   energyResult: EnergyApiResponse | null
   projectId: string
   queryResults: HostQueryResult[]
@@ -38,7 +40,8 @@ export function buildEnergyAssistantReply(
   context: EnergyAssistantContext,
 ): string {
   const normalizedMessage = message.trim().toLowerCase()
-  const { energyResult, projectId, queryResults, selectedComponentId, selectedComponentName } = context
+  const { energyResult, projectId, queryResults, selectedComponentId, selectedComponentName } =
+    context
 
   if (!energyResult) {
     if (
@@ -59,9 +62,7 @@ export function buildEnergyAssistantReply(
 
   const series = energyResult.series ?? []
   const analysisSeries =
-    series.length > 0
-      ? series
-      : [{ time: '当前', value: energyResult.todayUsage }]
+    series.length > 0 ? series : [{ time: '当前', value: energyResult.todayUsage }]
   const peakPoint = analysisSeries.reduce((best, point) =>
     point.value > best.value ? point : best,
   )

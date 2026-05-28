@@ -49,6 +49,33 @@ export function getLevelHeight(
   return height
 }
 
+export function getStackedLevelY(
+  levelId: string,
+  nodes: ReturnType<typeof useScene.getState>['nodes'],
+): number {
+  type LevelEntry = {
+    index: number
+    levelId: string
+  }
+
+  const entries: LevelEntry[] = []
+  sceneRegistry.byType.level.forEach((id) => {
+    const level = nodes[id as LevelNode['id']]
+    if (level) {
+      entries.push({ levelId: id, index: (level as any).level ?? 0 })
+    }
+  })
+  entries.sort((a, b) => a.index - b.index)
+
+  let cumulativeY = 0
+  for (const entry of entries) {
+    if (entry.levelId === levelId) return cumulativeY
+    cumulativeY += getLevelHeight(entry.levelId, nodes)
+  }
+
+  return 0
+}
+
 /**
  * Instantly snaps all level Objects3D to their true stacked Y positions
  * (ignores levelMode — always uses stacked, no exploded gap).
