@@ -780,10 +780,12 @@ const TaskList = memo(function TaskList({
   highlightedTaskId: string | null
   tasks: LiveTask[]
 }) {
+  const mobileReportCount = tasks.filter((task) => task.id.startsWith('mobile-alert-work-order-')).length
+
   return (
     <OperationsPanel
       icon={<ClipboardList className="h-5 w-5" strokeWidth={1.8} />}
-      rightSlot={<StatusBadge tone="amber">待办 2 · 处理中 1 · 超期 0</StatusBadge>}
+      rightSlot={<StatusBadge tone="amber">手机转工单 {mobileReportCount} · 总计 {tasks.length}</StatusBadge>}
       title="巡检与工单"
     >
       <div className="space-y-3">
@@ -1687,8 +1689,43 @@ export default function SmartOperationsWorkspace({
   const [mobileDetail, setMobileDetail] = useState<MobileDetailState>(null)
   const [dispatchPlan, setDispatchPlan] = useState<DispatchPlanItem[]>([])
 
+  const operatorLabels = useMemo(
+    () => dashboard.mobileOperators.map((operator) => `${operator.name} · ${operator.role}`),
+    [dashboard.mobileOperators],
+  )
+
+  const mobileAlertTasks = useMemo<LiveTask[]>(
+    () =>
+      dashboard.mobileAlerts
+        .filter((alert) => alert.status === '已受理' || acceptedMobileAlertIds.includes(alert.id))
+        .map((alert) => {
+          const assignee =
+            alert.title.includes('照明')
+              ? operatorLabels.find((name) => name.includes('李工'))
+              : alert.title.includes('配电') || alert.title.includes('电')
+                ? operatorLabels.find((name) => name.includes('王工'))
+                : operatorLabels[0]
+
+          return {
+            assignee: assignee ?? operatorLabels[0] ?? '综合维修组',
+            code: `WO-REPORT-${alert.id.replace(/\D/g, '').padStart(3, '0')}`,
+            due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
+            id: `mobile-alert-work-order-${alert.id}`,
+            linkedAlertId: alert.id,
+            opinion: alert.detail,
+            progress: 0,
+            status: '待接单',
+            steps: ['接收手机端告警', '现场复核', '处理异常', '回填结果'],
+            title: `处置手机端上报：${alert.title}`,
+            tools: '移动工单 / 现场照片 / 处理记录',
+          }
+        }),
+    [acceptedMobileAlertIds, dashboard.mobileAlerts, operatorLabels],
+  )
+
   const liveTasks = useMemo<LiveTask[]>(
     () => [
+      ...mobileAlertTasks,
       ...dashboard.tasks.map((task, index) => ({
         ...task,
         code: taskCode(task, index),
@@ -1700,7 +1737,7 @@ export default function SmartOperationsWorkspace({
       })),
       ...manualTasks,
     ],
-    [dashboard.alerts, dashboard.tasks, manualTasks],
+    [dashboard.alerts, dashboard.tasks, manualTasks, mobileAlertTasks],
   )
 
   const liveAlerts = useMemo<LiveAlert[]>(
@@ -1736,11 +1773,6 @@ export default function SmartOperationsWorkspace({
   useIntervalTick(() => {
     setOperators(randomInt(6, 9))
   }, 5000)
-
-  const operatorLabels = useMemo(
-    () => dashboard.mobileOperators.map((operator) => `${operator.name} · ${operator.role}`),
-    [dashboard.mobileOperators],
-  )
 
   const buildDispatchPlan = (preferredAssignee?: string): DispatchPlanItem[] => {
     const candidates = liveAlerts.filter((alert) => !alert.linkedTaskId)
@@ -1782,31 +1814,7 @@ export default function SmartOperationsWorkspace({
     setAcceptedMobileAlertIds((current) => (current.includes(id) ? current : [...current, id]))
     const alert = dashboard.mobileAlerts.find((item) => item.id === id)
     if (alert) {
-      const assignee =
-        alert.title.includes('照明')
-          ? operatorLabels.find((name) => name.includes('李工'))
-          : alert.title.includes('配电') || alert.title.includes('电')
-            ? operatorLabels.find((name) => name.includes('王工'))
-            : operatorLabels[0]
-
-      const task: LiveTask = {
-        assignee: assignee ?? operatorLabels[0] ?? '综合维修组',
-        code: `WO-REPORT-${alert.id.replace(/\D/g, '').padStart(3, '0')}`,
-        due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
-        id: `mobile-alert-work-order-${alert.id}`,
-        linkedAlertId: alert.id,
-        opinion: alert.detail,
-        progress: 0,
-        status: '待接单',
-        steps: ['接收手机端告警', '现场复核', '处理异常', '回填结果'],
-        title: `处置手机端上报：${alert.title}`,
-        tools: '移动工单 / 现场照片 / 处理记录',
-      }
-
-      setManualTasks((current) =>
-        current.some((item) => item.id === task.id) ? current : [...current, task],
-      )
-      setHighlightedTaskId(task.id)
+      setHighlightedTaskId(`mobile-alert-work-order-${alert.id}`)
     }
     setAgentPulse(true)
     window.setTimeout(() => setAgentPulse(false), 1400)
