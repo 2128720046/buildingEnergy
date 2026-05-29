@@ -608,7 +608,7 @@ const AlertCard = memo(function AlertCard({
         </div>
       </div>
       <div className="operations-alert-recommendation mt-4 border-l border-dashed border-cyan-300/45 bg-cyan-950/20 px-4 py-3 text-cyan-50/82">
-        <b className="mb-1 block text-[12px] font-black text-cyan-200/72">处理意见</b>
+        <b className="mb-1 block text-sm font-black text-cyan-200/78">处理意见</b>
         {alert.recommendation}
       </div>
       <div className="operations-alert-actions mt-3 flex justify-end gap-2">
@@ -755,7 +755,7 @@ const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: bo
           })}
         >
           <div
-            className="text-right text-[20px] font-black text-cyan-50"
+            className="text-right text-2xl font-black text-cyan-50"
             style={{ fontFamily: DASHBOARD_FONTS.num }}
           >
             <NumberFlow value={task.progress} />%
@@ -765,8 +765,8 @@ const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: bo
           </div>
         </div>
       </div>
-      <div className="operations-task-opinion mt-3 border-l border-dashed border-cyan-300/38 bg-cyan-950/18 px-4 py-3 text-[13px] leading-6 text-cyan-50/78">
-        <b className="mb-1 block text-[12px] font-black text-cyan-200/72">处理意见</b>
+      <div className="operations-task-opinion mt-3 border-l border-dashed border-cyan-300/38 bg-cyan-950/18 px-4 py-3 text-sm font-semibold leading-6 text-cyan-50/82">
+        <b className="mb-1 block text-sm font-black text-cyan-200/78">处理意见</b>
         {task.opinion ?? `${task.steps.join('；')}。使用 ${task.tools}，处理后回填复核结果。`}
       </div>
     </article>
@@ -849,10 +849,10 @@ function DispatchConfirmDialog({
                   <span className="font-black text-cyan-50">{item.alert.title}</span>
                   <StatusBadge tone={severityTone(item.alert.severity)}>{severityLabel(item.alert.severity)}</StatusBadge>
                 </div>
-                <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                <div className="mt-1 text-sm font-semibold leading-5 text-cyan-100/68">
                   {item.alert.location} · 截止 {item.due}
                 </div>
-                <div className="mt-2 text-[13px] leading-6 text-cyan-50/76">
+                <div className="mt-2 text-sm font-semibold leading-6 text-cyan-50/82">
                   <b className="text-cyan-200/78">处理意见：</b>
                   {item.opinion}
                 </div>
@@ -1111,10 +1111,10 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
                     <span className="font-black text-cyan-50">{alert.title}</span>
                     <StatusBadge tone={severityTone(alert.severity)}>{severityLabel(alert.severity)}</StatusBadge>
                   </div>
-                  <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                  <div className="mt-1 text-sm font-semibold leading-5 text-cyan-100/68">
                     {alert.location} · {alert.reporter} · 照片 {alert.photoCount} 张 · {alert.submittedAt}
                   </div>
-                  <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">{alert.detail}</div>
+                  <div className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-cyan-50/82">{alert.detail}</div>
                 </div>
                 <div className="operations-mobile-row-actions">
                   <button className="operations-mobile-mini-btn" onClick={() => onOpenAlertDetail(alert)} type="button">
@@ -1161,14 +1161,14 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
                       <span className="operations-task-code font-black text-[#7AF7FF]">{order.code}</span>
                       <span className="font-black text-cyan-50">{order.title}</span>
                     </div>
-                    <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                    <div className="mt-1 text-sm font-semibold leading-5 text-cyan-100/68">
                       {order.location} · {order.resultStatus} · 照片 {order.photoCount} 张
                     </div>
-                    <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">
+                    <div className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-cyan-50/82">
                       处理意见：{order.resultNote}
                     </div>
                     {rejected ? (
-                      <div className="mt-1 line-clamp-2 text-[12px] leading-5 text-rose-100/82">
+                      <div className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-rose-100/86">
                         驳回意见：{rejectionOpinions[order.id]}
                       </div>
                     ) : null}
@@ -1243,7 +1243,7 @@ const FocusOverview = memo(function FocusOverview({
                 }}
               />
             </div>
-            <div className="mt-2 text-[12px] leading-5 text-cyan-100/58">
+            <div className="mt-2 text-sm font-semibold leading-5 text-cyan-100/68">
               {alert.location} · {alert.currentValue}
             </div>
           </button>
@@ -1446,7 +1446,7 @@ const AgentChat = memo(function AgentChat({
                 ) : null}
                 <div
                   className={cn(
-                    'operations-chat-bubble max-w-[88%] whitespace-pre-line px-3 py-2 text-[13px] leading-6',
+                    'operations-chat-bubble max-w-[88%] whitespace-pre-line px-3 py-2 text-sm font-semibold leading-6',
                     message.role === 'assistant' ? 'assistant' : 'user',
                   )}
                 >
@@ -1538,7 +1538,7 @@ const OperationsStatusBar = memo(function OperationsStatusBar({
 }) {
   return (
     <BevelCard className="operations-status-bar px-4 py-2" size="small">
-      <div className="grid grid-cols-2 gap-3 text-[13px] font-semibold text-cyan-100/70 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 text-sm font-semibold text-cyan-100/74 md:grid-cols-4">
         <div
           className="flex items-center gap-2"
           {...tooltipAttrs({
@@ -1553,10 +1553,10 @@ const OperationsStatusBar = memo(function OperationsStatusBar({
           上次同步 {lastSyncSeconds}s 前
         </div>
         <div>
-          在线运维人员 <span className="text-cyan-50">{operators}</span> 人
+          在线运维人员 <span className="text-lg font-bold text-cyan-50">{operators}</span> 人
         </div>
         <div>
-          今日已处理工单 <span className="text-cyan-50">{doneTasks}</span> 件
+          今日已处理工单 <span className="text-lg font-bold text-cyan-50">{doneTasks}</span> 件
         </div>
         <div
           {...tooltipAttrs({
@@ -1567,7 +1567,7 @@ const OperationsStatusBar = memo(function OperationsStatusBar({
             title: '今日新增告警口径',
           })}
         >
-          今日新增告警 <span className="text-cyan-50">{todayAlerts}</span> 条
+          今日新增告警 <span className="text-lg font-bold text-cyan-50">{todayAlerts}</span> 条
         </div>
       </div>
     </BevelCard>
@@ -1960,7 +1960,7 @@ export default function SmartOperationsWorkspace({
             >
               智慧运维
             </h1>
-            <div className="mt-2 text-[13px] font-semibold text-cyan-100/62">
+            <div className="mt-2 text-sm font-bold text-cyan-100/70">
               公寓楼(BLDG-APT) / 全部设备
             </div>
           </div>
