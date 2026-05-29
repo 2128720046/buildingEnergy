@@ -1923,7 +1923,8 @@
   }
 
   .operations-alert-actions button,
-  .operations-adopt-btn {
+  .operations-adopt-btn,
+  .operations-one-click-btn {
     border: 1px solid rgba(0, 212, 255, 0.42);
     background: rgba(0, 212, 255, 0.12);
     color: #7af7ff;
@@ -2016,6 +2017,30 @@
     clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   }
 
+  .operations-mobile-select {
+    display: grid;
+    gap: 6px;
+    color: rgba(122, 247, 255, 0.68);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .operations-mobile-select select {
+    min-width: 0;
+    border: 1px solid rgba(0, 212, 255, 0.34);
+    background: rgba(2, 12, 26, 0.72);
+    color: #e8f4ff;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 850;
+    outline: none;
+  }
+
+  .operations-mobile-select option {
+    background: #061829;
+    color: #e8f4ff;
+  }
+
   .operations-mobile-mini-btn {
     min-width: 76px;
     flex-shrink: 0;
@@ -2055,6 +2080,16 @@
     gap: 8px;
   }
 
+  .operations-mobile-thumb {
+    width: 76px;
+    height: 58px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid rgba(122, 247, 255, 0.32);
+    background: rgba(0, 212, 255, 0.08);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+
   .operations-mobile-detail-backdrop {
     position: fixed;
     inset: 0;
@@ -2078,6 +2113,10 @@
     box-shadow: 0 24px 90px rgba(0, 0, 0, 0.48), inset 0 0 30px rgba(0, 212, 255, 0.08);
     padding: 24px;
     clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+  }
+
+  .operations-dispatch-dialog {
+    width: min(900px, 100%);
   }
 
   .operations-mobile-detail-header,
@@ -2164,6 +2203,37 @@
     margin: 0;
   }
 
+  .operations-reject-note {
+    border-color: rgba(255, 77, 141, 0.36);
+    background: rgba(255, 77, 141, 0.09);
+  }
+
+  .operations-reject-editor {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    color: rgba(122, 247, 255, 0.72);
+    font-size: 12px;
+    font-weight: 950;
+  }
+
+  .operations-reject-editor textarea {
+    min-height: 82px;
+    resize: vertical;
+    border: 1px solid rgba(255, 77, 141, 0.34);
+    background: rgba(4, 18, 34, 0.68);
+    color: #e8f4ff;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.65;
+    outline: none;
+  }
+
+  .operations-reject-editor textarea:focus {
+    border-color: rgba(255, 125, 165, 0.72);
+    box-shadow: 0 0 14px rgba(255, 77, 141, 0.16);
+  }
+
   .operations-detail-photo-block {
     margin-top: 18px;
   }
@@ -2203,6 +2273,29 @@
     font-weight: 900;
   }
 
+  .operations-detail-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.86;
+  }
+
+  .operations-detail-photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 18%, rgba(2, 8, 23, 0.62));
+  }
+
+  .operations-detail-photo span,
+  .operations-detail-photo svg,
+  .operations-detail-photo small {
+    position: relative;
+    z-index: 1;
+  }
+
   .operations-detail-photo small {
     position: absolute;
     right: 8px;
@@ -2229,6 +2322,53 @@
   .operations-mobile-row[data-reviewed='true'] {
     border-color: rgba(34, 211, 160, 0.3);
     background: rgba(34, 211, 160, 0.08);
+  }
+
+  .operations-mobile-row[data-rejected='true'] {
+    border-color: rgba(255, 77, 141, 0.36);
+    background: rgba(255, 77, 141, 0.08);
+  }
+
+  .operations-reject-btn {
+    border-color: rgba(255, 77, 141, 0.58);
+    background: rgba(255, 77, 141, 0.12);
+    color: #ffc8da;
+  }
+
+  .operations-dispatch-plan-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .operations-dispatch-plan-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 0.28fr);
+    gap: 16px;
+    align-items: center;
+    border: 1px solid rgba(0, 212, 255, 0.22);
+    background: rgba(4, 18, 34, 0.54);
+    padding: 14px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  }
+
+  .operations-dispatch-assignee {
+    display: grid;
+    gap: 5px;
+    justify-items: end;
+    color: rgba(184, 230, 255, 0.62);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .operations-one-click-btn {
+    padding: 6px 10px;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  }
+
+  .operations-dispatch-assignee b {
+    color: #e8f4ff;
+    font-size: 14px;
   }
 
   .operations-task-code {

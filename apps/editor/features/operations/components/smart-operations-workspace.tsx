@@ -11,7 +11,6 @@ import {
   Cpu,
   Filter,
   Image as ImageIcon,
-  Lightbulb,
   Radar,
   Send,
   SendToBack,
@@ -37,7 +36,7 @@ import {
   type OperationsAlert,
   type MobileAlertReport,
   type MobileUploadedWorkOrder,
-  type OperationsStrategy,
+  type OperationsOperator,
   type OperationsTask,
 } from '@/features/operations/lib/operations-dashboard'
 import { cn } from '@/lib/utils'
@@ -52,6 +51,7 @@ interface LiveAlert extends OperationsAlert {
 interface LiveTask extends OperationsTask {
   code: string
   linkedAlertId?: string
+  opinion?: string
   progress: number
   status: string
   steps: string[]
@@ -63,15 +63,15 @@ type MobileDetailState =
   | { item: MobileUploadedWorkOrder; kind: 'work-order' }
   | null
 
-const OPERATIONS_ASSIGNEES = [
-  '暖通运维一组',
-  '电气运维二组',
-  '给排水运维组',
-  '综合值班长',
-  '楼宇自控工程师',
-]
-
 type MobileDispatchStatus = '待派发' | '已发至手机端' | '手机端处理中'
+
+interface DispatchPlanItem {
+  alert: LiveAlert
+  assignee: string
+  code: string
+  due: string
+  opinion: string
+}
 
 interface AgentMessage {
   content: string
@@ -88,6 +88,7 @@ interface AgentAnswer {
 
 const QUICK_PROMPTS = [
   '总结当前能耗情况',
+  '派发工单',
   '峰值出现在什么时段?',
   '给我三条优化建议',
   '列出当前高能耗设备',
@@ -125,6 +126,12 @@ const DEFAULT_AGENT_ANSWER = `【问题理解】
     统一公区照明人体感应阈值标准`
 
 const ANSWER_BANK: Record<string, AgentAnswer> = {
+  派发工单: {
+    followUps: ['总结当前能耗情况', '列出当前高能耗设备'],
+    text: `【派单建议】
+已根据当前告警优先级生成待派发工单清单。
+请在弹窗中核对工单、处理人员和处理意见，确认后将统一派发。`,
+  },
   总结当前能耗情况: {
     followUps: ['新风机组的能耗趋势怎么样?', '怎么排查照明回路夜间未闭锁?'],
     text: `【问题理解】
@@ -532,17 +539,25 @@ const AlertCard = memo(function AlertCard({
   highlighted,
   onDispatchWorkOrder,
   onHighlightTask,
+  operatorOptions,
   pulse,
 }: {
   alert: LiveAlert
   highlighted: boolean
   onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
+  operatorOptions: OperationsOperator[]
   pulse: boolean
 }) {
   const tone = severityTone(alert.severity)
-  const [selectedAssignee, setSelectedAssignee] = useState(OPERATIONS_ASSIGNEES[0] ?? '')
+  const formattedOperators = operatorOptions.map((operator) => `${operator.name} · ${operator.role}`)
+  const [selectedAssignee, setSelectedAssignee] = useState(formattedOperators[0] ?? '')
   const dispatched = Boolean(alert.linkedTaskId)
+
+  useEffect(() => {
+    if (!formattedOperators.length || formattedOperators.includes(selectedAssignee)) return
+    setSelectedAssignee(formattedOperators[0] ?? '')
+  }, [formattedOperators, selectedAssignee])
 
   return (
     <article
@@ -593,6 +608,7 @@ const AlertCard = memo(function AlertCard({
         </div>
       </div>
       <div className="operations-alert-recommendation mt-4 border-l border-dashed border-cyan-300/45 bg-cyan-950/20 px-4 py-3 text-cyan-50/82">
+        <b className="mb-1 block text-[12px] font-black text-cyan-200/72">处理意见</b>
         {alert.recommendation}
       </div>
       <div className="operations-alert-actions mt-3 flex justify-end gap-2">
@@ -603,7 +619,7 @@ const AlertCard = memo(function AlertCard({
             onChange={(event) => setSelectedAssignee(event.target.value)}
             value={selectedAssignee}
           >
-            {OPERATIONS_ASSIGNEES.map((assignee) => (
+            {formattedOperators.map((assignee) => (
               <option key={assignee} value={assignee}>
                 {assignee}
               </option>
@@ -628,18 +644,29 @@ const AlertCenter = memo(function AlertCenter({
   highlightedAlertId,
   onDispatchWorkOrder,
   onHighlightTask,
+  onOneClickDispatch,
+  operatorOptions,
   pulseAlertId,
 }: {
   alerts: LiveAlert[]
   highlightedAlertId: string | null
   onDispatchWorkOrder: (alert: LiveAlert, assignee: string) => void
   onHighlightTask: (id: string | null) => void
+  onOneClickDispatch: () => void
+  operatorOptions: OperationsOperator[]
   pulseAlertId: string | null
 }) {
   return (
     <OperationsPanel
       icon={<AlertTriangle className="h-5 w-5" strokeWidth={1.8} />}
-      rightSlot={<StatusBadge tone="rose">5 条活跃</StatusBadge>}
+      rightSlot={
+        <div className="flex items-center gap-2">
+          <StatusBadge tone="rose">5 条活跃</StatusBadge>
+          <button className="operations-one-click-btn" onClick={onOneClickDispatch} type="button">
+            一键派发
+          </button>
+        </div>
+      }
       title="告警中心"
     >
       <div className="operations-alert-list space-y-3">
@@ -650,6 +677,7 @@ const AlertCenter = memo(function AlertCenter({
             key={alert.id}
             onDispatchWorkOrder={onDispatchWorkOrder}
             onHighlightTask={onHighlightTask}
+            operatorOptions={operatorOptions}
             pulse={pulseAlertId === alert.id}
           />
         ))}
@@ -737,6 +765,10 @@ const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: bo
           </div>
         </div>
       </div>
+      <div className="operations-task-opinion mt-3 border-l border-dashed border-cyan-300/38 bg-cyan-950/18 px-4 py-3 text-[13px] leading-6 text-cyan-50/78">
+        <b className="mb-1 block text-[12px] font-black text-cyan-200/72">处理意见</b>
+        {task.opinion ?? `${task.steps.join('；')}。使用 ${task.tools}，处理后回填复核结果。`}
+      </div>
     </article>
   )
 })
@@ -748,10 +780,12 @@ const TaskList = memo(function TaskList({
   highlightedTaskId: string | null
   tasks: LiveTask[]
 }) {
+  const mobileReportCount = tasks.filter((task) => task.id.startsWith('mobile-alert-work-order-')).length
+
   return (
     <OperationsPanel
       icon={<ClipboardList className="h-5 w-5" strokeWidth={1.8} />}
-      rightSlot={<StatusBadge tone="amber">待办 2 · 处理中 1 · 超期 0</StatusBadge>}
+      rightSlot={<StatusBadge tone="amber">手机转工单 {mobileReportCount} · 总计 {tasks.length}</StatusBadge>}
       title="巡检与工单"
     >
       <div className="space-y-3">
@@ -763,8 +797,8 @@ const TaskList = memo(function TaskList({
   )
 })
 
-function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: number) {
-  const safeCount = Math.max(1, count)
+function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: number, imageUrls: string[]) {
+  const safeCount = Math.max(1, imageUrls.length || count)
   const labels =
     kind === 'alert'
       ? ['现场全景', '设备铭牌', '异常特写', '位置环境']
@@ -772,27 +806,106 @@ function mobileMaterialPhotos(kind: 'alert' | 'work-order', id: string, count: n
 
   return Array.from({ length: safeCount }, (_, index) => ({
     id: `${kind}-${id}-photo-${index}`,
+    imageUrl: imageUrls[index],
     label: labels[index % labels.length],
   }))
+}
+
+function DispatchConfirmDialog({
+  onApprove,
+  onClose,
+  plan,
+}: {
+  onApprove: () => void
+  onClose: () => void
+  plan: DispatchPlanItem[]
+}) {
+  if (!plan.length) return null
+
+  return (
+    <div className="operations-mobile-detail-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        aria-modal="true"
+        className="operations-mobile-detail-dialog operations-dispatch-dialog"
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <header className="operations-mobile-detail-header">
+          <div>
+            <div className="operations-mobile-sync-label">一键派发确认</div>
+            <h3>待派发工单清单</h3>
+          </div>
+          <button aria-label="关闭" className="operations-detail-close" onClick={onClose} type="button">
+            ×
+          </button>
+        </header>
+
+        <div className="operations-dispatch-plan-list">
+          {plan.map((item) => (
+            <article className="operations-dispatch-plan-row" key={item.alert.id}>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="operations-task-code font-black text-[#7AF7FF]">{item.code}</span>
+                  <span className="font-black text-cyan-50">{item.alert.title}</span>
+                  <StatusBadge tone={severityTone(item.alert.severity)}>{severityLabel(item.alert.severity)}</StatusBadge>
+                </div>
+                <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
+                  {item.alert.location} · 截止 {item.due}
+                </div>
+                <div className="mt-2 text-[13px] leading-6 text-cyan-50/76">
+                  <b className="text-cyan-200/78">处理意见：</b>
+                  {item.opinion}
+                </div>
+              </div>
+              <div className="operations-dispatch-assignee">
+                <span>派给</span>
+                <b>{item.assignee}</b>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <footer className="operations-mobile-detail-footer">
+          <button className="operations-mobile-mini-btn operations-reject-btn" onClick={onClose} type="button">
+            拒绝
+          </button>
+          <button className="operations-mobile-mini-btn" onClick={onApprove} type="button">
+            同意并派发
+          </button>
+        </footer>
+      </section>
+    </div>
+  )
 }
 
 function MobileMaterialDetailDialog({
   detail,
   onClose,
+  onRejectWorkOrder,
   onReviewWorkOrder,
+  rejectionOpinions,
   reviewedOrderIds,
 }: {
   detail: MobileDetailState
   onClose: () => void
+  onRejectWorkOrder: (id: string, opinion: string) => void
   onReviewWorkOrder: (id: string) => void
+  rejectionOpinions: Record<string, string>
   reviewedOrderIds: Set<string>
 }) {
+  const [rejectOpinion, setRejectOpinion] = useState('')
+
+  useEffect(() => {
+    setRejectOpinion('')
+  }, [detail?.item.id])
+
   if (!detail) return null
 
   const isAlert = detail.kind === 'alert'
   const item = detail.item
-  const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount)
+  const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount, item.imageUrls)
   const reviewed = !isAlert && reviewedOrderIds.has(item.id)
+  const rejectionOpinion = !isAlert ? rejectionOpinions[item.id] : ''
 
   return (
     <div className="operations-mobile-detail-backdrop" role="presentation" onMouseDown={onClose}>
@@ -870,9 +983,25 @@ function MobileMaterialDetailDialog({
               <p>{item.anomaly}</p>
             </div>
             <div className="operations-detail-note">
-              <b>处理说明</b>
+              <b>处理意见</b>
               <p>{item.resultNote}</p>
             </div>
+            {rejectionOpinion ? (
+              <div className="operations-detail-note operations-reject-note">
+                <b>驳回意见</b>
+                <p>{rejectionOpinion}</p>
+              </div>
+            ) : null}
+            {!reviewed ? (
+              <label className="operations-reject-editor">
+                <span>修改意见</span>
+                <textarea
+                  onChange={(event) => setRejectOpinion(event.target.value)}
+                  placeholder="例如：请补充电流复测截图，并说明异常是否已连续 30 分钟恢复稳定。"
+                  value={rejectOpinion}
+                />
+              </label>
+            ) : null}
           </div>
         )}
 
@@ -884,7 +1013,11 @@ function MobileMaterialDetailDialog({
           <div className="operations-detail-photo-grid">
             {photos.map((photo, index) => (
               <div className="operations-detail-photo" key={photo.id}>
-                <ImageIcon className="h-6 w-6" strokeWidth={1.8} />
+                {photo.imageUrl ? (
+                  <img alt={photo.label} src={photo.imageUrl} />
+                ) : (
+                  <ImageIcon className="h-6 w-6" strokeWidth={1.8} />
+                )}
                 <span>{photo.label}</span>
                 <small>{String(index + 1).padStart(2, '0')}</small>
               </div>
@@ -897,17 +1030,30 @@ function MobileMaterialDetailDialog({
             关闭
           </button>
           {!isAlert ? (
-            <button
-              className="operations-mobile-mini-btn"
-              disabled={reviewed}
-              onClick={() => {
-                onReviewWorkOrder(item.id)
-                onClose()
-              }}
-              type="button"
-            >
-              {reviewed ? '已审阅' : '确认审阅'}
-            </button>
+            <>
+              <button
+                className="operations-mobile-mini-btn operations-reject-btn"
+                disabled={reviewed || !rejectOpinion.trim()}
+                onClick={() => {
+                  onRejectWorkOrder(item.id, rejectOpinion.trim())
+                  onClose()
+                }}
+                type="button"
+              >
+                驳回并提交意见
+              </button>
+              <button
+                className="operations-mobile-mini-btn"
+                disabled={reviewed}
+                onClick={() => {
+                  onReviewWorkOrder(item.id)
+                  onClose()
+                }}
+                type="button"
+              >
+                {reviewed ? '已审阅' : '确认审阅'}
+              </button>
+            </>
           ) : null}
         </footer>
       </section>
@@ -917,23 +1063,21 @@ function MobileMaterialDetailDialog({
 
 const MobileOpsBridge = memo(function MobileOpsBridge({
   alerts,
-  dispatchStatus,
   mobileWorkOrders,
   onAcceptAlert,
   onOpenAlertDetail,
   onOpenWorkOrderDetail,
-  onDispatchWorkOrder,
   onReviewWorkOrder,
+  rejectionOpinions,
   reviewedOrderIds,
 }: {
   alerts: MobileAlertReport[]
-  dispatchStatus: MobileDispatchStatus
   mobileWorkOrders: MobileUploadedWorkOrder[]
   onAcceptAlert: (id: string) => void
   onOpenAlertDetail: (alert: MobileAlertReport) => void
   onOpenWorkOrderDetail: (order: MobileUploadedWorkOrder) => void
-  onDispatchWorkOrder: () => void
   onReviewWorkOrder: (id: string) => void
+  rejectionOpinions: Record<string, string>
   reviewedOrderIds: Set<string>
 }) {
   const pendingReviewCount = mobileWorkOrders.filter(
@@ -948,23 +1092,6 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
       title="移动端协同工单"
     >
       <div className="operations-mobile-sync-grid">
-        <div className="operations-mobile-sync-card hidden">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="operations-mobile-sync-label">电脑端派发</div>
-              <h4 className="operations-mobile-sync-title">向手机端发放异常工单</h4>
-            </div>
-            <StatusBadge tone={dispatchStatus === '待派发' ? 'amber' : 'emerald'}>{dispatchStatus}</StatusBadge>
-          </div>
-          <div className="mt-3 text-[13px] leading-6 text-cyan-100/66">
-            工单包含设备、位置、异常说明、截止时间和处理要求，手机端巡检页可直接接收并回填结果。
-          </div>
-          <button className="operations-mobile-action mt-4" onClick={onDispatchWorkOrder} type="button">
-            <SendToBack className="h-4 w-4" strokeWidth={1.9} />
-            {dispatchStatus === '待派发' ? '派发至手机端' : '重新同步'}
-          </button>
-        </div>
-
         <div className="operations-mobile-sync-card">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -976,6 +1103,9 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
           <div className="mt-3 space-y-2.5">
             {alerts.map((alert) => (
               <div className="operations-mobile-row" data-severity={alert.severity} key={alert.id}>
+                {alert.imageUrls[0] ? (
+                  <img alt={alert.title} className="operations-mobile-thumb" src={alert.imageUrls[0]} />
+                ) : null}
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-black text-cyan-50">{alert.title}</span>
@@ -996,7 +1126,7 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
                   onClick={() => onAcceptAlert(alert.id)}
                   type="button"
                 >
-                  {alert.status === '已受理' ? '已受理' : '受理'}
+                  {alert.status === '已受理' ? '已转工单' : '接收并转工单'}
                 </button>
                 </div>
               </div>
@@ -1015,8 +1145,17 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
           <div className="mt-3 space-y-2.5">
             {mobileWorkOrders.map((order) => {
               const reviewed = reviewedOrderIds.has(order.id)
+              const rejected = Boolean(rejectionOpinions[order.id])
               return (
-                <div className="operations-mobile-row" data-reviewed={reviewed ? 'true' : undefined} key={order.id}>
+                <div
+                  className="operations-mobile-row"
+                  data-rejected={rejected ? 'true' : undefined}
+                  data-reviewed={reviewed ? 'true' : undefined}
+                  key={order.id}
+                >
+                  {order.imageUrls[0] ? (
+                    <img alt={order.title} className="operations-mobile-thumb" src={order.imageUrls[0]} />
+                  ) : null}
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="operations-task-code font-black text-[#7AF7FF]">{order.code}</span>
@@ -1025,7 +1164,14 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
                     <div className="mt-1 text-[12px] leading-5 text-cyan-100/58">
                       {order.location} · {order.resultStatus} · 照片 {order.photoCount} 张
                     </div>
-                    <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">{order.resultNote}</div>
+                    <div className="mt-1 line-clamp-2 text-[13px] leading-5 text-cyan-50/76">
+                      处理意见：{order.resultNote}
+                    </div>
+                    {rejected ? (
+                      <div className="mt-1 line-clamp-2 text-[12px] leading-5 text-rose-100/82">
+                        驳回意见：{rejectionOpinions[order.id]}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="operations-mobile-row-actions">
                     <button
@@ -1049,55 +1195,6 @@ const MobileOpsBridge = memo(function MobileOpsBridge({
             })}
           </div>
         </div>
-      </div>
-    </OperationsPanel>
-  )
-})
-
-const StrategyList = memo(function StrategyList({ strategies }: { strategies: OperationsStrategy[] }) {
-  const [expanded, setExpanded] = useState<string | null>(strategies[0]?.title ?? null)
-
-  useEffect(() => {
-    if (!expanded && strategies[0]) {
-      setExpanded(strategies[0].title)
-    }
-  }, [expanded, strategies])
-
-  return (
-    <OperationsPanel icon={<Lightbulb className="h-5 w-5" strokeWidth={1.8} />} title="待优化项">
-      <div className="space-y-3">
-        {strategies.map((strategy, index) => {
-          const isExpanded = expanded === strategy.title
-          return (
-            <button
-              className="operations-strategy-item group w-full border border-cyan-300/22 bg-cyan-950/16 p-4 text-left"
-              data-expanded={isExpanded ? 'true' : undefined}
-              key={strategy.title}
-              onClick={() => setExpanded(isExpanded ? null : strategy.title)}
-              type="button"
-              {...tooltipAttrs({
-                rows: [
-                  { label: '处理类型', value: '运维待办' },
-                  { label: '计划窗口', value: index === 1 ? '今晚' : '本周' },
-                ],
-                title: strategy.title,
-              })}
-            >
-              <div className="flex items-center gap-3">
-                <span className="operations-strategy-index">{index + 1}</span>
-                <span className="min-w-0 flex-1 text-[16px] font-black text-cyan-50">
-                  {strategy.title}
-                </span>
-                <span className="operations-adopt-btn">查看</span>
-              </div>
-              {isExpanded ? (
-                <div className="mt-3 pl-11 text-[13px] leading-6 text-cyan-100/66">
-                  {strategy.description}
-                </div>
-              ) : null}
-            </button>
-          )
-        })}
       </div>
     </OperationsPanel>
   )
@@ -1214,7 +1311,13 @@ function buildFallbackAnswer(prompt: string): AgentAnswer {
   }
 }
 
-const AgentChat = memo(function AgentChat({ agentPulse }: { agentPulse: boolean }) {
+const AgentChat = memo(function AgentChat({
+  agentPulse,
+  onOneClickDispatch,
+}: {
+  agentPulse: boolean
+  onOneClickDispatch: () => void
+}) {
   const [draft, setDraft] = useState('')
   const [thinking, setThinking] = useState(false)
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
@@ -1255,6 +1358,7 @@ const AgentChat = memo(function AgentChat({ agentPulse }: { agentPulse: boolean 
     const answer = ANSWER_BANK[prompt] ?? buildFallbackAnswer(prompt)
     const now = Date.now()
     const assistantId = `assistant-${now}`
+    const shouldOpenDispatch = prompt === '派发工单'
 
     setMessages((current) => [
       ...current,
@@ -1266,6 +1370,9 @@ const AgentChat = memo(function AgentChat({ agentPulse }: { agentPulse: boolean 
 
     window.setTimeout(() => {
       setThinking(false)
+      if (shouldOpenDispatch) {
+        onOneClickDispatch()
+      }
       setMessages((current) => [
         ...current,
         {
@@ -1577,11 +1684,48 @@ export default function SmartOperationsWorkspace({
   const [mobileDispatchStatus, setMobileDispatchStatus] = useState<MobileDispatchStatus>('待派发')
   const [acceptedMobileAlertIds, setAcceptedMobileAlertIds] = useState<string[]>([])
   const [reviewedMobileOrderIds, setReviewedMobileOrderIds] = useState<string[]>([])
+  const [rejectionOpinions, setRejectionOpinions] = useState<Record<string, string>>({})
   const [manualTasks, setManualTasks] = useState<LiveTask[]>([])
   const [mobileDetail, setMobileDetail] = useState<MobileDetailState>(null)
+  const [dispatchPlan, setDispatchPlan] = useState<DispatchPlanItem[]>([])
+
+  const operatorLabels = useMemo(
+    () => dashboard.mobileOperators.map((operator) => `${operator.name} · ${operator.role}`),
+    [dashboard.mobileOperators],
+  )
+
+  const mobileAlertTasks = useMemo<LiveTask[]>(
+    () =>
+      dashboard.mobileAlerts
+        .filter((alert) => alert.status === '已受理' || acceptedMobileAlertIds.includes(alert.id))
+        .map((alert) => {
+          const assignee =
+            alert.title.includes('照明')
+              ? operatorLabels.find((name) => name.includes('李工'))
+              : alert.title.includes('配电') || alert.title.includes('电')
+                ? operatorLabels.find((name) => name.includes('王工'))
+                : operatorLabels[0]
+
+          return {
+            assignee: assignee ?? operatorLabels[0] ?? '综合维修组',
+            code: `WO-REPORT-${alert.id.replace(/\D/g, '').padStart(3, '0')}`,
+            due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
+            id: `mobile-alert-work-order-${alert.id}`,
+            linkedAlertId: alert.id,
+            opinion: alert.detail,
+            progress: 0,
+            status: '待接单',
+            steps: ['接收手机端告警', '现场复核', '处理异常', '回填结果'],
+            title: `处置手机端上报：${alert.title}`,
+            tools: '移动工单 / 现场照片 / 处理记录',
+          }
+        }),
+    [acceptedMobileAlertIds, dashboard.mobileAlerts, operatorLabels],
+  )
 
   const liveTasks = useMemo<LiveTask[]>(
     () => [
+      ...mobileAlertTasks,
       ...dashboard.tasks.map((task, index) => ({
         ...task,
         code: taskCode(task, index),
@@ -1593,7 +1737,7 @@ export default function SmartOperationsWorkspace({
       })),
       ...manualTasks,
     ],
-    [dashboard.alerts, dashboard.tasks, manualTasks],
+    [dashboard.alerts, dashboard.tasks, manualTasks, mobileAlertTasks],
   )
 
   const liveAlerts = useMemo<LiveAlert[]>(
@@ -1630,35 +1774,84 @@ export default function SmartOperationsWorkspace({
     setOperators(randomInt(6, 9))
   }, 5000)
 
-  const dispatchMobileWorkOrder = () => {
-    setMobileDispatchStatus('已发至手机端')
-    setAgentPulse(true)
-    window.setTimeout(() => setMobileDispatchStatus('手机端处理中'), 1200)
-    window.setTimeout(() => setAgentPulse(false), 1600)
+  const buildDispatchPlan = (preferredAssignee?: string): DispatchPlanItem[] => {
+    const candidates = liveAlerts.filter((alert) => !alert.linkedTaskId)
+    const fallbackAssignees = operatorLabels.length ? operatorLabels : ['综合维修组']
+
+    return candidates.map((alert, index) => {
+      const assignee =
+        preferredAssignee ||
+        (alert.title.includes('照明')
+          ? fallbackAssignees.find((name) => name.includes('李工'))
+          : alert.title.includes('空调') || alert.title.includes('新风')
+            ? fallbackAssignees.find((name) => name.includes('赵工'))
+            : alert.title.includes('配电') || alert.title.includes('电')
+              ? fallbackAssignees.find((name) => name.includes('王工'))
+              : fallbackAssignees[index % fallbackAssignees.length]) ||
+        fallbackAssignees[index % fallbackAssignees.length]
+
+      return {
+        alert,
+        assignee,
+        code: `WO-AUTO-${String(51 + index).padStart(3, '0')}`,
+        due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
+        opinion: alert.recommendation,
+      }
+    })
+  }
+
+  const openDispatchPlan = (preferredAssignee?: string) => {
+    const plan = buildDispatchPlan(preferredAssignee)
+    if (!plan.length) {
+      setAgentPulse(true)
+      window.setTimeout(() => setAgentPulse(false), 1200)
+      return
+    }
+    setDispatchPlan(plan)
   }
 
   const acceptMobileAlert = (id: string) => {
     setAcceptedMobileAlertIds((current) => (current.includes(id) ? current : [...current, id]))
+    const alert = dashboard.mobileAlerts.find((item) => item.id === id)
+    if (alert) {
+      setHighlightedTaskId(`mobile-alert-work-order-${alert.id}`)
+    }
     setAgentPulse(true)
     window.setTimeout(() => setAgentPulse(false), 1400)
   }
 
   const reviewMobileWorkOrder = (id: string) => {
     setReviewedMobileOrderIds((current) => (current.includes(id) ? current : [...current, id]))
+    setRejectionOpinions((current) => {
+      const { [id]: _removed, ...rest } = current
+      return rest
+    })
     setAgentPulse(true)
     window.setTimeout(() => setAgentPulse(false), 1400)
   }
 
-  const dispatchAlertWorkOrder = (alert: LiveAlert, assignee: string) => {
+  const rejectMobileWorkOrder = (id: string, opinion: string) => {
+    setReviewedMobileOrderIds((current) => current.filter((orderId) => orderId !== id))
+    setRejectionOpinions((current) => ({ ...current, [id]: opinion }))
+    setAgentPulse(true)
+    window.setTimeout(() => setAgentPulse(false), 1400)
+  }
+
+  const dispatchAlertWorkOrder = (
+    alert: LiveAlert,
+    assignee: string,
+    options?: { code?: string; due?: string; opinion?: string },
+  ) => {
     if (liveTasks.some((task) => task.linkedAlertId === alert.id)) return
 
     const sequence = liveTasks.length + 31
     const task: LiveTask = {
       assignee,
-      code: `WO-MANUAL-${String(sequence).padStart(3, '0')}`,
-      due: alert.severity === 'high' ? '今天 18:00' : '明天 10:00',
+      code: options?.code ?? `WO-MANUAL-${String(sequence).padStart(3, '0')}`,
+      due: options?.due ?? (alert.severity === 'high' ? '今天 18:00' : '明天 10:00'),
       id: `manual-work-order-${alert.id}`,
       linkedAlertId: alert.id,
+      opinion: options?.opinion ?? alert.recommendation,
       progress: 0,
       status: '待接单',
       steps: ['接收工单', '现场复核', '处理异常', '回填结果'],
@@ -1675,6 +1868,19 @@ export default function SmartOperationsWorkspace({
       setPulseAlertId(null)
       setAgentPulse(false)
     }, 1800)
+  }
+
+  const approveDispatchPlan = () => {
+    dispatchPlan.forEach((item) => {
+      dispatchAlertWorkOrder(item.alert, item.assignee, {
+        code: item.code,
+        due: item.due,
+        opinion: item.opinion,
+      })
+    })
+    setDispatchPlan([])
+    setMobileDispatchStatus('已发至手机端')
+    window.setTimeout(() => setMobileDispatchStatus('手机端处理中'), 1200)
   }
 
   const activeAlertCount = liveAlerts.length + mobileAlerts.filter((alert) => alert.status !== '已受理').length
@@ -1731,10 +1937,17 @@ export default function SmartOperationsWorkspace({
       <VideoBackground />
       <div className="cockpit-atmosphere" />
       <DashboardTooltipLayer />
+      <DispatchConfirmDialog
+        onApprove={approveDispatchPlan}
+        onClose={() => setDispatchPlan([])}
+        plan={dispatchPlan}
+      />
       <MobileMaterialDetailDialog
         detail={mobileDetail}
         onClose={() => setMobileDetail(null)}
+        onRejectWorkOrder={rejectMobileWorkOrder}
         onReviewWorkOrder={reviewMobileWorkOrder}
+        rejectionOpinions={rejectionOpinions}
         reviewedOrderIds={reviewedOrderIdSet}
       />
 
@@ -1813,21 +2026,21 @@ export default function SmartOperationsWorkspace({
               highlightedAlertId={highlightedAlertId}
               onDispatchWorkOrder={dispatchAlertWorkOrder}
               onHighlightTask={setHighlightedTaskId}
+              onOneClickDispatch={() => openDispatchPlan()}
+              operatorOptions={dashboard.mobileOperators}
               pulseAlertId={pulseAlertId}
             />
             <TaskList highlightedTaskId={highlightedTaskId} tasks={liveTasks} />
             <MobileOpsBridge
               alerts={mobileAlerts}
-              dispatchStatus={mobileDispatchStatus}
               mobileWorkOrders={dashboard.mobileWorkOrders}
               onAcceptAlert={acceptMobileAlert}
-              onDispatchWorkOrder={dispatchMobileWorkOrder}
               onOpenAlertDetail={(alert) => setMobileDetail({ item: alert, kind: 'alert' })}
               onOpenWorkOrderDetail={(order) => setMobileDetail({ item: order, kind: 'work-order' })}
               onReviewWorkOrder={reviewMobileWorkOrder}
+              rejectionOpinions={rejectionOpinions}
               reviewedOrderIds={reviewedOrderIdSet}
             />
-            <StrategyList strategies={dashboard.strategies} />
           </div>
 
           <div className="operations-right-stack flex min-w-0 flex-col gap-6">
@@ -1836,7 +2049,7 @@ export default function SmartOperationsWorkspace({
               highlightedAlertId={highlightedAlertId}
               onHighlight={setHighlightedAlertId}
             />
-            <AgentChat agentPulse={agentPulse} />
+            <AgentChat agentPulse={agentPulse} onOneClickDispatch={() => openDispatchPlan()} />
           </div>
         </div>
 
