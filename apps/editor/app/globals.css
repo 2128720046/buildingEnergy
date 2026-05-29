@@ -1805,17 +1805,6 @@
     z-index: 1;
   }
 
-  .operations-typewriter::after {
-    content: '';
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    margin-left: 3px;
-    background: #7af7ff;
-    vertical-align: -0.12em;
-    animation: cursor-blink 900ms steps(2, jump-none) infinite;
-  }
-
   .operations-focus-keyword {
     color: #7af7ff;
     font-weight: 900;
@@ -1832,6 +1821,7 @@
 
   .operations-alert-card,
   .operations-task-card,
+  .operations-decarbon-action,
   .operations-strategy-item,
   .operations-focus-card {
     contain: layout paint style;
@@ -1895,10 +1885,20 @@
     background: #ffb800;
   }
 
+  .operations-decarbon-action::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #22d3a0;
+    box-shadow: 0 0 11px currentColor;
+  }
+
   .operations-alert-card:hover,
   .operations-alert-card[data-highlighted='true'],
   .operations-task-card:hover,
   .operations-task-card[data-highlighted='true'],
+  .operations-decarbon-action:hover,
   .operations-strategy-item:hover,
   .operations-focus-card:hover,
   .operations-focus-card[data-highlighted='true'] {
@@ -1949,6 +1949,7 @@
   }
 
   .operations-alert-actions button,
+  .operations-decarbon-btn,
   .operations-adopt-btn,
   .operations-one-click-btn {
     border: 1px solid rgba(0, 212, 255, 0.42);
@@ -2455,6 +2456,193 @@
     transform: translateX(0);
   }
 
+  .operations-decarbon-panel {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.12), transparent 42%),
+      linear-gradient(180deg, rgba(4, 16, 32, 0.82), rgba(2, 8, 23, 0.78));
+  }
+
+  .operations-decarbon-shell {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .operations-decarbon-intro {
+    color: rgba(184, 230, 255, 0.72);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .operations-decarbon-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .operations-decarbon-summary-grid > span {
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(0, 212, 255, 0.055);
+    padding: 10px;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+
+  .operations-decarbon-summary-value {
+    display: block;
+    margin-top: 5px;
+    color: #7af7ff;
+    font-family: var(--font-rajdhani);
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 0.95;
+    text-shadow:
+      0 0 8px rgba(122, 247, 255, 0.78),
+      0 0 18px rgba(0, 212, 255, 0.42);
+  }
+
+  .operations-decarbon-summary-grid em {
+    display: block;
+    margin-top: 3px;
+    color: rgba(224, 240, 255, 0.68);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 900;
+  }
+
+  .operations-decarbon-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .operations-decarbon-action {
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.24);
+    background: rgba(8, 28, 48, 0.46);
+    padding: 14px;
+  }
+
+  .operations-decarbon-action[data-risk='medium'] {
+    --decarbon-rail: #ffb800;
+  }
+
+  .operations-decarbon-action[data-risk='low'] {
+    --decarbon-rail: #22d3a0;
+  }
+
+  .operations-decarbon-action::before {
+    background: var(--decarbon-rail, #22d3a0);
+  }
+
+  .operations-decarbon-meta-line {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .operations-decarbon-status-stack {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 6px;
+    max-width: 42%;
+  }
+
+  .operations-decarbon-status-stack .operations-badge,
+  .operations-decarbon-meta-line .operations-badge {
+    min-height: 26px;
+    padding: 5px 8px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .operations-decarbon-grid {
+    font-size: 13px;
+    gap: 8px 12px;
+  }
+
+  .operations-decarbon-next {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .operations-decarbon-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .operations-decarbon-btn {
+    display: inline-flex;
+    min-width: 92px;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 10px;
+    line-height: 1.25;
+    text-align: center;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+  }
+
+  .operations-decarbon-btn svg {
+    flex-shrink: 0;
+  }
+
+  .operations-decarbon-btn:hover,
+  .operations-decarbon-btn[data-active='true'] {
+    transform: translateY(-1px);
+    border-color: rgba(122, 247, 255, 0.74);
+    background: rgba(0, 212, 255, 0.15);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.14);
+  }
+
+  .operations-decarbon-btn.primary {
+    border-color: rgba(34, 211, 160, 0.42);
+    background: rgba(34, 211, 160, 0.1);
+    color: #baf7e5;
+  }
+
+  .operations-decarbon-btn.primary:hover,
+  .operations-decarbon-btn.primary[data-active='true'] {
+    border-color: rgba(34, 211, 160, 0.72);
+    background: rgba(34, 211, 160, 0.16);
+    box-shadow: 0 0 12px rgba(34, 211, 160, 0.14);
+  }
+
+  @media (max-width: 520px) {
+    .operations-decarbon-summary-grid,
+    .operations-decarbon-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .operations-decarbon-action > .flex {
+      flex-direction: column;
+    }
+
+    .operations-decarbon-status-stack {
+      max-width: none;
+      align-items: flex-start;
+      flex-direction: row;
+    }
+
+    .operations-decarbon-actions {
+      justify-content: stretch;
+    }
+
+    .operations-decarbon-btn {
+      flex: 1 1 120px;
+    }
+  }
+
   .operations-agent-panel {
     background:
       radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.14), transparent 44%),
@@ -2522,7 +2710,37 @@
     contain: layout paint style;
     min-height: 360px;
     max-height: 520px;
+    scrollbar-color: rgba(122, 247, 255, 0.82) rgba(0, 212, 255, 0.08);
+    scrollbar-width: thin;
     clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+
+  .operations-chat-feed::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .operations-chat-feed::-webkit-scrollbar-track {
+    border-left: 1px solid rgba(0, 212, 255, 0.18);
+    background:
+      linear-gradient(180deg, rgba(0, 212, 255, 0.08), rgba(2, 8, 23, 0.24)),
+      rgba(2, 8, 23, 0.38);
+  }
+
+  .operations-chat-feed::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(2, 8, 23, 0.72);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgba(178, 255, 255, 0.96), rgba(0, 212, 255, 0.74) 46%, rgba(34, 211, 160, 0.82)),
+      #00d4ff;
+    box-shadow:
+      0 0 10px rgba(0, 212, 255, 0.34),
+      inset 0 0 6px rgba(255, 255, 255, 0.24);
+  }
+
+  .operations-chat-feed::-webkit-scrollbar-thumb:hover {
+    background:
+      linear-gradient(180deg, #ffffff, rgba(122, 247, 255, 0.92) 48%, rgba(34, 211, 160, 0.92)),
+      #7af7ff;
   }
 
   .operations-chat-row[data-proactive='true'] .operations-chat-bubble {
