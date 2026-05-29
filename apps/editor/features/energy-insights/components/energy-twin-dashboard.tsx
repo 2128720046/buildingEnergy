@@ -75,6 +75,17 @@ const EDITOR_PANEL_AVOID_GAP = 20
 const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
 const COCKPIT_SIDE_RAIL_WIDTH = 'clamp(280px, 22vw, 360px)'
 const BOTTOM_CENTER_OVERLAY_WIDTH = `calc(100% - ${COCKPIT_SIDE_RAIL_WIDTH} - ${COCKPIT_SIDE_RAIL_WIDTH} - 80px)`
+const ECHARTS_CANVAS_DPR =
+  typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 1.25)
+const ECHARTS_RENDERER_OPTIONS = {
+  renderer: 'canvas',
+  devicePixelRatio: ECHARTS_CANVAS_DPR,
+} as const
+const CHART_STATIC_PERF = {
+  animation: false,
+  animationDuration: 0,
+  animationDurationUpdate: 0,
+} as const
 
 const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
   return (
@@ -82,7 +93,7 @@ const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof Rea
       echarts={echarts}
       lazyUpdate
       notMerge={false}
-      opts={{ renderer: 'canvas' }}
+      opts={ECHARTS_RENDERER_OPTIONS}
       {...props}
     />
   )
@@ -177,9 +188,7 @@ function buildDualLineOption(
   const labels = today.map((_, i) => `${String(i).padStart(2, '0')}:00`)
   return {
     backgroundColor: 'transparent',
-    animation: true,
-    animationDurationUpdate: 520,
-    animationEasingUpdate: 'cubicOut',
+    ...CHART_STATIC_PERF,
     grid: { top: 28, right: 14, bottom: 24, left: 42 },
     tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
     legend: {
@@ -279,9 +288,7 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
   const compositionCenter = ['50%', '43%']
   return {
     backgroundColor: 'transparent',
-    animation: true,
-    animationDurationUpdate: 520,
-    animationEasingUpdate: 'cubicOut',
+    ...CHART_STATIC_PERF,
     tooltip: hudTooltip('item'),
     legend: {
       bottom: 0,
@@ -404,9 +411,7 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
   if (items.length === 0) return {}
   return {
     backgroundColor: 'transparent',
-    animation: true,
-    animationDurationUpdate: 520,
-    animationEasingUpdate: 'cubicOut',
+    ...CHART_STATIC_PERF,
     grid: { top: 8, right: 18, bottom: 8, left: 78 },
     xAxis: {
       type: 'value',
@@ -466,9 +471,7 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
 function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
   return {
     backgroundColor: 'transparent',
-    animation: true,
-    animationDurationUpdate: 520,
-    animationEasingUpdate: 'cubicOut',
+    ...CHART_STATIC_PERF,
     grid: { top: 30, right: 14, bottom: 22, left: 42 },
     tooltip: {
       ...hudTooltip('axis'),
@@ -628,9 +631,7 @@ function buildPredictionOption(
 
   return {
     backgroundColor: 'transparent',
-    animation: true,
-    animationDurationUpdate: 520,
-    animationEasingUpdate: 'cubicOut',
+    ...CHART_STATIC_PERF,
     grid: { top: 30, right: 16, bottom: 24, left: 44 },
     tooltip: { ...hudTooltip('axis'), axisPointer: axisPointer() },
     legend: {
@@ -1244,7 +1245,14 @@ export default function EnergyTwinDashboard({
 
         <div className="pointer-events-none relative min-h-0 min-w-0">
           {floorHeatmapData ? (
-            <div className="pointer-events-auto absolute top-3 right-3 z-30">
+            <div
+              className="pointer-events-auto absolute top-3 z-30 transition-[right,opacity] duration-200 ease-out"
+              style={{
+                right: selectedComponentId
+                  ? 'calc(var(--host-editor-panel-width, 320px) + 64px)'
+                  : '12px',
+              }}
+            >
               <FloorHeatmapOverlay data={floorHeatmapData} />
             </div>
           ) : null}

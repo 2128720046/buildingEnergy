@@ -22,7 +22,6 @@ import { ScanSystem } from '../../systems/scan/scan-system'
 import { WallCutout } from '../../systems/wall/wall-cutout'
 import { ZoneSystem } from '../../systems/zone/zone-system'
 import { SceneRenderer } from '../renderers/scene-renderer'
-import FrameLimiter from './frame-limiter'
 import { Lights } from './lights'
 import { PerfMonitor } from './perf-monitor'
 import PostProcessing from './post-processing'
@@ -139,7 +138,6 @@ const Viewer: React.FC<ViewerProps> = ({
       camera={{ position: [50, 50, 50], fov: 50 }}
       className={`transition-colors duration-700 ${theme === 'dark' ? 'bg-[#0C0E14]' : 'bg-[#fafafa]'}`}
       dpr={[1, maxDpr]}
-      frameloop="never"
       gl={
         ((props: { canvas?: HTMLCanvasElement }) => {
           const canvas = props.canvas
@@ -176,7 +174,6 @@ const Viewer: React.FC<ViewerProps> = ({
         enabled: true,
       }}
     >
-      <FrameLimiter fps={60} />
       <ViewerCamera />
 
       <Lights />

@@ -2,6 +2,7 @@
 
 import { ChevronLeft, RotateCcw, X } from 'lucide-react'
 import Image from 'next/image'
+import { useEffect } from 'react'
 import { cn } from '../../../lib/utils'
 
 interface PanelWrapperProps {
@@ -26,6 +27,16 @@ export function PanelWrapper({
   width = 320, // default width
 }: PanelWrapperProps) {
   const panelTop = 'var(--host-editor-panel-top, 380px)'
+  const resolvedWidth = typeof width === 'number' ? `${width}px` : String(width)
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--host-editor-panel-width', resolvedWidth)
+    document.documentElement.style.setProperty('--host-editor-panel-visible', '1')
+
+    return () => {
+      document.documentElement.style.setProperty('--host-editor-panel-visible', '0')
+    }
+  }, [resolvedWidth])
 
   return (
     <div
@@ -35,7 +46,7 @@ export function PanelWrapper({
       )}
       style={{
         width,
-        ['--host-editor-panel-width' as string]: typeof width === 'number' ? `${width}px` : String(width),
+        ['--host-editor-panel-width' as string]: resolvedWidth,
         top: panelTop,
         height: `calc((100dvh - ${panelTop}) / 1.7)`,
         right: 'calc(1rem + var(--host-editor-panel-avoid-right, 0px))',

@@ -1,7 +1,6 @@
 import { useRegistry, type ZoneNode } from '@pascal-app/core'
 import { Html } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, type Group, Shape } from 'three'
 import { float, uniform, uv } from 'three/tsl'
 import { MeshBasicNodeMaterial } from 'three/webgpu'
@@ -10,16 +9,11 @@ import { ZONE_LAYER } from '../../../lib/layers'
 
 const Y_OFFSET = 0.01
 const WALL_HEIGHT = 2.3
-const LERP_SPEED = 0.18
 
-/**
- * Creates a gradient wall material using a mutable uniform for color.
- * Stores the color uniform on material.userData.uColor so it can be animated at runtime.
- */
 function createWallGradientMaterial(zoneColor: string) {
   const colorUniform = uniform(new Color(zoneColor))
   const gradientT = uv().y
-  const opacity = uniform(1) // 默认可见
+  const opacity = uniform(1)
   const finalOpacity = float(0.6).mul(float(1).sub(gradientT)).mul(opacity)
 
   const mat = new MeshBasicNodeMaterial({
@@ -27,16 +21,16 @@ function createWallGradientMaterial(zoneColor: string) {
     colorNode: colorUniform,
     opacityNode: finalOpacity,
     side: DoubleSide,
-    depthWrite: true,
+    depthWrite: false,
     depthTest: false,
-    userData: { uOpacity: opacity, uColor: colorUniform },
+    userData: { uColor: colorUniform, uOpacity: opacity },
   })
   return mat
 }
 
 function createFloorMaterial(zoneColor: string) {
   const colorUniform = uniform(new Color(zoneColor))
-  const opacity = uniform(1) // 默认可见
+  const opacity = uniform(1)
 
   const mat = new MeshBasicNodeMaterial({
     transparent: true,
@@ -45,9 +39,14 @@ function createFloorMaterial(zoneColor: string) {
     side: DoubleSide,
     depthWrite: false,
     depthTest: false,
-    userData: { uOpacity: opacity, uColor: colorUniform },
+    userData: { uColor: colorUniform, uOpacity: opacity },
   })
   return mat
+}
+
+function updateMaterialColor(material: MeshBasicNodeMaterial, nextColor: string) {
+  const colorUniform = material.userData.uColor as { value?: Color } | undefined
+  colorUniform?.value?.set(nextColor)
 }
 
 function createWallGeometry(polygon: Array<[number, number]>): BufferGeometry {
@@ -86,7 +85,6 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
   const ref = useRef<Group>(null!)
   useRegistry(node.id, 'zone', ref)
 
-  // ---- 几何体（不随颜色变化） ----
   const floorShape = useMemo(() => {
     if (!node?.polygon || node.polygon.length < 3) return null
     const shape = new Shape()
@@ -105,7 +103,9 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
 
   const centroid = useMemo(() => {
     if (!node?.polygon || node.polygon.length < 3) return [0, 0] as [number, number]
-    let signedArea = 0, cx = 0, cz = 0
+    let signedArea = 0,
+      cx = 0,
+      cz = 0
     const polygon = node.polygon
     for (let i = 0; i < polygon.length; i++) {
       const [x0, z0] = polygon[i]!
@@ -120,47 +120,19 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
     return [cx * factor, cz * factor] as [number, number]
   }, [node?.polygon])
 
-  // ---- 材质（只创建一次，通过 uniform 更新颜色） ----
-  const floorMatRef = useRef<MeshBasicNodeMaterial | null>(null)
-  const wallMatRef = useRef<MeshBasicNodeMaterial | null>(null)
-  const targetColorRef = useRef(new Color(node.color || '#3b82f6'))
-  const initDone = useRef(false)
-
-  if (!initDone.current) {
-    initDone.current = true
-    floorMatRef.current = createFloorMaterial(node.color || '#3b82f6')
-    wallMatRef.current = createWallGradientMaterial(node.color || '#3b82f6')
-  }
-
-  // node.color 变化时更新目标色
-  useEffect(() => {
-    if (node?.color) {
-      targetColorRef.current.set(node.color)
-    }
-  }, [node?.color])
-
-  // 每帧平滑插值颜色 uniform
-  useFrame(() => {
-    const floorUColor = floorMatRef.current?.userData?.uColor as
-      | { value: Color }
-      | undefined
-    if (floorUColor?.value && !floorUColor.value.equals(targetColorRef.current)) {
-      floorUColor.value.lerp(targetColorRef.current, LERP_SPEED)
-    }
-
-    const wallUColor = wallMatRef.current?.userData?.uColor as
-      | { value: Color }
-      | undefined
-    if (wallUColor?.value && !wallUColor.value.equals(targetColorRef.current)) {
-      wallUColor.value.lerp(targetColorRef.current, LERP_SPEED)
-    }
-  })
-
   const handlers = useNodeEvents(node, 'zone')
 
   const currentColor = node.color || '#3b82f6'
+  const initialColorRef = useRef(currentColor)
+  const floorMaterial = useMemo(() => createFloorMaterial(initialColorRef.current), [])
+  const wallMaterial = useMemo(() => createWallGradientMaterial(initialColorRef.current), [])
 
-  if (!(node && floorShape && wallGeometry && floorMatRef.current && wallMatRef.current)) {
+  useLayoutEffect(() => {
+    updateMaterialColor(floorMaterial, currentColor)
+    updateMaterialColor(wallMaterial, currentColor)
+  }, [currentColor, floorMaterial, wallMaterial])
+
+  if (!(node && floorShape && wallGeometry && floorMaterial && wallMaterial)) {
     return null
   }
 
@@ -219,9 +191,10 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
       {/* Floor fill */}
       <mesh
         layers={ZONE_LAYER}
-        material={floorMatRef.current}
+        material={floorMaterial}
         name="floor"
         position={[0, Y_OFFSET, 0]}
+        renderOrder={20}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <shapeGeometry args={[floorShape]} />
@@ -231,8 +204,9 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
       <mesh
         geometry={wallGeometry}
         layers={ZONE_LAYER}
-        material={wallMatRef.current}
+        material={wallMaterial}
         name="walls"
+        renderOrder={21}
       />
     </group>
   )

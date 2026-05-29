@@ -7,7 +7,6 @@ const DEFAULT_COLOR = '#0066aa'
 const HIGHLIGHT_THRESHOLD = 0.7
 
 let appliedHighlighted: Set<string> = new Set()
-let pendingRafId: number | null = null
 
 function setsAreEqual(a: Set<string>, b: Set<string>): boolean {
   if (a.size !== b.size) return false
@@ -28,7 +27,9 @@ export function applyEnergyHighlights(
   let hasUpdates = false
 
   for (const id of sceneRegistry.byType.zone) {
-    const node = useScene.getState().nodes[id as ZoneNode['id']]
+    const node = useScene.getState().nodes[id as ZoneNode['id']] as
+      | (ZoneNode & { color?: string })
+      | undefined
     if (!node) continue
     const isHigh = nowHigh.has(id)
     if (isHigh && node.color !== HIGH_COLOR) {
@@ -43,12 +44,9 @@ export function applyEnergyHighlights(
   appliedHighlighted = nowHigh
   if (!hasUpdates) return
 
-  pendingRafId = requestAnimationFrame(() => {
-    pendingRafId = null
-    useScene.setState((prev) => ({
-      nodes: { ...prev.nodes, ...nodesPatch },
-    }))
-  })
+  useScene.setState((prev) => ({
+    nodes: { ...prev.nodes, ...nodesPatch },
+  }))
 }
 
 export function resetAllEnergyHighlights(): void {
@@ -57,7 +55,9 @@ export function resetAllEnergyHighlights(): void {
 
   for (const id of sceneRegistry.byType.zone) {
     if (!appliedHighlighted.has(id)) continue
-    const node = useScene.getState().nodes[id as ZoneNode['id']]
+    const node = useScene.getState().nodes[id as ZoneNode['id']] as
+      | (ZoneNode & { color?: string })
+      | undefined
     if (node && node.color !== DEFAULT_COLOR) {
       nodesPatch[id] = { ...node, color: DEFAULT_COLOR }
     }
@@ -65,11 +65,7 @@ export function resetAllEnergyHighlights(): void {
   appliedHighlighted = new Set()
   if (Object.keys(nodesPatch).length === 0) return
 
-  if (pendingRafId !== null) cancelAnimationFrame(pendingRafId)
-  pendingRafId = requestAnimationFrame(() => {
-    pendingRafId = null
-    useScene.setState((prev) => ({
-      nodes: { ...prev.nodes, ...nodesPatch },
-    }))
-  })
+  useScene.setState((prev) => ({
+    nodes: { ...prev.nodes, ...nodesPatch },
+  }))
 }
