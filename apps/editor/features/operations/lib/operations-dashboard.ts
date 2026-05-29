@@ -30,6 +30,20 @@ export interface OperationsTask {
   title: string
 }
 
+export interface OperationsDecarbonAction {
+  confidence: number
+  expectedCarbonKg: number
+  expectedSavingKwh: number
+  id: string
+  linkedWorkOrder: string
+  nextAction: string
+  owner: string
+  risk: 'high' | 'low' | 'medium'
+  source: '告警中心' | '工单进度' | '智能体问答'
+  status: string
+  title: string
+}
+
 export interface OperationsOperator {
   name: string
   phone: string
@@ -74,6 +88,7 @@ export interface OperationsStrategy {
 
 export interface OperationsDashboardData {
   alerts: OperationsAlert[]
+  decarbonActions: OperationsDecarbonAction[]
   metrics: OperationsMetric[]
   mobileAlerts: MobileAlertReport[]
   mobileOperators: OperationsOperator[]
@@ -182,6 +197,48 @@ export function buildOperationsDashboardData({
       title: '复核 2F 公区照明回路夜间未闭锁',
       assignee: '李工 · 照明巡检组',
       due: '明天 10:00',
+    },
+  ]
+
+  const decarbonActions: OperationsDecarbonAction[] = [
+    {
+      confidence: 0.86,
+      expectedCarbonKg: 10.6,
+      expectedSavingKwh: 18.6,
+      id: 'decarbon-3f-fresh-air-review',
+      linkedWorkOrder: 'WO-BUILDING-031',
+      nextAction: '复核过滤器压差与新风阀开度，确认后调整夜间新风策略。',
+      owner: '赵工 · 暖通运维组',
+      risk: 'medium',
+      source: '智能体问答',
+      status: '可执行',
+      title: '3F 新风机组策略复核',
+    },
+    {
+      confidence: 0.82,
+      expectedCarbonKg: 7.1,
+      expectedSavingKwh: 12.4,
+      id: 'decarbon-2f-lighting-lock',
+      linkedWorkOrder: 'WO-BUILDING-032',
+      nextAction: '今晚 22:00 下发强制闭锁策略，并回看 21:00-06:00 控制日志。',
+      owner: '李工 · 照明巡检组',
+      risk: 'low',
+      source: '告警中心',
+      status: '已关联工单',
+      title: '2F 公区照明强制闭锁',
+    },
+    {
+      confidence: 0.74,
+      expectedCarbonKg: 3.3,
+      expectedSavingKwh: 5.9,
+      id: 'decarbon-b1-pump-threshold',
+      linkedWorkOrder: '待纳入巡检项',
+      nextAction: '纳入本周给排水巡检，校准压差传感器采样与启停阈值。',
+      owner: '陈工 · 综合维修组',
+      risk: 'medium',
+      source: '工单进度',
+      status: '待纳入巡检',
+      title: 'B1 水泵启停阈值校准',
     },
   ]
 
@@ -301,6 +358,7 @@ export function buildOperationsDashboardData({
 
   return {
     alerts,
+    decarbonActions,
     metrics,
     mobileAlerts,
     mobileOperators,

@@ -19,7 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BevelCard, VideoBackground } from '@/features/analytics/components/dashboard-primitives'
 import { DASHBOARD_COLORS, DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import {
@@ -33,9 +33,10 @@ import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import { useNow } from '@/features/host-shell/lib/time-store'
 import {
   buildOperationsDashboardData,
-  type OperationsAlert,
   type MobileAlertReport,
   type MobileUploadedWorkOrder,
+  type OperationsAlert,
+  type OperationsDecarbonAction,
   type OperationsOperator,
   type OperationsTask,
 } from '@/features/operations/lib/operations-dashboard'
@@ -64,6 +65,12 @@ type MobileDetailState =
   | null
 
 type MobileDispatchStatus = '待派发' | '已发至手机端' | '手机端处理中'
+
+interface AgentTrigger {
+  answer?: AgentAnswer
+  id: number
+  prompt: string
+}
 
 interface DispatchPlanItem {
   alert: LiveAlert
@@ -245,6 +252,25 @@ const ANSWER_BANK: Record<string, AgentAnswer> = {
   },
 }
 
+function buildDecarbonReasonAnswer(action: OperationsDecarbonAction): AgentAnswer {
+  return {
+    followUps: ['生成对应工单', '这项动作的减排口径是什么?'],
+    text: `【问题理解】
+解释“${action.title}”为什么被纳入智能减排闭环。
+【核心结论】
+该动作来自${action.source}，已关联${action.linkedWorkOrder}，优先级来自当前负荷偏差、工单可落地性和责任班组可执行性。
+【分析依据】
+● 预计节电 ${action.expectedSavingKwh.toFixed(1)} kWh/日，预计减排 ${action.expectedCarbonKg.toFixed(1)} kgCO₂e/日。
+● 责任人：${action.owner}。
+● 置信度：${Math.round(action.confidence * 100)}%。
+【原因分析】
+● 当前不是单纯的报表建议，而是可以进入工单或巡检闭环的动作。
+● 减排量 = 预计节电量 × 项目排放因子，当前为项目估算口径，不代表真实碳核算结果。
+【下一步】
+${action.nextAction}`,
+  }
+}
+
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min)
 }
@@ -305,6 +331,25 @@ function severityColor(severity: Severity) {
   if (severity === 'high') return DASHBOARD_COLORS.rose
   if (severity === 'medium') return DASHBOARD_COLORS.amber
   return DASHBOARD_COLORS.emerald
+}
+
+function decarbonRiskTone(risk: OperationsDecarbonAction['risk']): 'amber' | 'emerald' | 'rose' {
+  if (risk === 'high') return 'rose'
+  if (risk === 'medium') return 'amber'
+  return 'emerald'
+}
+
+function decarbonStatusTone(status: string): ToastTone | 'amber' {
+  if (status.includes('关联')) return 'cyan'
+  if (status.includes('巡检')) return 'amber'
+  if (status.includes('可执行')) return 'emerald'
+  return 'cyan'
+}
+
+function decarbonSourceTone(source: OperationsDecarbonAction['source']): ToastTone | 'amber' {
+  if (source === '告警中心') return 'amber'
+  if (source === '工单进度') return 'emerald'
+  return 'cyan'
 }
 
 function taskSteps(task: OperationsTask) {
@@ -1257,17 +1302,29 @@ function TypingText({
   active,
   content,
   onDone,
+  onVisibleChange,
 }: {
   active?: boolean
   content: string
   onDone?: () => void
+  onVisibleChange?: () => void
 }) {
   const [visible, setVisible] = useState(active ? '' : content)
   const onDoneRef = useRef(onDone)
+  const onVisibleChangeRef = useRef(onVisibleChange)
 
   useEffect(() => {
     onDoneRef.current = onDone
   }, [onDone])
+
+  useEffect(() => {
+    onVisibleChangeRef.current = onVisibleChange
+  }, [onVisibleChange])
+
+  useEffect(() => {
+    if (!active || !visible) return
+    onVisibleChangeRef.current?.()
+  }, [active, visible])
 
   useEffect(() => {
     if (!active) {
@@ -1314,13 +1371,16 @@ function buildFallbackAnswer(prompt: string): AgentAnswer {
 const AgentChat = memo(function AgentChat({
   agentPulse,
   onOneClickDispatch,
+  trigger,
 }: {
   agentPulse: boolean
   onOneClickDispatch: () => void
+  trigger?: AgentTrigger | null
 }) {
   const [draft, setDraft] = useState('')
   const [thinking, setThinking] = useState(false)
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
+  const [scrollRequest, setScrollRequest] = useState(0)
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
       content: DEFAULT_AGENT_QUESTION,
@@ -1336,12 +1396,31 @@ const AgentChat = memo(function AgentChat({
     },
   ])
   const messageAreaRef = useRef<HTMLDivElement>(null)
+  const messageSequenceRef = useRef(0)
+  const handledTriggerIdRef = useRef<number | null>(null)
+
+  const scrollChatToBottom = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const area = messageAreaRef.current
+        if (!area) return
+        area.scrollTop = area.scrollHeight
+      })
+    })
+  }, [])
+
+  const requestChatScroll = useCallback(() => {
+    setScrollRequest((current) => current + 1)
+  }, [])
 
   useEffect(() => {
-    const area = messageAreaRef.current
-    if (!area) return
-    area.scrollTop = area.scrollHeight
-  }, [messages, thinking])
+    scrollChatToBottom()
+  }, [scrollChatToBottom])
+
+  useEffect(() => {
+    if (scrollRequest <= 0) return
+    scrollChatToBottom()
+  }, [scrollChatToBottom, scrollRequest])
 
   const completeTyping = (messageId: string) => {
     setMessages((current) =>
@@ -1349,24 +1428,27 @@ const AgentChat = memo(function AgentChat({
         message.id === messageId ? { ...message, typing: false } : message,
       ),
     )
+    requestChatScroll()
   }
 
-  const submitPrompt = (rawPrompt: string) => {
+  const submitPrompt = useCallback((rawPrompt: string, overrideAnswer?: AgentAnswer) => {
     const prompt = rawPrompt.trim()
     if (!prompt || thinking) return
 
-    const answer = ANSWER_BANK[prompt] ?? buildFallbackAnswer(prompt)
-    const now = Date.now()
-    const assistantId = `assistant-${now}`
+    const answer = overrideAnswer ?? ANSWER_BANK[prompt] ?? buildFallbackAnswer(prompt)
+    messageSequenceRef.current += 1
+    const messageKey = `${Date.now()}-${messageSequenceRef.current}`
+    const assistantId = `assistant-${messageKey}`
     const shouldOpenDispatch = prompt === '派发工单'
 
     setMessages((current) => [
       ...current,
-      { content: prompt, id: `user-${now}`, role: 'user' },
+      { content: prompt, id: `user-${messageKey}`, role: 'user' },
     ])
     setDraft('')
     setThinking(true)
     setActivePrompt(prompt)
+    requestChatScroll()
 
     window.setTimeout(() => {
       setThinking(false)
@@ -1383,9 +1465,18 @@ const AgentChat = memo(function AgentChat({
           typing: true,
         },
       ])
+      requestChatScroll()
       window.setTimeout(() => setActivePrompt(null), 520)
     }, 5000)
-  }
+  }, [onOneClickDispatch, requestChatScroll, thinking])
+
+  useEffect(() => {
+    if (!trigger) return
+    if (thinking) return
+    if (handledTriggerIdRef.current === trigger.id) return
+    handledTriggerIdRef.current = trigger.id
+    submitPrompt(trigger.prompt, trigger.answer)
+  }, [submitPrompt, thinking, trigger])
 
   return (
     <OperationsPanel
@@ -1454,6 +1545,7 @@ const AgentChat = memo(function AgentChat({
                     active={message.typing}
                     content={message.content}
                     onDone={() => completeTyping(message.id)}
+                    onVisibleChange={scrollChatToBottom}
                   />
                 </div>
               </div>
@@ -1520,6 +1612,176 @@ const AgentChat = memo(function AgentChat({
             <Send className="h-5 w-5" strokeWidth={1.9} />
           </button>
         </form>
+      </div>
+    </OperationsPanel>
+  )
+})
+
+const DecarbonAgentPanel = memo(function DecarbonAgentPanel({
+  actions,
+  adoptedActionIds,
+  askedActionIds,
+  onAdoptAction,
+  onAskReason,
+}: {
+  actions: OperationsDecarbonAction[]
+  adoptedActionIds: string[]
+  askedActionIds: string[]
+  onAdoptAction: (action: OperationsDecarbonAction) => void
+  onAskReason: (action: OperationsDecarbonAction) => void
+}) {
+  const totalSavingKwh = actions.reduce((total, action) => total + action.expectedSavingKwh, 0)
+  const totalCarbonKg = actions.reduce((total, action) => total + action.expectedCarbonKg, 0)
+  const actionableCount = actions.length
+  const estimateTooltip: DashboardTooltipContent = {
+    body: '减排量 = 预计节电量 × 项目排放因子。当前为项目估算口径，不代表真实碳核算结果。',
+    rows: [
+      { label: '口径', value: '项目估算' },
+      { label: '数据来源', value: '告警、工单、智能体结论' },
+    ],
+    title: '减排估算说明',
+  }
+
+  return (
+    <OperationsPanel
+      className="operations-decarbon-panel"
+      icon={<SendToBack className="h-5 w-5" strokeWidth={1.8} />}
+      rightSlot={<StatusBadge tone="emerald">{actionableCount} 项可执行</StatusBadge>}
+      title="智能减排闭环"
+    >
+      <div className="operations-decarbon-shell">
+        <p className="operations-decarbon-intro">
+          基于当前告警、工单和智能体结论生成，优先展示可落地的节能减排行动。
+        </p>
+
+        <div className="operations-alert-detail-grid operations-decarbon-summary-grid">
+          <span {...tooltipAttrs(estimateTooltip)}>
+            <b>预计节电</b>
+            <strong className="operations-decarbon-summary-value">
+              <AnimatedNumber decimals={1} value={totalSavingKwh} />
+            </strong>
+            <em>kWh/日</em>
+          </span>
+          <span {...tooltipAttrs(estimateTooltip)}>
+            <b>预计减排</b>
+            <strong className="operations-decarbon-summary-value">
+              <AnimatedNumber decimals={1} value={totalCarbonKg} />
+            </strong>
+            <em>kgCO₂e/日</em>
+          </span>
+          <span
+            {...tooltipAttrs({
+              body: '统计当前智能体已生成、且能落到工单或巡检项的动作数量。',
+              rows: [
+                { label: '关联工单', value: '2 项' },
+                { label: '待纳入巡检', value: '1 项' },
+              ],
+              title: '可执行动作数量',
+            })}
+          >
+            <b>可执行动作</b>
+            <strong className="operations-decarbon-summary-value">
+              <AnimatedNumber value={actionableCount} />
+            </strong>
+            <em>项</em>
+          </span>
+        </div>
+
+        <div className="operations-decarbon-list">
+          {actions.map((action, index) => {
+            const adopted = adoptedActionIds.includes(action.id)
+            const asked = askedActionIds.includes(action.id)
+
+            return (
+              <article
+                className="operations-decarbon-action"
+                data-risk={action.risk}
+                key={action.id}
+                {...tooltipAttrs({
+                  rows: [
+                    { label: '置信度', value: `${Math.round(action.confidence * 100)}%` },
+                    {
+                      label: '风险',
+                      tone: decarbonRiskTone(action.risk),
+                      value:
+                        action.risk === 'high'
+                          ? '高'
+                          : action.risk === 'medium'
+                            ? '中'
+                            : '低',
+                    },
+                    { label: '关联项', value: action.linkedWorkOrder },
+                  ],
+                  title: action.title,
+                })}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="operations-decarbon-meta-line">
+                      <span className="operations-strategy-index">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="operations-task-code font-black text-[#7AF7FF]">
+                        {action.linkedWorkOrder}
+                      </span>
+                      <StatusBadge tone={decarbonSourceTone(action.source)}>来源：{action.source}</StatusBadge>
+                    </div>
+                    <h4 className="operations-card-title mt-2 font-black text-cyan-50">{action.title}</h4>
+                  </div>
+                  <div className="operations-decarbon-status-stack">
+                    <StatusBadge tone={decarbonStatusTone(action.status)}>{action.status}</StatusBadge>
+                    <StatusBadge tone={decarbonRiskTone(action.risk)}>
+                      置信度 {Math.round(action.confidence * 100)}%
+                    </StatusBadge>
+                  </div>
+                </div>
+
+                <div className="operations-alert-detail-grid operations-decarbon-grid mt-3">
+                  <span>
+                    <b>预计节电</b>
+                    {action.expectedSavingKwh.toFixed(1)} kWh/日
+                  </span>
+                  <span>
+                    <b>预计减排</b>
+                    {action.expectedCarbonKg.toFixed(1)} kgCO₂e/日
+                  </span>
+                  <span>
+                    <b>责任</b>
+                    {action.owner}
+                  </span>
+                  <span>
+                    <b>置信度</b>
+                    {Math.round(action.confidence * 100)}%
+                  </span>
+                </div>
+
+                <div className="operations-alert-recommendation operations-decarbon-next mt-3 border-l border-dashed border-cyan-300/38 bg-cyan-950/18 px-4 py-3 text-cyan-50/82">
+                  <b className="mb-1 block text-sm font-black text-cyan-200/78">下一步动作</b>
+                  {action.nextAction}
+                </div>
+
+                <div className="operations-alert-actions operations-decarbon-actions mt-3">
+                  <button
+                    className="operations-decarbon-btn primary"
+                    data-active={adopted ? 'true' : undefined}
+                    onClick={() => onAdoptAction(action)}
+                    type="button"
+                  >
+                    <ClipboardList className="h-4 w-4" strokeWidth={1.8} />
+                    {adopted ? '已纳入' : '纳入工单'}
+                  </button>
+                  <button
+                    className="operations-decarbon-btn"
+                    data-active={asked ? 'true' : undefined}
+                    onClick={() => onAskReason(action)}
+                    type="button"
+                  >
+                    <Bot className="h-4 w-4" strokeWidth={1.8} />
+                    {asked ? '已追问' : '追问原因'}
+                  </button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
       </div>
     </OperationsPanel>
   )
@@ -1688,6 +1950,10 @@ export default function SmartOperationsWorkspace({
   const [manualTasks, setManualTasks] = useState<LiveTask[]>([])
   const [mobileDetail, setMobileDetail] = useState<MobileDetailState>(null)
   const [dispatchPlan, setDispatchPlan] = useState<DispatchPlanItem[]>([])
+  const [adoptedDecarbonActionIds, setAdoptedDecarbonActionIds] = useState<string[]>([])
+  const [askedDecarbonActionIds, setAskedDecarbonActionIds] = useState<string[]>([])
+  const [agentTrigger, setAgentTrigger] = useState<AgentTrigger | null>(null)
+  const agentTriggerSequenceRef = useRef(0)
 
   const operatorLabels = useMemo(
     () => dashboard.mobileOperators.map((operator) => `${operator.name} · ${operator.role}`),
@@ -1788,7 +2054,8 @@ export default function SmartOperationsWorkspace({
             : alert.title.includes('配电') || alert.title.includes('电')
               ? fallbackAssignees.find((name) => name.includes('王工'))
               : fallbackAssignees[index % fallbackAssignees.length]) ||
-        fallbackAssignees[index % fallbackAssignees.length]
+        fallbackAssignees[index % fallbackAssignees.length] ||
+        '综合维修组'
 
       return {
         alert,
@@ -1868,6 +2135,65 @@ export default function SmartOperationsWorkspace({
       setPulseAlertId(null)
       setAgentPulse(false)
     }, 1800)
+  }
+
+  const adoptDecarbonAction = (action: OperationsDecarbonAction) => {
+    setAdoptedDecarbonActionIds((current) => (current.includes(action.id) ? current : [...current, action.id]))
+
+    const taskId = `decarbon-work-order-${action.id}`
+    if (liveTasks.some((task) => task.id === taskId)) {
+      setHighlightedTaskId(taskId)
+      setAgentPulse(true)
+      window.setTimeout(() => setAgentPulse(false), 1200)
+      return
+    }
+
+    const linkedAlert = dashboard.alerts.find((alert) => action.title.includes('3F')
+      ? alert.id.includes('3f')
+      : action.title.includes('2F')
+        ? alert.id.includes('2f')
+        : action.title.includes('B1')
+          ? alert.id.includes('b1')
+          : false)
+    const task: LiveTask = {
+      assignee: action.owner,
+      code: action.linkedWorkOrder.startsWith('WO-') ? action.linkedWorkOrder : `WO-DECARBON-${String(manualTasks.length + 41).padStart(3, '0')}`,
+      due: action.risk === 'low' ? '明天 10:00' : '今天 18:00',
+      id: taskId,
+      linkedAlertId: linkedAlert?.id,
+      opinion: `智能减排闭环纳入：${action.title}。预计节电 ${action.expectedSavingKwh.toFixed(1)} kWh/日，预计减排 ${action.expectedCarbonKg.toFixed(1)} kgCO₂e/日。${action.nextAction}`,
+      progress: 0,
+      status: '待接单',
+      steps: ['接收减排动作', '现场复核', '执行节能策略', '回填节电效果'],
+      title: `减排动作：${action.title}`,
+      tools: '移动工单 / 能耗曲线 / 策略日志',
+    }
+
+    setManualTasks((current) =>
+      current.some((existingTask) => existingTask.id === task.id) ? current : [...current, task],
+    )
+    setHighlightedTaskId(task.id)
+    if (linkedAlert) {
+      setHighlightedAlertId(linkedAlert.id)
+      setPulseAlertId(linkedAlert.id)
+    }
+    setAgentPulse(true)
+    window.setTimeout(() => {
+      setPulseAlertId(null)
+      setAgentPulse(false)
+    }, 1800)
+  }
+
+  const askDecarbonReason = (action: OperationsDecarbonAction) => {
+    setAskedDecarbonActionIds((current) => (current.includes(action.id) ? current : [...current, action.id]))
+    agentTriggerSequenceRef.current += 1
+    setAgentTrigger({
+      answer: buildDecarbonReasonAnswer(action),
+      id: agentTriggerSequenceRef.current,
+      prompt: `追问减排原因：${action.title}`,
+    })
+    setAgentPulse(true)
+    window.setTimeout(() => setAgentPulse(false), 1400)
   }
 
   const approveDispatchPlan = () => {
@@ -2049,7 +2375,18 @@ export default function SmartOperationsWorkspace({
               highlightedAlertId={highlightedAlertId}
               onHighlight={setHighlightedAlertId}
             />
-            <AgentChat agentPulse={agentPulse} onOneClickDispatch={() => openDispatchPlan()} />
+            <AgentChat
+              agentPulse={agentPulse}
+              onOneClickDispatch={() => openDispatchPlan()}
+              trigger={agentTrigger}
+            />
+            <DecarbonAgentPanel
+              actions={dashboard.decarbonActions}
+              adoptedActionIds={adoptedDecarbonActionIds}
+              askedActionIds={askedDecarbonActionIds}
+              onAdoptAction={adoptDecarbonAction}
+              onAskReason={askDecarbonReason}
+            />
           </div>
         </div>
 
