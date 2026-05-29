@@ -26,6 +26,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { BevelCard } from '@/features/analytics/components/dashboard-primitives'
 import { DASHBOARD_FONTS } from '@/features/analytics/components/dashboard-theme'
 import EnergyAssistantChat from '@/features/energy-insights/components/energy-assistant-chat'
 import EnergyTimelineStrip, {
@@ -107,11 +108,12 @@ interface EnergyTwinDashboardProps {
 }
 
 // ---- Cybernetic Chart Palette ----
-const CYAN = '#00F5FF'
-const AMBER = '#FFB300'
-const RED = '#FF3333'
-const BLUE = '#1D8BFF'
-const PINK = '#FF5CA8'
+const CYAN = '#00D4FF'
+const CYAN_BRIGHT = '#7AF7FF'
+const AMBER = '#FFB800'
+const ROSE = '#FF4D8D'
+const BLUE = '#3A8FFF'
+const PINK = '#FF4D8D'
 const LABEL = 'rgba(206,244,255,0.72)'
 const MUTED_LABEL = 'rgba(164,211,226,0.48)'
 const GRID = 'rgba(122,247,255,0.14)'
@@ -122,8 +124,8 @@ function hudTooltip(trigger: 'axis' | 'item' = 'axis') {
     trigger,
     appendToBody: true,
     confine: true,
-    backgroundColor: 'rgba(2, 8, 23, 0.92)',
-    borderColor: 'rgba(122, 247, 255, 0.34)',
+    backgroundColor: 'rgba(4, 21, 39, 0.94)',
+    borderColor: 'rgba(122, 247, 255, 0.44)',
     borderWidth: 1,
     padding: [8, 10],
     textStyle: {
@@ -227,9 +229,9 @@ function buildDualLineOption(
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(0,245,255,0.28)' },
-              { offset: 0.55, color: 'rgba(0,130,255,0.08)' },
-              { offset: 1, color: 'rgba(0,245,255,0)' },
+              { offset: 0, color: 'rgba(122,247,255,0.3)' },
+              { offset: 0.55, color: 'rgba(0,212,255,0.1)' },
+              { offset: 1, color: 'rgba(0,212,255,0)' },
             ],
           },
         },
@@ -242,7 +244,7 @@ function buildDualLineOption(
               symbolSize: 28,
             },
           ],
-          itemStyle: { color: RED as any, shadowBlur: 12, shadowColor: 'rgba(255,51,51,0.5)' },
+          itemStyle: { color: ROSE as any, shadowBlur: 12, shadowColor: 'rgba(255,77,141,0.5)' },
           label: { color: '#fff', fontFamily: DASHBOARD_FONTS.num, fontSize: 11, fontWeight: 700 },
         },
       },
@@ -367,7 +369,7 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
         x2: 1,
         y2: 1,
         colorStops: [
-          { offset: 0, color: '#7AF7FF' },
+          { offset: 0, color: CYAN_BRIGHT },
           { offset: 1, color: CYAN },
         ],
       },
@@ -452,7 +454,7 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
             colorStops: [
               { offset: 0, color: 'rgba(0,116,255,0.26)' },
               { offset: 0.55, color: CYAN },
-              { offset: 1, color: '#A7FFFF' },
+              { offset: 1, color: CYAN_BRIGHT },
             ],
           },
         },
@@ -511,7 +513,7 @@ function buildWeeklyTrend(w: WeeklyTrendData): EChartsOption {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: '#A7FFFF' },
+              { offset: 0, color: CYAN_BRIGHT },
               { offset: 0.45, color: CYAN },
               { offset: 1, color: 'rgba(0,116,255,0.24)' },
             ],
@@ -693,9 +695,9 @@ const CardHeader = memo(function CardHeader({
   title: string
 }) {
   return (
-    <div className="mb-3 flex items-start justify-between gap-2">
+    <header className="operations-panel-header energy-query-header mb-3 flex items-start justify-between gap-2">
       <div className="flex min-w-0 items-start gap-2">
-        <span className="operations-panel-icon shrink-0 text-cyan-300">{icon}</span>
+        <span className="operations-panel-icon shrink-0">{icon}</span>
         <div className="min-w-0">
           <h3
             className="text-[17px] font-black leading-tight text-cyan-50"
@@ -711,7 +713,7 @@ const CardHeader = memo(function CardHeader({
         </div>
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
-    </div>
+    </header>
   )
 })
 
@@ -723,15 +725,17 @@ const GlassCard = memo(function GlassCard({
   className?: string
 }) {
   return (
-    <section
-      className={cn(
-        'contain-layout-paint glass-panel pointer-events-auto relative overflow-hidden p-3',
-        className,
-      )}
+    <BevelCard
+      className={cn('operations-hud-card energy-query-panel pointer-events-auto p-3', className)}
+      contentClassName="flex h-full flex-col"
+      size="medium"
+      withCorners
     >
-      <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
+      <span aria-hidden className="operations-card-slashes energy-query-slashes">
+        {'///'}
+      </span>
       {children}
-    </section>
+    </BevelCard>
   )
 })
 
@@ -743,7 +747,14 @@ const ChartFrame = memo(function ChartFrame({
   className?: string
 }) {
   return (
-    <div className={cn('contain-layout-paint tech-chart-frame h-full', className)}>{children}</div>
+    <div
+      className={cn(
+        'contain-layout-paint tech-chart-frame energy-query-chart-frame h-full p-1.5',
+        className,
+      )}
+    >
+      {children}
+    </div>
   )
 })
 

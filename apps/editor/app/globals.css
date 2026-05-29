@@ -1632,6 +1632,114 @@
     color: #ffb800;
   }
 
+  .energy-query-panel {
+    --hud-cut: 10px;
+    --hud-border: rgba(0, 212, 255, 0.54);
+    --hud-border-soft: rgba(122, 247, 255, 0.18);
+    background:
+      linear-gradient(135deg, rgba(122, 247, 255, 0.1) 0 1px, transparent 1px 40%),
+      radial-gradient(circle at 12% 0%, rgba(0, 212, 255, 0.2), transparent 30%),
+      radial-gradient(circle at 96% 92%, rgba(34, 211, 160, 0.12), transparent 34%),
+      linear-gradient(180deg, rgba(4, 21, 39, 0.76), rgba(2, 8, 23, 0.78));
+    box-shadow:
+      inset 0 0 24px rgba(0, 212, 255, 0.08),
+      inset 0 1px 0 rgba(221, 251, 255, 0.12),
+      0 0 18px rgba(0, 212, 255, 0.14);
+  }
+
+  .energy-query-panel::after {
+    background:
+      linear-gradient(90deg, rgba(0, 212, 255, 0.16), transparent 24%, transparent 76%, rgba(34, 211, 160, 0.1)),
+      repeating-linear-gradient(135deg, rgba(122, 247, 255, 0.04) 0 1px, transparent 1px 13px);
+  }
+
+  .energy-query-header h3 {
+    font-size: 17px;
+  }
+
+  .energy-query-header .operations-panel-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .energy-query-slashes {
+    top: 9px;
+    right: 13px;
+    font-size: 11px;
+    opacity: 0.72;
+  }
+
+  .energy-query-chart-frame {
+    border-color: rgba(122, 247, 255, 0.38);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(0, 212, 255, 0.12), transparent 42%),
+      linear-gradient(180deg, rgba(3, 14, 26, 0.54), rgba(2, 8, 23, 0.34));
+    box-shadow:
+      inset 0 0 0 1px rgba(122, 247, 255, 0.12),
+      inset 0 0 22px rgba(0, 212, 255, 0.06),
+      0 0 16px rgba(0, 212, 255, 0.12);
+  }
+
+  .energy-query-chart-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0 18%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(122, 247, 255, 0.72), transparent);
+    pointer-events: none;
+  }
+
+  .energy-query-metric {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(122, 247, 255, 0.18);
+    border-radius: 6px;
+    background:
+      linear-gradient(135deg, rgba(122, 247, 255, 0.08), transparent 42%),
+      rgba(2, 8, 23, 0.42);
+    box-shadow: inset 0 0 16px rgba(0, 212, 255, 0.06);
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease,
+      transform 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .energy-query-metric:hover {
+    border-color: rgba(122, 247, 255, 0.36);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 0 18px rgba(0, 212, 255, 0.08),
+      0 0 14px rgba(0, 212, 255, 0.12);
+  }
+
+  .energy-query-metric[data-tone='rose'] {
+    border-color: rgba(255, 77, 141, 0.34);
+    background:
+      linear-gradient(135deg, rgba(255, 77, 141, 0.14), transparent 44%),
+      rgba(40, 8, 22, 0.34);
+  }
+
+  .energy-query-metric[data-tone='amber'] {
+    border-color: rgba(255, 184, 0, 0.3);
+    background:
+      linear-gradient(135deg, rgba(255, 184, 0, 0.13), transparent 44%),
+      rgba(38, 25, 4, 0.28);
+  }
+
+  .energy-query-metric[data-tone='emerald'] {
+    border-color: rgba(34, 211, 160, 0.3);
+    background:
+      linear-gradient(135deg, rgba(34, 211, 160, 0.12), transparent 44%),
+      rgba(4, 32, 26, 0.28);
+  }
+
+  .energy-query-progress {
+    border: 1px solid rgba(122, 247, 255, 0.1);
+    background: rgba(2, 8, 23, 0.58);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.42);
+  }
+
   .operations-kpi-card [data-tone='emerald'],
   .operations-kpi-icon[data-tone='emerald'] {
     color: #22d3a0;
