@@ -124,7 +124,7 @@ export function buildOperationsDashboardData({
       location: 'Level 3 西侧设备间',
       occurredAt: '19:42',
       recommendation:
-        '优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。暖通运维一组需先核查过滤器压差、阀门开度和送回风温差,今晚复核后回填处理记录。',
+        '运维智能体建议优先处置该异常。先比对近 30 天同时间段基线与实时负荷曲线，再现场核查过滤器压差、阀门开度和送回风温差；若复核后 30 分钟内负荷未回落，建议调整新风策略并升级复核。',
       severity: 'high',
       status: '处理中',
       title: 'BLDG-APT-3F 新风机组 负荷偏高',
@@ -136,7 +136,7 @@ export function buildOperationsDashboardData({
       id: 'apt-2f-lighting-unlocked',
       location: 'Level 2 公区走廊',
       occurredAt: '19:18',
-      recommendation: '已派单给电气运维二组，复核 21:00-06:00 定时闭锁与人体感应阈值。',
+      recommendation: '运维智能体判断为夜间闭锁策略疑似失效。建议调取 21:00-06:00 控制日志，复核定时闭锁、人体感应阈值和回路联动状态，确认后同步修正策略参数。',
       severity: 'medium',
       status: '已派单',
       title: 'BLDG-APT-2F 公区照明回路 夜间未闭锁',
@@ -148,7 +148,7 @@ export function buildOperationsDashboardData({
       id: 'apt-b1-pump-short-cycle',
       location: '地下设备层',
       occurredAt: '18:55',
-      recommendation: '待给排水组现场复核止回阀状态、压差传感器采样和启停阈值。',
+      recommendation: '运维智能体判断存在短周期启停风险。建议先校验压差传感器采样，再复核止回阀状态和启停阈值；若启停次数持续高于基线，建议临时收窄告警阈值并持续跟踪。',
       severity: 'medium',
       status: '待处理',
       title: 'BLDG-APT-B1 水泵 频繁启停',
@@ -160,7 +160,7 @@ export function buildOperationsDashboardData({
       id: 'apt-5f-ahu-return-temp',
       location: 'Level 5',
       occurredAt: '17:30',
-      recommendation: '待暖通值班员检查回风传感器、冷冻水阀门开度和末端风量。',
+      recommendation: '运维智能体判断回风温度偏离正常区间。建议先核对回风传感器读数，再检查冷冻水阀门开度和末端风量；若温差仍扩大，建议切换为重点监测并复核控制策略。',
       severity: 'medium',
       status: '待处理',
       title: 'BLDG-APT-5F 空调机组 回风温度异常',
@@ -172,7 +172,7 @@ export function buildOperationsDashboardData({
       id: 'apt-rf-cooling-tower-vibration',
       location: '屋面',
       occurredAt: '16:12',
-      recommendation: '已确认并纳入本周巡检，优先检查风机轴承、紧固件和基础减振状态。',
+      recommendation: '运维智能体判断为低等级振动偏高。建议纳入巡检队列，重点观察风机轴承、紧固件和基础减振状态；若振动值继续上升，建议提前触发专项检查。',
       severity: 'low',
       status: '已确认',
       title: 'BLDG-APT-RF 屋顶冷却塔 风机振动告警',
@@ -354,7 +354,7 @@ export function buildOperationsDashboardData({
   ]
 
   const summary =
-    '优先处理:BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%,已派发工单 WO-BUILDING-031。处置重点是过滤器压差、阀门开度和送回风温差,责任人为暖通运维一组;今天 16:30 前完成现场复核,若负荷 30 分钟内未回落,同步调整新风策略并升级为值班长复核。'
+    '运维智能体建议优先处理 BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%。处置重点是过滤器压差、阀门开度和送回风温差；今天 16:30 前完成现场复核，若负荷 30 分钟内未回落，同步调整新风策略并升级复核。'
 
   return {
     alerts,
