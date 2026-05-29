@@ -726,7 +726,7 @@ const GlassCard = memo(function GlassCard({
 }) {
   return (
     <BevelCard
-      className={cn('operations-hud-card energy-query-panel pointer-events-auto p-3', className)}
+      className={cn('energy-query-panel pointer-events-none p-3', className)}
       contentClassName="flex h-full flex-col"
       size="medium"
       withCorners
@@ -734,7 +734,7 @@ const GlassCard = memo(function GlassCard({
       <span aria-hidden className="operations-card-slashes energy-query-slashes">
         {'///'}
       </span>
-      {children}
+      <div className="pointer-events-auto">{children}</div>
     </BevelCard>
   )
 })
@@ -954,7 +954,7 @@ export default function EnergyTwinDashboard({
   )
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden text-slate-100">
+    <div className="energy-query-dashboard pointer-events-none absolute inset-0 z-20 overflow-hidden text-slate-100">
       <div className="cockpit-atmosphere" />
       <div
         className="absolute z-30"
@@ -972,9 +972,9 @@ export default function EnergyTwinDashboard({
           gridTemplateColumns: `${COCKPIT_SIDE_RAIL_WIDTH} minmax(0, 1fr) ${COCKPIT_SIDE_RAIL_WIDTH}`,
         }}
       >
-        <div className="pointer-events-auto min-h-0 w-full max-w-[360px]">
+        <div className="pointer-events-none min-h-0 w-full max-w-[360px]">
           <div className="h-full">
-            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
+            <div className="no-scrollbar pointer-events-none h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
               {/* 1. 告警状态 — 脉冲动画 + 占比条 */}
               <GlassCard>
                 <CardHeader
@@ -1250,9 +1250,9 @@ export default function EnergyTwinDashboard({
           ) : null}
         </div>
 
-        <div className="pointer-events-auto min-h-0 w-full max-w-[360px] justify-self-end">
+        <div className="pointer-events-none min-h-0 w-full max-w-[360px] justify-self-end">
           <div className="h-full">
-            <div className="no-scrollbar h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
+            <div className="no-scrollbar pointer-events-none h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
               {/* 6. 能耗排行 */}
               <GlassCard>
                 <CardHeader
@@ -1527,7 +1527,7 @@ export default function EnergyTwinDashboard({
 
       {/* 能耗预测图（始终可见） */}
       <div
-        className="pointer-events-auto absolute bottom-2 left-1/2 z-40 -translate-x-1/2"
+        className="pointer-events-none absolute bottom-2 left-1/2 z-40 -translate-x-1/2"
         style={{ width: BOTTOM_CENTER_OVERLAY_WIDTH }}
       >
         <div className="rounded border border-cyan-300/15 bg-[#061522]/72 p-2 shadow-[0_0_28px_rgba(0,212,255,0.12)] backdrop-blur-sm">

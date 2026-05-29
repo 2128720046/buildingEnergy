@@ -28,7 +28,7 @@ import useViewer from '../../store/use-viewer'
 
 // SSGI Parameters - adjust these to fine-tune global illumination and ambient occlusion
 export const SSGI_PARAMS = {
-  enabled: true,
+  enabled: false,
   sliceCount: 1,
   stepCount: 4,
   radius: 1,
@@ -82,8 +82,6 @@ const PERF_POST_FX_DISABLED =
 
 const MAX_PIPELINE_RETRIES = 3
 const RETRY_DELAY_MS = 500
-const INTERACTION_POST_FX_RESTORE_DELAY_MS = 150
-
 const DARK_BG = '#0C0E14'
 const LIGHT_BG = '#ffffff'
 
@@ -127,10 +125,8 @@ const PostProcessingPasses = () => {
   }, [])
 
   const hoverHighlightMode = useViewer((s) => s.hoverHighlightMode)
-  const cameraDragging = useViewer((s) => s.cameraDragging)
   const projectId = useViewer((s) => s.projectId)
   const lastProjectIdRef = useRef(projectId)
-  const [interactionFastPath, setInteractionFastPath] = useState(false)
 
   // Bump this to force a pipeline rebuild (used by retry logic)
   const [pipelineVersion, setPipelineVersion] = useState(0)
@@ -162,19 +158,6 @@ const PostProcessingPasses = () => {
       }
     }
   }, [])
-
-  useEffect(() => {
-    if (cameraDragging) {
-      setInteractionFastPath(true)
-      return
-    }
-
-    const timeout = setTimeout(() => {
-      setInteractionFastPath(false)
-    }, INTERACTION_POST_FX_RESTORE_DELAY_MS)
-
-    return () => clearTimeout(timeout)
-  }, [cameraDragging])
 
   // ─── Pipeline build ───────────────────────────────────────────────────
   useEffect(() => {
@@ -305,6 +288,13 @@ const PostProcessingPasses = () => {
         )
       }
 
+      // Zone fills/borders are rendered in a separate layer. Keep them visible
+      // even when SSGI/AO is disabled; otherwise energy/query zone highlights
+      // disappear from the final post-processing output.
+      if (!ssgiEnabled) {
+        sceneColor = vec4(add(scenePassColor.rgb, zonePass.rgb), contentAlpha)
+      }
+
       // Single merged outline node: one shared depth pass for both selected
       // and hovered groups.
       let compositeWithOutlines = sceneColor
@@ -407,12 +397,7 @@ const PostProcessingPasses = () => {
     bgCurrent.current.lerp(bgTarget.current, Math.min(delta, 0.1) * 4)
     bgUniform.current.value.copy(bgCurrent.current)
 
-    if (
-      interactionFastPath ||
-      PERF_POST_FX_DISABLED ||
-      hasPipelineErrorRef.current ||
-      !renderPipelineRef.current
-    ) {
+    if (PERF_POST_FX_DISABLED || hasPipelineErrorRef.current || !renderPipelineRef.current) {
       // Fallback: direct render without any post-processing
       try {
         if ((renderer as any).setClearAlpha) {

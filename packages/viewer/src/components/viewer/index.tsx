@@ -107,7 +107,7 @@ function InteractionDprScaler({ maxDpr }: { maxDpr: number }) {
 
     const timeout = window.setTimeout(() => {
       setDpr(maxDpr)
-    }, 150)
+    }, 450)
 
     return () => window.clearTimeout(timeout)
   }, [cameraDragging, maxDpr, setDpr])

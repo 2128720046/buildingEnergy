@@ -33,6 +33,7 @@ export const CustomCameraControls = () => {
     !isPreviewMode && allowUndergroundCamera ? DEBUG_MAX_POLAR_ANGLE : DEFAULT_MAX_POLAR_ANGLE
 
   const camera = useThree((state) => state.camera)
+  const gl = useThree((state) => state.gl)
   const raycaster = useThree((state) => state.raycaster)
   useEffect(() => {
     camera.layers.enable(EDITOR_LAYER)
@@ -62,7 +63,7 @@ export const CustomCameraControls = () => {
       nextTarget.x,
       nextTarget.y,
       nextTarget.z,
-      true,
+      false,
     )
   }, [currentLevelId, isPreviewMode])
 
@@ -374,6 +375,90 @@ export const CustomCameraControls = () => {
   const onRest = useCallback(() => {
     useViewer.getState().setCameraDragging(false)
   }, [])
+
+  useEffect(() => {
+    const canvas = gl.domElement
+    let wheelRestTimer: ReturnType<typeof setTimeout> | null = null
+    let pointerStart: { id: number; x: number; y: number } | null = null
+    let didDragPointer = false
+
+    const markDragging = () => {
+      if (wheelRestTimer !== null) {
+        clearTimeout(wheelRestTimer)
+        wheelRestTimer = null
+      }
+      useViewer.getState().setCameraDragging(true)
+    }
+
+    const markWheelRestSoon = () => {
+      markDragging()
+      wheelRestTimer = setTimeout(() => {
+        useViewer.getState().setCameraDragging(false)
+        wheelRestTimer = null
+      }, 520)
+    }
+
+    const markRestSoon = () => {
+      if (wheelRestTimer !== null) {
+        clearTimeout(wheelRestTimer)
+      }
+      wheelRestTimer = setTimeout(() => {
+        useViewer.getState().setCameraDragging(false)
+        wheelRestTimer = null
+      }, 700)
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (wheelRestTimer !== null) {
+        clearTimeout(wheelRestTimer)
+        wheelRestTimer = null
+      }
+      useViewer.getState().setCameraDragging(false)
+      pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY }
+      didDragPointer = false
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!pointerStart || pointerStart.id !== event.pointerId) return
+
+      const dx = event.clientX - pointerStart.x
+      const dy = event.clientY - pointerStart.y
+      if (dx * dx + dy * dy < 16) return
+
+      didDragPointer = true
+      markDragging()
+    }
+
+    const handlePointerEnd = (event: PointerEvent) => {
+      if (pointerStart?.id === event.pointerId) {
+        pointerStart = null
+      }
+      if (didDragPointer) {
+        markRestSoon()
+      } else {
+        useViewer.getState().setCameraDragging(false)
+      }
+    }
+
+    canvas.addEventListener('pointerdown', handlePointerDown, { passive: true })
+    canvas.addEventListener('pointermove', handlePointerMove, { passive: true })
+    canvas.addEventListener('wheel', markWheelRestSoon, { passive: true })
+    window.addEventListener('pointerup', handlePointerEnd, { passive: true })
+    window.addEventListener('pointercancel', handlePointerEnd, { passive: true })
+    window.addEventListener('blur', markRestSoon, { passive: true })
+
+    return () => {
+      if (wheelRestTimer !== null) {
+        clearTimeout(wheelRestTimer)
+      }
+      canvas.removeEventListener('pointerdown', handlePointerDown)
+      canvas.removeEventListener('pointermove', handlePointerMove)
+      canvas.removeEventListener('wheel', markWheelRestSoon)
+      window.removeEventListener('pointerup', handlePointerEnd)
+      window.removeEventListener('pointercancel', handlePointerEnd)
+      window.removeEventListener('blur', markRestSoon)
+    }
+  }, [gl])
 
   if (walkthroughMode) {
     return <WalkthroughControls />
