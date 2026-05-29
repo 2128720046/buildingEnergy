@@ -54,6 +54,8 @@ interface LiveTask extends OperationsTask {
   linkedAlertId?: string
   opinion?: string
   progress: number
+  source?: 'mobile-alert' | 'platform' | 'manual'
+  sourceLabel?: string
   status: string
   steps: string[]
   tools: string
@@ -733,15 +735,18 @@ const AlertCenter = memo(function AlertCenter({
 
 const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: boolean; task: LiveTask }) {
   const dueTone = task.due.includes('今天') ? 'amber' : 'cyan'
+  const isMobileConvertedTask = task.source === 'mobile-alert' || task.id.startsWith('mobile-alert-work-order-')
 
   return (
     <article
       className="operations-task-card border border-cyan-300/24 bg-cyan-950/18 p-4"
       data-highlighted={highlighted ? 'true' : undefined}
+      id={task.id}
       {...tooltipAttrs({
         actions: ['打开工单', '追加记录'],
         rows: [
           { label: '关联告警', value: task.linkedAlertId ? '已绑定' : '未绑定' },
+          { label: '工单来源', value: task.sourceLabel ?? '平台告警工单' },
           { label: '处理步骤', value: task.steps.join(' / ') },
           { label: '责任人', value: task.assignee },
           { label: '工具材料', value: task.tools },
@@ -787,6 +792,7 @@ const TaskCard = memo(function TaskCard({ highlighted, task }: { highlighted: bo
               截止 {task.due}
             </StatusBadge>
             <StatusBadge tone={task.status === '处理中' ? 'rose' : 'amber'}>{task.status}</StatusBadge>
+            {isMobileConvertedTask ? <StatusBadge tone="emerald">手机端报警转工单</StatusBadge> : null}
           </div>
         </div>
         <div
@@ -825,7 +831,11 @@ const TaskList = memo(function TaskList({
   highlightedTaskId: string | null
   tasks: LiveTask[]
 }) {
-  const mobileReportCount = tasks.filter((task) => task.id.startsWith('mobile-alert-work-order-')).length
+  const mobileConvertedTasks = tasks.filter(
+    (task) => task.source === 'mobile-alert' || task.id.startsWith('mobile-alert-work-order-'),
+  )
+  const platformTasks = tasks.filter((task) => !mobileConvertedTasks.some((mobileTask) => mobileTask.id === task.id))
+  const mobileReportCount = mobileConvertedTasks.length
 
   return (
     <OperationsPanel
@@ -833,10 +843,30 @@ const TaskList = memo(function TaskList({
       rightSlot={<StatusBadge tone="amber">手机转工单 {mobileReportCount} · 总计 {tasks.length}</StatusBadge>}
       title="巡检与工单"
     >
-      <div className="space-y-3">
-        {tasks.map((task) => (
-          <TaskCard highlighted={highlightedTaskId === task.id} key={task.id} task={task} />
-        ))}
+      <div className="space-y-4">
+        {mobileConvertedTasks.length ? (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3 text-sm font-black text-cyan-100/76">
+              <span>手机端报警转工单</span>
+              <StatusBadge tone="emerald">{mobileConvertedTasks.length} 条已生成</StatusBadge>
+            </div>
+            {mobileConvertedTasks.map((task) => (
+              <TaskCard highlighted={highlightedTaskId === task.id} key={task.id} task={task} />
+            ))}
+          </section>
+        ) : null}
+
+        <section className="space-y-3">
+          {mobileConvertedTasks.length ? (
+            <div className="flex items-center justify-between gap-3 text-sm font-black text-cyan-100/76">
+              <span>平台工单</span>
+              <StatusBadge tone="cyan">{platformTasks.length} 条</StatusBadge>
+            </div>
+          ) : null}
+          {platformTasks.map((task) => (
+            <TaskCard highlighted={highlightedTaskId === task.id} key={task.id} task={task} />
+          ))}
+        </section>
       </div>
     </OperationsPanel>
   )
@@ -1980,6 +2010,8 @@ export default function SmartOperationsWorkspace({
             linkedAlertId: alert.id,
             opinion: alert.detail,
             progress: 0,
+            source: 'mobile-alert',
+            sourceLabel: '手机端报警转工单',
             status: '待接单',
             steps: ['接收手机端告警', '现场复核', '处理异常', '回填结果'],
             title: `处置手机端上报：${alert.title}`,
@@ -1997,6 +2029,8 @@ export default function SmartOperationsWorkspace({
         code: taskCode(task, index),
         linkedAlertId: dashboard.alerts[index]?.id,
         progress: task.progress ?? (index === 0 ? 65 : 30),
+        source: 'platform' as const,
+        sourceLabel: '平台告警工单',
         status: task.status ?? (index === 0 ? '处理中' : '待复核'),
         steps: taskSteps(task),
         tools: taskTools(task),
@@ -2081,7 +2115,9 @@ export default function SmartOperationsWorkspace({
     setAcceptedMobileAlertIds((current) => (current.includes(id) ? current : [...current, id]))
     const alert = dashboard.mobileAlerts.find((item) => item.id === id)
     if (alert) {
-      setHighlightedTaskId(`mobile-alert-work-order-${alert.id}`)
+      const taskId = `mobile-alert-work-order-${alert.id}`
+      setHighlightedTaskId(taskId)
+      window.setTimeout(() => document.getElementById(taskId)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80)
     }
     setAgentPulse(true)
     window.setTimeout(() => setAgentPulse(false), 1400)
