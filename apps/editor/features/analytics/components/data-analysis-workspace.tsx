@@ -549,8 +549,8 @@ function RealtimeSyncWidget({ seconds }: { seconds: number }) {
     >
       <span className="sync-radar" />
       <span className="flex flex-col leading-tight">
-        <span className="text-[13px] font-bold tracking-[0.04em] text-cyan-50">实时同步中</span>
-        <span className="mt-0.5 text-[11px] font-semibold tracking-[0.03em] text-cyan-100/68">
+        <span className="text-sm font-bold tracking-[0.04em] text-cyan-50">实时同步中</span>
+        <span className="mt-0.5 text-xs font-bold tracking-[0.03em] text-cyan-100/74">
           上次同步 {seconds}s 前
         </span>
       </span>
@@ -1240,6 +1240,38 @@ function buildBars(values: number[], width: number, height: number, padding: num
   })
 }
 
+function buildAxisTicks(minValue: number, maxValue: number, count = 4) {
+  const range = Math.max(maxValue - minValue, 1)
+
+  return Array.from({ length: count }, (_, index) => maxValue - (range / (count - 1)) * index)
+}
+
+function axisY(value: number, minValue: number, maxValue: number, height: number, padding: number) {
+  const range = Math.max(maxValue - minValue, 1)
+
+  return height - padding - ((value - minValue) / range) * (height - padding * 2)
+}
+
+function axisX(index: number, total: number, width: number, padding: number) {
+  return total <= 1 ? width / 2 : padding + (index / (total - 1)) * (width - padding * 2)
+}
+
+function axisExtent(values: number[], fallbackMin = 0, fallbackMax = 1) {
+  if (values.length === 0) return { max: fallbackMax, min: fallbackMin }
+
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+
+  return max === min ? { max: max + 1, min } : { max, min }
+}
+
+function axisTickLabel(value: number, decimals = 0) {
+  return value.toLocaleString('zh-CN', {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: 0,
+  })
+}
+
 function buildLinePath(points: Array<{ x: number; y: number }>) {
   return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
 }
@@ -1614,7 +1646,7 @@ const MetricCard = memo(function MetricCard({ metric }: { metric: MonitoringMetr
         </div>
         <div className="min-w-0">
           <AnimatedNumber
-            className="mt-1 truncate text-[26px] font-bold leading-none text-cyan-50 drop-shadow-[0_0_12px_rgba(0,212,255,0.35)]"
+            className="mt-1 truncate text-[34px] font-bold leading-none text-cyan-50 drop-shadow-[0_0_12px_rgba(0,212,255,0.35)]"
             decimals={parsedValue.decimals}
             style={{ color: accent, fontFamily: DASHBOARD_FONTS.numHeavy }}
             suffix={parsedValue.suffix}
@@ -1779,15 +1811,21 @@ const DailyLoadPanel = memo(function DailyLoadPanel({ model }: { model: Monitori
   const lineProgress = useLoopProgress(6000)
   const chartWidth = 860
   const chartHeight = 320
-  const padding = 34
+  const padding = 56
+  const dailyElectricityValues = model.dailySeries.map((point) => point.electricity)
+  const dailyOccupancyValues = model.dailySeries.map((point) => point.occupancy)
+  const maxDailyElectricity = Math.max(...dailyElectricityValues, 1)
+  const occupancyExtent = axisExtent([0, ...dailyOccupancyValues])
+  const dailyElectricityTicks = buildAxisTicks(0, maxDailyElectricity)
+  const dailyOccupancyTicks = buildAxisTicks(occupancyExtent.min, occupancyExtent.max)
   const electricityBars = buildBars(
-    model.dailySeries.map((point) => point.electricity),
+    dailyElectricityValues,
     chartWidth,
     chartHeight,
     padding,
   )
   const occupancyPoints = buildLinePoints(
-    model.dailySeries.map((point) => point.occupancy),
+    dailyOccupancyValues,
     chartWidth,
     chartHeight,
     padding,
@@ -1859,18 +1897,83 @@ const DailyLoadPanel = memo(function DailyLoadPanel({ model }: { model: Monitori
             </filter>
           </defs>
 
-          {[0, 1, 2, 3].map((index) => {
-            const y = padding + ((chartHeight - padding * 2) / 3) * index
+          <g className="chart-legend">
+            <rect fill="rgba(4,21,39,0.82)" height="27" rx="4" width="248" x={padding + 190} y="16" />
+            <rect fill="url(#dailyBarFill)" height="10" rx="2" width="20" x={padding + 202} y="24" />
+            <text className="fill-cyan-100/82 text-xs font-semibold" x={padding + 228} y="34">
+              日用电量 kWh
+            </text>
+            <line stroke={DASHBOARD_COLORS.emerald} strokeLinecap="round" strokeWidth="3" x1={padding + 322} x2={padding + 348} y1="29" y2="29" />
+            <circle cx={padding + 335} cy="29" fill="#061829" r="4" stroke={DASHBOARD_COLORS.emerald} strokeWidth="2" />
+            <text className="fill-cyan-100/82 text-xs font-semibold" x={padding + 356} y="34">
+              人流指数
+            </text>
+          </g>
+
+          {dailyElectricityTicks.map((tick) => {
+            const y = axisY(tick, 0, maxDailyElectricity, chartHeight, padding)
             return (
-              <line
-                key={y}
-                stroke="rgba(141,168,197,0.22)"
-                strokeDasharray="5 8"
-                x1={padding}
-                x2={chartWidth - padding}
-                y1={y}
-                y2={y}
-              />
+              <g key={`daily-y-${tick}`}>
+                <line
+                  stroke="rgba(141,168,197,0.22)"
+                  strokeDasharray="5 8"
+                  x1={padding}
+                  x2={chartWidth - padding}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-cyan-100/72 text-xs font-semibold"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding - 9}
+                  y={y}
+                >
+                  {axisTickLabel(tick)}
+                </text>
+              </g>
+            )
+          })}
+
+          {dailyOccupancyTicks.map((tick) => {
+            const y = axisY(tick, occupancyExtent.min, occupancyExtent.max, chartHeight, padding)
+            return (
+              <text
+                className="fill-emerald-100/70 text-xs font-semibold"
+                dominantBaseline="middle"
+                key={`daily-right-y-${tick}`}
+                x={chartWidth - padding + 16}
+                y={y}
+              >
+                {axisTickLabel(tick, 1)}
+              </text>
+            )
+          })}
+
+          <line stroke="rgba(122,247,255,0.4)" x1={padding} x2={padding} y1={padding} y2={chartHeight - padding} />
+          <line stroke="rgba(122,247,255,0.4)" x1={padding} x2={chartWidth - padding} y1={chartHeight - padding} y2={chartHeight - padding} />
+          <line stroke="rgba(34,211,160,0.36)" x1={chartWidth - padding} x2={chartWidth - padding} y1={padding} y2={chartHeight - padding} />
+          <text className="fill-cyan-100/82 text-xs font-bold" x={padding} y={padding - 18}>
+            用电量 kWh
+          </text>
+          <text className="fill-emerald-100/80 text-xs font-bold" textAnchor="end" x={chartWidth - padding} y={padding - 18}>
+            人流指数
+          </text>
+          <text className="fill-cyan-100/78 text-xs font-bold" textAnchor="middle" x={chartWidth / 2} y={chartHeight - 12}>
+            日期 / 近 12 天
+          </text>
+          {model.dailySeries.map((point, index) => {
+            const x = axisX(index, model.dailySeries.length, chartWidth, padding)
+            return (
+              <text
+                className="fill-cyan-100/66 text-xs font-semibold"
+                key={`daily-x-${point.date}`}
+                textAnchor="middle"
+                x={x}
+                y={chartHeight - padding + 23}
+              >
+                {point.date}
+              </text>
             )
           })}
 
@@ -1983,7 +2086,7 @@ const DailyLoadPanel = memo(function DailyLoadPanel({ model }: { model: Monitori
           >
             <div className="whitespace-nowrap font-semibold tracking-[0.04em]">{point.date}</div>
             <AnimatedNumber
-              className="mt-1 text-lg font-semibold text-cyan-50"
+              className="mt-1 text-xl font-bold text-cyan-50"
               decimals={1}
               style={{ fontFamily: DASHBOARD_FONTS.num }}
               suffix=" kWh"
@@ -2000,10 +2103,13 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
   const [hoveredHourlyIndex, setHoveredHourlyIndex] = useState<number | null>(null)
   const currentSlotIndex = getCurrentSlotIndex()
   const chartWidth = 460
-  const chartHeight = 210
-  const padding = 24
+  const chartHeight = 230
+  const padding = 42
   const {
     electricityBars,
+    hourlyElectricityTicks,
+    hourlyOccupancyExtent,
+    hourlyOccupancyTicks,
     maxHourlyElectricity,
     maxHourlyOccupancy,
     occupancyPoints,
@@ -2015,6 +2121,7 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
     const occupancyValues = model.hourlySeries.map((point) => point.occupancy)
     const maxHourlyElectricity = Math.max(...electricityValues, 1)
     const minHourlyElectricity = Math.min(...electricityValues)
+    const hourlyOccupancyExtent = axisExtent([0, ...occupancyValues])
     const peakPoint = model.hourlySeries.reduce((best, point) =>
       point.electricity > best.electricity ? point : best,
     )
@@ -2024,6 +2131,9 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
 
     return {
       electricityBars: buildBars(electricityValues, chartWidth, chartHeight, padding),
+      hourlyElectricityTicks: buildAxisTicks(0, maxHourlyElectricity),
+      hourlyOccupancyExtent,
+      hourlyOccupancyTicks: buildAxisTicks(hourlyOccupancyExtent.min, hourlyOccupancyExtent.max),
       maxHourlyElectricity,
       maxHourlyOccupancy: Math.max(...occupancyValues, 1),
       occupancyPoints: buildLinePoints(occupancyValues, chartWidth, chartHeight, padding),
@@ -2127,18 +2237,83 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
             </linearGradient>
           </defs>
 
-          {[0, 1, 2, 3].map((index) => {
-            const y = padding + ((chartHeight - padding * 2) / 3) * index
+          <g className="chart-legend">
+            <rect fill="rgba(4,21,39,0.82)" height="27" rx="4" width="218" x={padding + 72} y="12" />
+            <rect fill="url(#hourlyBarFill)" height="10" rx="2" width="20" x={padding + 84} y="20" />
+            <text className="fill-cyan-100/82 text-xs font-semibold" x={padding + 110} y="30">
+              负荷 kWh
+            </text>
+            <line stroke={DASHBOARD_COLORS.amber} strokeLinecap="round" strokeWidth="3" x1={padding + 188} x2={padding + 214} y1="25" y2="25" />
+            <circle cx={padding + 201} cy="25" fill="#061829" r="4" stroke={DASHBOARD_COLORS.amber} strokeWidth="2" />
+            <text className="fill-cyan-100/82 text-xs font-semibold" x={padding + 222} y="30">
+              人流
+            </text>
+          </g>
+
+          {hourlyElectricityTicks.map((tick) => {
+            const y = axisY(tick, 0, maxHourlyElectricity, chartHeight, padding)
             return (
-              <line
-                key={y}
-                stroke="rgba(141,168,197,0.2)"
-                strokeDasharray="5 8"
-                x1={padding}
-                x2={chartWidth - padding}
-                y1={y}
-                y2={y}
-              />
+              <g key={`hourly-y-${tick}`}>
+                <line
+                  stroke="rgba(141,168,197,0.2)"
+                  strokeDasharray="5 8"
+                  x1={padding}
+                  x2={chartWidth - padding}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-cyan-100/72 text-xs font-semibold"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding - 8}
+                  y={y}
+                >
+                  {axisTickLabel(tick)}
+                </text>
+              </g>
+            )
+          })}
+
+          {hourlyOccupancyTicks.map((tick) => {
+            const y = axisY(tick, hourlyOccupancyExtent.min, hourlyOccupancyExtent.max, chartHeight, padding)
+            return (
+              <text
+                className="fill-amber-100/76 text-xs font-semibold"
+                dominantBaseline="middle"
+                key={`hourly-right-y-${tick}`}
+                x={chartWidth - padding + 14}
+                y={y}
+              >
+                {axisTickLabel(tick, 1)}
+              </text>
+            )
+          })}
+
+          <line stroke="rgba(122,247,255,0.38)" x1={padding} x2={padding} y1={padding} y2={chartHeight - padding} />
+          <line stroke="rgba(122,247,255,0.38)" x1={padding} x2={chartWidth - padding} y1={chartHeight - padding} y2={chartHeight - padding} />
+          <line stroke="rgba(255,184,0,0.32)" x1={chartWidth - padding} x2={chartWidth - padding} y1={padding} y2={chartHeight - padding} />
+          <text className="fill-cyan-100/82 text-xs font-bold" x={padding} y={padding - 16}>
+            kWh
+          </text>
+          <text className="fill-amber-100/80 text-xs font-bold" textAnchor="end" x={chartWidth - padding} y={padding - 16}>
+            人流指数
+          </text>
+          <text className="fill-cyan-100/78 text-xs font-bold" textAnchor="middle" x={chartWidth / 2} y={chartHeight - 8}>
+            时段
+          </text>
+          {model.hourlySeries.map((point, index) => {
+            const x = axisX(index, model.hourlySeries.length, chartWidth, padding)
+            return (
+              <text
+                className="fill-cyan-100/68 text-xs font-semibold"
+                key={`hourly-x-${point.hour}`}
+                textAnchor="middle"
+                x={x}
+                y={chartHeight - padding + 21}
+              >
+                {point.hour}
+              </text>
             )
           })}
 
@@ -2225,19 +2400,19 @@ const HourlyPatternPanel = memo(function HourlyPatternPanel({ model }: { model: 
               {...tooltipAttrs(hourlyTooltip(point, index))}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[13px] text-cyan-100/74">{point.hour}</span>
+                <span className="text-sm font-semibold text-cyan-100/78">{point.hour}</span>
                 {isCurrent ? (
-                  <span className="rounded-sm border border-cyan-300/40 bg-cyan-300/12 px-1 text-[10px] font-bold text-cyan-100">
+                  <span className="rounded-sm border border-cyan-300/40 bg-cyan-300/12 px-1.5 py-0.5 text-xs font-bold text-cyan-100">
                     当前
                   </span>
                 ) : null}
               </div>
               <AnimatedNumber
-                className="mt-0.5 text-base font-bold text-cyan-50"
+                className="mt-0.5 text-xl font-bold text-cyan-50"
                 style={{ fontFamily: DASHBOARD_FONTS.num }}
                 value={point.electricity}
               />
-              <div className="text-[11px] text-cyan-100/62">kWh</div>
+              <div className="text-xs font-semibold text-cyan-100/68">kWh</div>
             </div>
           )
         })}
@@ -2445,7 +2620,7 @@ const PeakDevicePanel = memo(function PeakDevicePanel({ model }: { model: Monito
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="truncate text-[14px] font-bold text-cyan-50">{record.deviceId}</div>
-                <div className="mt-0.5 text-[13px] text-cyan-100/62">
+                <div className="mt-0.5 text-sm font-semibold text-cyan-100/70">
                   {record.buildingId} / {record.monitorTime.slice(5)}
                 </div>
               </div>
@@ -2573,7 +2748,7 @@ const RiskLayerPanel = memo(function RiskLayerPanel({ model }: { model: Monitori
                   <div className="truncate text-[15px] font-bold text-cyan-50">
                     {summary.buildingId}
                   </div>
-                  <div className="text-[13px] text-cyan-100/62">效率 {summary.efficiencyScore}</div>
+                  <div className="text-sm font-semibold text-cyan-100/70">效率 {summary.efficiencyScore}</div>
                 </div>
               </div>
               <div
@@ -2623,7 +2798,7 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
   const trendProgress = useLoopProgress(4000)
   const chartWidth = 720
   const chartHeight = 330
-  const padding = 42
+  const padding = 52
   const visiblePoints = useMemo(
     () => points.filter((point) => !hiddenTones.has(point.tone)),
     [hiddenTones, points],
@@ -2631,6 +2806,22 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
   const scatterPoints = useMemo(
     () => buildScatterPoints(visiblePoints, chartWidth, chartHeight, padding, xAccessor, yAccessor),
     [visiblePoints, xAccessor, yAccessor],
+  )
+  const scatterXExtent = useMemo(
+    () => axisExtent(visiblePoints.map(xAccessor)),
+    [visiblePoints, xAccessor],
+  )
+  const scatterYExtent = useMemo(
+    () => axisExtent(visiblePoints.map(yAccessor)),
+    [visiblePoints, yAccessor],
+  )
+  const scatterXTicks = useMemo(
+    () => [...buildAxisTicks(scatterXExtent.min, scatterXExtent.max, 6)].reverse(),
+    [scatterXExtent.max, scatterXExtent.min],
+  )
+  const scatterYTicks = useMemo(
+    () => buildAxisTicks(scatterYExtent.min, scatterYExtent.max, 6),
+    [scatterYExtent.max, scatterYExtent.min],
   )
   const chartId = xLabel.includes('温度') || xLabel.includes('度') ? 'temperature' : 'occupancy'
   const trendId = `scatterTrend-${chartId}`
@@ -2860,35 +3051,61 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
             y={padding + (chartHeight - padding * 2) / 2}
           />
 
-          {[0, 1, 2, 3, 4, 5].map((index) => {
-            const y = padding + ((chartHeight - padding * 2) / 5) * index
+          {scatterYTicks.map((tick) => {
+            const y = axisY(tick, scatterYExtent.min, scatterYExtent.max, chartHeight, padding)
             return (
-              <line
-                key={`y-${y}`}
-                stroke="rgba(122,247,255,0.18)"
-                strokeDasharray={index === 0 || index === 5 ? '0' : '7 9'}
-                x1={padding}
-                x2={chartWidth - padding}
-                y1={y}
-                y2={y}
-              />
+              <g key={`scatter-y-${tick}`}>
+                <line
+                  stroke="rgba(122,247,255,0.18)"
+                  strokeDasharray={tick === scatterYTicks[0] || tick === scatterYTicks[scatterYTicks.length - 1] ? '0' : '7 9'}
+                  x1={padding}
+                  x2={chartWidth - padding}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  className="fill-cyan-100/72 text-xs font-semibold"
+                  dominantBaseline="middle"
+                  textAnchor="end"
+                  x={padding - 10}
+                  y={y}
+                >
+                  {axisTickLabel(tick, 1)}
+                </text>
+              </g>
             )
           })}
 
-          {[0, 1, 2, 3, 4, 5].map((index) => {
-            const x = padding + ((chartWidth - padding * 2) / 5) * index
+          {scatterXTicks.map((tick) => {
+            const x =
+              padding +
+              ((tick - scatterXExtent.min) /
+                Math.max(scatterXExtent.max - scatterXExtent.min, 1)) *
+                (chartWidth - padding * 2)
             return (
-              <line
-                key={`x-${x}`}
-                stroke="rgba(122,247,255,0.14)"
-                strokeDasharray={index === 0 || index === 5 ? '0' : '7 9'}
-                x1={x}
-                x2={x}
-                y1={padding}
-                y2={chartHeight - padding}
-              />
+              <g key={`scatter-x-${tick}`}>
+                <line
+                  stroke="rgba(122,247,255,0.14)"
+                  strokeDasharray={tick === scatterXTicks[0] || tick === scatterXTicks[scatterXTicks.length - 1] ? '0' : '7 9'}
+                  x1={x}
+                  x2={x}
+                  y1={padding}
+                  y2={chartHeight - padding}
+                />
+                <text
+                  className="fill-cyan-100/70 text-xs font-semibold"
+                  textAnchor="middle"
+                  x={x}
+                  y={chartHeight - padding + 23}
+                >
+                  {axisTickLabel(tick, 1)}
+                </text>
+              </g>
             )
           })}
+
+          <line stroke="rgba(122,247,255,0.42)" x1={padding} x2={padding} y1={padding} y2={chartHeight - padding} />
+          <line stroke="rgba(122,247,255,0.42)" x1={padding} x2={chartWidth - padding} y1={chartHeight - padding} y2={chartHeight - padding} />
 
           {trendLine ? (
             <>
@@ -2986,13 +3203,14 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
             )
           })}
 
-          <text className="fill-cyan-100/74 text-[14px] font-semibold" x={padding} y={padding - 10}>
+          <text className="fill-cyan-100/82 text-sm font-bold" x={padding} y={padding - 12}>
             {yLabel}
           </text>
           <text
-            className="fill-cyan-100/74 text-[14px] font-semibold"
-            x={padding}
-            y={chartHeight - 9}
+            className="fill-cyan-100/82 text-sm font-bold"
+            textAnchor="middle"
+            x={chartWidth / 2}
+            y={chartHeight - 8}
           >
             {xLabel}
           </text>
@@ -3008,9 +3226,9 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
               title: '样本数统计',
             })}
           >
-            <div className="text-[13px] font-semibold text-cyan-100/70">样本数</div>
+            <div className="text-sm font-semibold text-cyan-100/74">样本数</div>
             <AnimatedNumber
-              className="text-lg font-bold text-cyan-50"
+              className="text-xl font-bold text-cyan-50"
               style={{ fontFamily: DASHBOARD_FONTS.num }}
               value={points.length}
             />
@@ -3025,9 +3243,9 @@ const RelationshipScatterPanel = memo(function RelationshipScatterPanel({
               title: '风险点统计',
             })}
           >
-            <div className="text-[13px] font-semibold text-cyan-100/70">风险点</div>
+            <div className="text-sm font-semibold text-cyan-100/74">风险点</div>
             <AnimatedNumber
-              className="text-lg font-bold text-[#FF4D6D]"
+              className="text-xl font-bold text-[#FF4D6D]"
               style={{ fontFamily: DASHBOARD_FONTS.num }}
               value={warningCount}
             />
@@ -3098,9 +3316,9 @@ const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: Monitori
                 title: item.label,
               })}
             >
-              <div className="text-[13px] font-semibold text-cyan-100/62">{item.label}</div>
+              <div className="text-sm font-semibold text-cyan-100/70">{item.label}</div>
               <div
-                className="mt-1 truncate text-[17px] font-bold leading-none"
+                className="mt-1 truncate text-xl font-bold leading-none"
                 style={{ color: item.tone, fontFamily: DASHBOARD_FONTS.num }}
               >
                 {item.value}
@@ -3254,7 +3472,7 @@ const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: Monitori
                         }}
                       />
                       <div className="relative flex h-full min-h-[44px] flex-col justify-between">
-                        <span className="text-[11px] font-semibold text-cyan-50/72">
+                        <span className="text-sm font-bold text-cyan-50/80">
                           {Math.round(intensity * 100)}
                         </span>
                         <span
@@ -3272,9 +3490,9 @@ const HeatmapPanel = memo(function HeatmapPanel({ heatmap }: { heatmap: Monitori
 
             <div />
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-cyan-100/54">低负荷</span>
+              <span className="text-sm font-semibold text-cyan-100/62">低负荷</span>
               <div className="heatmap-scale relative h-2 w-36 bg-[linear-gradient(90deg,rgba(0,212,255,0.2),rgba(0,212,255,0.72),rgba(34,211,160,0.78),rgba(255,184,0,0.9))] shadow-[0_0_10px_rgba(0,212,255,0.18)]" />
-              <span className="text-[12px] font-semibold text-cyan-100/74">高负荷</span>
+              <span className="text-sm font-semibold text-cyan-100/78">高负荷</span>
             </div>
           </div>
         </div>
@@ -3491,7 +3709,7 @@ const CompositionPanel = memo(function CompositionPanel({
                       : Math.round(total)
                   }
                 />
-                <div className="mt-1 text-[13px] font-semibold tracking-[0.06em] text-cyan-100/68">
+                <div className="mt-1 text-sm font-bold tracking-[0.06em] text-cyan-100/74">
                   {hoveredComposition ?? '本月累计'}
                 </div>
               </div>
@@ -3536,7 +3754,7 @@ const CompositionPanel = memo(function CompositionPanel({
                     />
                   </div>
                   <span
-                    className="w-10 text-right text-[12px] font-semibold text-cyan-100/70"
+                    className="w-12 text-right text-sm font-bold text-cyan-100/76"
                     style={{ fontFamily: DASHBOARD_FONTS.num }}
                   >
                     {ratio.toFixed(1)}%
@@ -3602,11 +3820,11 @@ const DetailTable = memo(function DetailTable({
       contentClassName="[&>div:first-child]:mb-3"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-400/10 px-3 py-1.5 text-[13px] font-bold text-emerald-100">
+        <div className="inline-flex items-center gap-2 border border-emerald-300/30 bg-emerald-400/10 px-3 py-1.5 text-sm font-bold text-emerald-100">
           <span className="table-live-dot" />
           实时
         </div>
-        <div className="detail-live-counter text-right text-[13px] font-semibold text-cyan-100/72">
+        <div className="detail-live-counter text-right text-sm font-bold text-cyan-100/78">
           今日已采集{' '}
           <AnimatedNumber
             className="text-cyan-50"
@@ -3876,7 +4094,7 @@ export default function DataAnalysisWorkspace({ projectId }: DataAnalysisWorkspa
         />
       </div>
       <div
-        className="issue-pill fixed bottom-4 left-4 z-30 flex items-center gap-2 rounded-full border border-[#FF4D8D]/55 bg-[#19091A]/88 px-3 py-2 text-[13px] font-bold text-[#FFD6E5] shadow-[0_0_18px_rgba(255,77,141,0.22)] backdrop-blur-md"
+        className="issue-pill fixed bottom-4 left-4 z-30 flex items-center gap-2 rounded-full border border-[#FF4D8D]/55 bg-[#19091A]/88 px-3 py-2 text-sm font-bold text-[#FFD6E5] shadow-[0_0_18px_rgba(255,77,141,0.22)] backdrop-blur-md"
         {...tooltipAttrs({
           actions: ['立即处理', '忽略'],
           rows: [

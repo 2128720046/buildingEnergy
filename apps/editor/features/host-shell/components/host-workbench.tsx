@@ -413,7 +413,7 @@ function DataAnalysisTitlePlate() {
           strokeWidth="1.2"
         />
       </svg>
-      <div className="data-analysis-title-text relative leading-none tracking-[0.08em] text-cyan-50 [text-shadow:0_0_8px_rgba(122,247,255,0.68),0_0_22px_rgba(0,212,255,0.34)]">
+      <div className="data-analysis-title-text relative not-italic leading-none tracking-[0.08em] text-cyan-50 [text-shadow:0_0_8px_rgba(122,247,255,0.68),0_0_22px_rgba(0,212,255,0.34)]">
         建筑能耗管理与运维系统
       </div>
     </div>

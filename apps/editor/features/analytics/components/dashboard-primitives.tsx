@@ -123,7 +123,7 @@ export function SectionHeader({
       <div className="flex-1">
         {eyebrow ? (
           <div
-            className="text-[11px] font-semibold tracking-[0.24em] uppercase"
+            className="text-xs font-semibold tracking-[0.22em] uppercase"
             style={{ color: DASHBOARD_COLORS.textMuted, fontFamily: DASHBOARD_FONTS.num }}
           >
             {eyebrow}
@@ -142,7 +142,7 @@ export function SectionHeader({
         </h3>
         {description ? (
           <p
-            className="mt-2 max-w-2xl text-[12px] leading-5"
+            className="mt-2 max-w-2xl text-sm font-semibold leading-5"
             style={{ color: DASHBOARD_COLORS.textSecondary, fontFamily: DASHBOARD_FONTS.cn }}
           >
             {description}
@@ -182,7 +182,7 @@ export function KpiTile({ label, value, unit, detail, tone = 'primary', icon }: 
     <BevelCard className="min-h-[120px] px-5 py-4" size="kpi">
       <div className="flex items-center justify-between">
         <div
-          className="text-[11px] font-medium tracking-[0.18em] uppercase"
+          className="text-[13px] font-semibold tracking-[0.16em] uppercase"
           style={{ color: DASHBOARD_COLORS.textMuted, fontFamily: DASHBOARD_FONTS.num }}
         >
           {label}
@@ -198,7 +198,7 @@ export function KpiTile({ label, value, unit, detail, tone = 'primary', icon }: 
         </span>
         {unit ? (
           <span
-            className="text-[12px]"
+            className="text-sm font-semibold"
             style={{ color: DASHBOARD_COLORS.textSecondary, fontFamily: DASHBOARD_FONTS.cn }}
           >
             {unit}
@@ -207,7 +207,7 @@ export function KpiTile({ label, value, unit, detail, tone = 'primary', icon }: 
       </div>
       {detail ? (
         <div
-          className="mt-2 text-[11px] leading-[18px]"
+          className="mt-2 text-xs font-semibold leading-5"
           style={{ color: DASHBOARD_COLORS.textSecondary, fontFamily: DASHBOARD_FONTS.cn }}
         >
           {detail}
@@ -232,7 +232,7 @@ export function Pill({ children, tone = 'neutral' }: PillProps) {
   }[tone]
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
       style={{
         backgroundColor: 'rgba(10, 37, 64, 0.5)',
         border: `1px solid ${palette.border}`,

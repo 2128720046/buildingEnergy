@@ -72,7 +72,7 @@
 :root {
   --font-alimama-shuhei: "AlimamaShuHeiTi", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-douyu: "DOUYUFont", "AlimamaShuHeiTi", "PingFang SC", sans-serif;
-  --font-puhuiti: var(--font-alimama-shuhei);
+  --font-puhuiti: "AlibabaPuHuiTi", "Alibaba PuHuiTi", "Alibaba PuHuiTi 3.0", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-rajdhani: "Rajdhani", "DINPro", "AlimamaShuHeiTi", sans-serif;
   --font-dinpro: "DINPro", "Rajdhani", "AlimamaShuHeiTi", sans-serif;
 }
@@ -1398,7 +1398,11 @@
   }
 
   .data-analysis-title-text {
+    font-family: var(--font-alimama-shuhei);
     font-size: clamp(22px, 2.28vw, 31px);
+    font-weight: 900;
+    font-style: normal;
+    font-synthesis-style: none;
   }
 
   /* ---- 智慧运维页：深蓝科技风组件 ---- */
@@ -1432,8 +1436,8 @@
     border: 1px solid rgba(0, 212, 255, 0.3);
     background: rgba(0, 212, 255, 0.08);
     color: rgba(224, 240, 255, 0.88);
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 7px 11px;
+    font-size: 13px;
     font-weight: 900;
     clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
     white-space: nowrap;
@@ -1557,12 +1561,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 30px;
-    padding: 5px 11px;
+    min-height: 32px;
+    padding: 6px 12px;
     border: 1px solid rgba(0, 212, 255, 0.36);
     color: #7af7ff;
     background: rgba(0, 212, 255, 0.1);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
     clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
@@ -1600,7 +1604,7 @@
   }
 
   .operations-kpi-value {
-    font-size: 46px;
+    font-size: 58px;
   }
 
   .operations-kpi-detail {
@@ -1744,7 +1748,8 @@
   .operations-online-value {
     color: #22d3a0;
     font-family: var(--font-alimama-shuhei);
-    font-size: 38px;
+    font-size: 48px;
+    font-weight: 950;
     text-shadow: 0 0 14px rgba(34, 211, 160, 0.44);
     animation: status-dot-breathe 1.8s ease-in-out infinite;
   }
@@ -1852,7 +1857,7 @@
     display: block;
     margin-bottom: 3px;
     color: rgba(122, 247, 255, 0.66);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
   }
 
@@ -1943,7 +1948,7 @@
     align-items: center;
     gap: 6px;
     color: rgba(184, 230, 255, 0.72);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
   }
 
@@ -1981,7 +1986,7 @@
 
   .operations-mobile-sync-label {
     color: rgba(122, 247, 255, 0.68);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
   }
 
@@ -2021,7 +2026,7 @@
     display: grid;
     gap: 6px;
     color: rgba(122, 247, 255, 0.68);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
   }
 
@@ -2191,7 +2196,7 @@
     display: block;
     margin-bottom: 5px;
     color: rgba(122, 247, 255, 0.72);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 950;
   }
 
@@ -2213,7 +2218,7 @@
     gap: 8px;
     margin-top: 12px;
     color: rgba(122, 247, 255, 0.72);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 950;
   }
 
@@ -2301,7 +2306,7 @@
     right: 8px;
     bottom: 6px;
     color: rgba(122, 247, 255, 0.58);
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .operations-mobile-detail-footer {
@@ -2357,7 +2362,7 @@
     gap: 5px;
     justify-items: end;
     color: rgba(184, 230, 255, 0.62);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
   }
 
