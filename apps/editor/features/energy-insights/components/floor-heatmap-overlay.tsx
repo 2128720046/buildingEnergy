@@ -1,6 +1,6 @@
 'use client'
 
-import { Activity, ArrowUpRight, Layers3, Zap } from 'lucide-react'
+import { Activity, ArrowUpRight, Layers3, X, Zap } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
   FloorHeatmapData,
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 interface FloorHeatmapOverlayProps {
   data: FloorHeatmapData | null
   className?: string
+  onClose?: () => void
 }
 
 const CANVAS_PADDING = 24
@@ -42,7 +43,7 @@ function getZoneTone(zone: ZoneHeatmapEntry): string {
   return '#35e6b2'
 }
 
-export default function FloorHeatmapOverlay({ data, className }: FloorHeatmapOverlayProps) {
+export default function FloorHeatmapOverlay({ data, className, onClose }: FloorHeatmapOverlayProps) {
   const summary = useMemo(() => {
     if (!data || data.zones.length === 0) return null
 
@@ -169,14 +170,16 @@ export default function FloorHeatmapOverlay({ data, className }: FloorHeatmapOve
   return (
     <div
       className={cn(
-        'pointer-events-auto overflow-hidden rounded border border-cyan-200/12 bg-[#03111d]/82 shadow-[0_18px_42px_rgba(0,0,0,0.42)] backdrop-blur-sm',
+        'pointer-events-auto relative overflow-hidden rounded-lg border border-cyan-200/14 bg-[linear-gradient(145deg,rgba(3,17,29,0.78),rgba(5,32,48,0.50)_56%,rgba(3,17,29,0.70))] shadow-[0_22px_54px_rgba(0,0,0,0.36),0_0_32px_rgba(0,245,255,0.10),inset_0_1px_0_rgba(190,255,255,0.12)] backdrop-blur-md',
         className,
       )}
       style={{ width: HEATMAP_WIDTH }}
     >
-      <div className="border-b border-cyan-200/10 bg-cyan-200/[0.03] px-3 py-2.5">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(0,245,255,0.16),transparent_34%),linear-gradient(90deg,rgba(125,249,255,0.12),transparent_18%,transparent_82%,rgba(125,249,255,0.10))]" />
+      <div className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-cyan-100/70 to-transparent" />
+      <div className="relative border-b border-cyan-100/12 bg-cyan-100/[0.025] px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded border border-cyan-200/16 bg-cyan-300/8 text-cyan-100">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md border border-cyan-100/18 bg-cyan-200/10 text-cyan-50 shadow-[0_0_18px_rgba(0,245,255,0.14)]">
             <Layers3 className="h-3.5 w-3.5" strokeWidth={1.8} />
           </span>
           <div className="min-w-0">
@@ -185,15 +188,27 @@ export default function FloorHeatmapOverlay({ data, className }: FloorHeatmapOve
             </div>
             <div className="truncate text-[10px] text-cyan-100/42">{data.floorName}</div>
           </div>
-          <div className="ml-auto rounded border border-rose-300/20 bg-rose-400/10 px-2 py-1 text-[10px] text-rose-100">
-            异常 {summary.anomalyCount}
+          <div className="ml-auto flex items-center gap-1.5">
+            <div className="rounded-md border border-rose-200/22 bg-rose-400/12 px-2 py-1 text-[10px] text-rose-50 shadow-[0_0_16px_rgba(255,77,109,0.10)]">
+              异常 {summary.anomalyCount}
+            </div>
+            {onClose ? (
+              <button
+                aria-label="关闭楼层能耗热力图"
+                className="flex h-6 w-6 items-center justify-center rounded-md border border-cyan-100/14 bg-white/6 text-cyan-100/60 transition hover:border-cyan-100/30 hover:bg-white/10 hover:text-cyan-50"
+                onClick={onClose}
+                type="button"
+              >
+                <X className="h-3.5 w-3.5" strokeWidth={1.8} />
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="relative h-[218px]">{svgContent}</div>
 
-      <div className="grid grid-cols-[1fr_auto] gap-2 border-t border-cyan-200/10 bg-black/18 px-3 py-2.5">
+      <div className="relative grid grid-cols-[1fr_auto] gap-2 border-t border-cyan-100/12 bg-black/12 px-3 py-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[10px] text-white/42">
             <Zap className="h-3 w-3 text-cyan-200/70" strokeWidth={1.8} />
@@ -226,7 +241,7 @@ export default function FloorHeatmapOverlay({ data, className }: FloorHeatmapOve
 
         <div className="col-span-2 flex items-center gap-2 pt-1">
           <span className="text-[9px] text-white/32">低</span>
-          <div className="flex h-2 flex-1 overflow-hidden rounded-sm border border-white/8">
+          <div className="flex h-2 flex-1 overflow-hidden rounded-sm border border-white/6">
             {Array.from({ length: 18 }, (_, index) => (
               <span
                 className="h-full flex-1"

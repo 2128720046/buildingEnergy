@@ -17,6 +17,54 @@ type RoomType =
   | 'storage'
   | 'mixed'
 
+export interface OfficeMonitoringRecord {
+  building_id: string
+  building_type: string
+  chilled_water_return_temp: number
+  chilled_water_supply_temp: number
+  device_id: string
+  device_status: 'maintenance' | 'normal' | 'offline' | 'warning'
+  electricity_kwh: number
+  env_humidity: number
+  env_temperature: number
+  hvac_kwh: number
+  id: number
+  monitor_time: string
+  occupancy_density: number
+  water_m3: number
+}
+
+export interface OfficeOperationsAlert {
+  baselineDeltaPct: number
+  baselineValue: number
+  currentValue: number
+  detail: string
+  id: string
+  location: string
+  occurredAt: string
+  recommendation: string
+  severity: 'high' | 'medium'
+  status: string
+  title: string
+  type: 'hvac-load' | 'lighting-lock' | 'return-temp'
+  unit: 'kWh' | '°C'
+}
+
+export interface OfficeOperationsSnapshot {
+  activeAlerts: OfficeOperationsAlert[]
+  alertSummary: {
+    high: number
+    medium: number
+    total: number
+  }
+  healthScore: number
+  monitoringRecords: OfficeMonitoringRecord[]
+  statusCounts: Record<OfficeMonitoringRecord['device_status'], number>
+  todayElectricityKwh: number
+  todayHvacKwh: number
+  updatedAt: string
+}
+
 // ---- 每小时数据 ----
 export interface HourlyEnergyRecord {
   hour: number // 0-23
@@ -52,15 +100,87 @@ export interface DailyEnergySummary {
 }
 
 // ---- 各房间类型每平米基准电耗 (kWh/m²/h) ----
-const ROOM_TYPE_BASE_LOAD: Record<RoomType, { electricity: number; hvac: number; lighting: number; socket: number }> = {
-  office: { electricity: 0.055, hvac: 0.022, lighting: 0.015, socket: 0.018 },
-  corridor: { electricity: 0.025, hvac: 0.006, lighting: 0.012, socket: 0.007 },
-  server_room: { electricity: 0.35, hvac: 0.14, lighting: 0.008, socket: 0.202 },
-  restroom: { electricity: 0.028, hvac: 0.005, lighting: 0.010, socket: 0.013 },
-  lobby: { electricity: 0.042, hvac: 0.018, lighting: 0.018, socket: 0.006 },
-  meeting: { electricity: 0.065, hvac: 0.026, lighting: 0.016, socket: 0.023 },
-  storage: { electricity: 0.015, hvac: 0.003, lighting: 0.005, socket: 0.007 },
-  mixed: { electricity: 0.040, hvac: 0.014, lighting: 0.012, socket: 0.014 },
+const ROOM_TYPE_BASE_LOAD: Record<
+  RoomType,
+  { electricity: number; hvac: number; lighting: number; socket: number }
+> = {
+  office: { electricity: 0.045, hvac: 0.018, lighting: 0.012, socket: 0.015 },
+  corridor: { electricity: 0.018, hvac: 0.004, lighting: 0.01, socket: 0.004 },
+  server_room: { electricity: 0.32, hvac: 0.13, lighting: 0.006, socket: 0.184 },
+  restroom: { electricity: 0.022, hvac: 0.004, lighting: 0.008, socket: 0.01 },
+  lobby: { electricity: 0.035, hvac: 0.014, lighting: 0.015, socket: 0.006 },
+  meeting: { electricity: 0.052, hvac: 0.021, lighting: 0.013, socket: 0.018 },
+  storage: { electricity: 0.012, hvac: 0.002, lighting: 0.004, socket: 0.006 },
+  mixed: { electricity: 0.034, hvac: 0.012, lighting: 0.01, socket: 0.012 },
+}
+
+const dailySummaryCache = new Map<string, DailyEnergySummary>()
+const officeMonitoringCache = new Map<string, OfficeMonitoringRecord[]>()
+const officeOperationsSnapshotCache = new Map<string, OfficeOperationsSnapshot>()
+export const OFFICE_ALERTS_CHANGED_EVENT = 'office-operations-alerts-changed'
+const OFFICE_RESOLVED_ALERTS_STORAGE_KEY = 'editor:office-operations:resolved-alerts'
+
+const OFFICE_SAMPLE_BUILDINGS = [
+  { id: 'OFFICE-A', type: 'office', area: 12_500, occupancy: 0.78 },
+  { id: 'OFFICE-B', type: 'office', area: 10_800, occupancy: 0.66 },
+  { id: 'OFFICE-C', type: 'office', area: 14_200, occupancy: 0.72 },
+  { id: 'OFFICE-D', type: 'mixed-office', area: 9_600, occupancy: 0.58 },
+] as const
+
+const OFFICE_ACTIVE_ANOMALIES = [
+  {
+    buildingId: 'OFFICE-C',
+    hour: 18,
+    id: 'office-c-18f-fresh-air-high-load',
+    location: '18F 西侧设备间',
+    severity: 'high',
+    status: '处理中',
+    title: 'OFFICE-C-18F 新风机组 负荷偏高',
+    type: 'hvac-load',
+  },
+  {
+    buildingId: 'OFFICE-D',
+    hour: 18,
+    id: 'office-d-2f-lighting-unlocked',
+    location: '2F 公区走廊',
+    severity: 'medium',
+    status: '已派单',
+    title: 'OFFICE-D-2F 公区照明回路 夜间未闭锁',
+    type: 'lighting-lock',
+  },
+  {
+    buildingId: 'OFFICE-A',
+    hour: 12,
+    id: 'office-a-12f-ahu-return-temp',
+    location: '12F 北侧办公区',
+    severity: 'medium',
+    status: '待处理',
+    title: 'OFFICE-A-12F 空调机组 回风温度异常',
+    type: 'return-temp',
+  },
+] as const
+
+function resolvedAlertStorageKey(projectId: string) {
+  return `${OFFICE_RESOLVED_ALERTS_STORAGE_KEY}:${projectId}`
+}
+
+export function getResolvedOfficeAlertIds(projectId: string): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(resolvedAlertStorageKey(projectId))
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+export function markOfficeAlertResolved(projectId: string, alertId: string) {
+  if (typeof window === 'undefined') return
+  const ids = new Set(getResolvedOfficeAlertIds(projectId))
+  ids.add(alertId)
+  window.localStorage.setItem(resolvedAlertStorageKey(projectId), JSON.stringify([...ids]))
+  window.dispatchEvent(new CustomEvent(OFFICE_ALERTS_CHANGED_EVENT, { detail: { projectId } }))
 }
 
 // ---- 时间乘数曲线（24h），反映工作日负荷波动 ----
@@ -293,6 +413,10 @@ export function buildDailySummary(
   areaM2: number,
   date: string,
 ): DailyEnergySummary {
+  const cacheKey = `${zoneId}:${roomType}:${areaM2.toFixed(2)}:${date}`
+  const cached = dailySummaryCache.get(cacheKey)
+  if (cached) return cached
+
   const hourly = buildHourlyRecords(zoneId, roomType, areaM2, date)
 
   const totalElectricity = hourly.reduce((s, r) => s + r.electricity_kwh, 0)
@@ -307,7 +431,7 @@ export function buildDailySummary(
   const avgOccupancy = occupancies.reduce((s, v) => s + v, 0) / 24
   const maxOccupancy = Math.max(...occupancies)
 
-  return {
+  const summary = {
     date,
     total_electricity_kwh: Number(totalElectricity.toFixed(2)),
     total_hvac_kwh: Number(totalHvac.toFixed(2)),
@@ -321,6 +445,8 @@ export function buildDailySummary(
     max_occupancy: Math.round(maxOccupancy),
     hourly,
   }
+  dailySummaryCache.set(cacheKey, summary)
+  return summary
 }
 
 // ---- 日期工具 ----
@@ -358,6 +484,292 @@ export function getWeekDates(anchor: string): string[] {
 /** 简单电费模型：峰电 1.05 元/kWh，谷电 0.46 元/kWh */
 export function estimateCost(kwh: number): number {
   return Number((kwh * 0.82).toFixed(2))
+}
+
+function formatTimestamp(date: string, hour: number): string {
+  return `${date} ${String(hour).padStart(2, '0')}:00`
+}
+
+function resolveDeviceStatus(
+  projectId: string,
+  buildingId: string,
+  record: HourlyEnergyRecord,
+  daily: DailyEnergySummary,
+): OfficeMonitoringRecord['device_status'] {
+  if (
+    OFFICE_ACTIVE_ANOMALIES.some(
+      (anomaly) => anomaly.buildingId === buildingId && anomaly.hour === record.hour,
+    )
+  ) {
+    return 'warning'
+  }
+
+  const baseline = daily.total_electricity_kwh / 24
+  const peakRatio = record.electricity_kwh / Math.max(baseline, 1)
+  if (
+    (record.hour >= 6 && record.hour <= 18 && peakRatio > 1.92) ||
+    record.indoor_temp_c > 30.4
+  ) {
+    return 'warning'
+  }
+  if (record.pm25_ugm3 > 76 && seededRandom(`${projectId}:${buildingId}:${record.hour}`, 83) > 0.82) {
+    return 'maintenance'
+  }
+  if (
+    record.electricity_kwh < baseline * 0.15 &&
+    record.hour >= 2 &&
+    record.hour <= 4 &&
+    seededRandom(`${projectId}:${buildingId}:${record.hour}`, 89) > 0.9
+  ) {
+    return 'offline'
+  }
+  return 'normal'
+}
+
+function applyActiveAnomaly(
+  projectId: string,
+  buildingId: string,
+  record: HourlyEnergyRecord,
+): HourlyEnergyRecord {
+  const anomaly = OFFICE_ACTIVE_ANOMALIES.find(
+    (item) => item.buildingId === buildingId && item.hour === record.hour,
+  )
+  if (!anomaly) return record
+
+  const loadFactor =
+    anomaly.type === 'hvac-load' ? 1.24 : anomaly.type === 'lighting-lock' ? 1.16 : 1.08
+  const hvacFactor = anomaly.type === 'hvac-load' ? 1.35 : anomaly.type === 'return-temp' ? 1.18 : 1.03
+  const tempLift = anomaly.type === 'return-temp' ? 2.2 : anomaly.type === 'hvac-load' ? 0.8 : 0.2
+  const jitter = 0.98 + seededRandom(`${projectId}:${buildingId}:${record.hour}:active`, 97) * 0.04
+  const electricity = record.electricity_kwh * loadFactor * jitter
+  const hvac = Math.min(electricity * 0.58, record.hvac_kwh * hvacFactor * jitter)
+
+  return {
+    ...record,
+    electricity_kwh: Number(electricity.toFixed(3)),
+    hvac_kwh: Number(hvac.toFixed(3)),
+    indoor_temp_c: Number((record.indoor_temp_c + tempLift).toFixed(1)),
+  }
+}
+
+export function buildOfficeMonitoringDataset(
+  projectId: string,
+  anchorDate = todayStr(),
+): OfficeMonitoringRecord[] {
+  const cacheKey = `${projectId}:${anchorDate}`
+  const cached = officeMonitoringCache.get(cacheKey)
+  if (cached) return cached
+
+  const records: OfficeMonitoringRecord[] = []
+  let id = 1
+
+  for (let dayOffset = 11; dayOffset >= 0; dayOffset--) {
+    const date = shiftDateStr(anchorDate, -dayOffset)
+    for (const building of OFFICE_SAMPLE_BUILDINGS) {
+      const effectiveArea =
+        building.area * (0.96 + seededRandom(`${projectId}:${building.id}`, 71) * 0.08)
+      const daily = buildDailySummary(`${projectId}:${building.id}`, 'office', effectiveArea, date)
+
+      for (const hour of [0, 6, 12, 18]) {
+        const record = applyActiveAnomaly(projectId, building.id, daily.hourly[hour]!)
+        const status = resolveDeviceStatus(projectId, building.id, record, daily)
+        const hvacRatio = record.hvac_kwh / Math.max(record.electricity_kwh, 1)
+        const supplyTemp = clamp(7.2 - hvacRatio * 1.2, 5.8, 8.4)
+        const returnTemp = supplyTemp + clamp(3.8 + record.indoor_temp_c * 0.08, 4.2, 7.4)
+        const occupancyBase =
+          hour >= 9 && hour <= 17 ? 72 : hour >= 6 && hour < 9 ? 38 : hour >= 18 ? 24 : 8
+        const occupancyDensity = clamp(
+          occupancyBase * building.occupancy + (seededRandom(`${building.id}:${date}:${hour}`, 79) - 0.5) * 10,
+          4,
+          92,
+        )
+
+        records.push({
+          building_id: building.id,
+          building_type: building.type,
+          chilled_water_return_temp: Number(returnTemp.toFixed(2)),
+          chilled_water_supply_temp: Number(supplyTemp.toFixed(2)),
+          device_id: `${building.id}-MTR-${String((id % 36) + 1).padStart(2, '0')}`,
+          device_status: status,
+          electricity_kwh: Number(record.electricity_kwh.toFixed(1)),
+          env_humidity: record.indoor_humidity_pct,
+          env_temperature: record.indoor_temp_c,
+          hvac_kwh: Number(record.hvac_kwh.toFixed(1)),
+          id,
+          monitor_time: formatTimestamp(date, hour),
+          occupancy_density: Number(occupancyDensity.toFixed(1)),
+          water_m3: Number(record.water_m3.toFixed(1)),
+        })
+        id++
+      }
+    }
+  }
+
+  records.sort((left, right) => right.monitor_time.localeCompare(left.monitor_time))
+  officeMonitoringCache.set(cacheKey, records)
+  return records
+}
+
+function baselineForRecord(record: OfficeMonitoringRecord): number {
+  const seed = `${record.building_id}:${record.monitor_time.slice(0, 10)}:${record.monitor_time.slice(11, 13)}`
+  return Number((record.electricity_kwh * (0.84 + seededRandom(seed, 101) * 0.05)).toFixed(1))
+}
+
+function currentForAnomaly(record: OfficeMonitoringRecord, type: OfficeOperationsAlert['type']) {
+  if (type === 'return-temp') {
+    return Number((record.env_temperature + 0.6).toFixed(1))
+  }
+  return record.electricity_kwh
+}
+
+function baselineForAnomaly(record: OfficeMonitoringRecord, type: OfficeOperationsAlert['type']) {
+  if (type === 'return-temp') {
+    return Number((record.env_temperature - 2.1).toFixed(1))
+  }
+  return baselineForRecord(record)
+}
+
+function recommendationForAnomaly(type: OfficeOperationsAlert['type']) {
+  if (type === 'lighting-lock') {
+    return '建议调取 21:00-06:00 控制日志，复核定时闭锁、人体感应阈值和回路联动状态，确认后同步修正策略参数。'
+  }
+  if (type === 'return-temp') {
+    return '建议先核对回风传感器读数，再检查冷冻水阀门开度和末端风量；若温差仍扩大，切换为重点监测并复核控制策略。'
+  }
+  return '建议优先比对近 30 天同时间段基线与实时负荷曲线，再现场核查过滤器压差、阀门开度和送回风温差。'
+}
+
+function buildOfficeOperationsAlerts(
+  projectId: string,
+  monitoringRecords: OfficeMonitoringRecord[],
+  anchorDate: string,
+): OfficeOperationsAlert[] {
+  const alerts: OfficeOperationsAlert[] = []
+
+  for (const anomaly of OFFICE_ACTIVE_ANOMALIES) {
+    const record = monitoringRecords.find(
+      (item) =>
+        item.building_id === anomaly.buildingId &&
+        item.monitor_time.startsWith(anchorDate) &&
+        Number(item.monitor_time.slice(11, 13)) === anomaly.hour,
+    )
+    if (!record) continue
+
+    const currentValue = currentForAnomaly(record, anomaly.type)
+    const baselineValue = baselineForAnomaly(record, anomaly.type)
+    const baselineDeltaPct =
+      anomaly.type === 'return-temp'
+        ? Number((currentValue - baselineValue).toFixed(1))
+        : Number((((currentValue - baselineValue) / Math.max(baselineValue, 1)) * 100).toFixed(1))
+    const unit = anomaly.type === 'return-temp' ? '°C' : 'kWh'
+
+    alerts.push({
+      baselineDeltaPct,
+      baselineValue,
+      currentValue,
+      detail:
+        anomaly.type === 'return-temp'
+          ? `${anomaly.location} · ${currentValue.toFixed(1)}${unit}(+${baselineDeltaPct.toFixed(1)}${unit})`
+          : `${anomaly.location} · ${currentValue.toFixed(1)} ${unit}(+${baselineDeltaPct.toFixed(1)}%)`,
+      id: `${projectId}-${anomaly.id}`,
+      location: anomaly.location,
+      occurredAt: `${String(anomaly.hour).padStart(2, '0')}:${anomaly.severity === 'high' ? '42' : '18'}`,
+      recommendation: recommendationForAnomaly(anomaly.type),
+      severity: anomaly.severity,
+      status: anomaly.status,
+      title: anomaly.title,
+      type: anomaly.type,
+      unit,
+    })
+  }
+
+  return alerts
+}
+
+export function buildOfficeOperationsSnapshot(
+  projectId: string,
+  anchorDate = todayStr(),
+): OfficeOperationsSnapshot {
+  const cacheKey = `${projectId}:${anchorDate}`
+  const cached = officeOperationsSnapshotCache.get(cacheKey)
+  if (cached) return cached
+
+  const monitoringRecords = buildOfficeMonitoringDataset(projectId, anchorDate)
+  const activeAlerts = buildOfficeOperationsAlerts(projectId, monitoringRecords, anchorDate)
+  const statusCounts: Record<OfficeMonitoringRecord['device_status'], number> = {
+    maintenance: 0,
+    normal: 0,
+    offline: 0,
+    warning: 0,
+  }
+  for (const record of monitoringRecords) {
+    statusCounts[record.device_status] += 1
+  }
+
+  const todayRecords = monitoringRecords.filter((record) => record.monitor_time.startsWith(anchorDate))
+  const todayElectricityKwh = Number(
+    todayRecords.reduce((sum, record) => sum + record.electricity_kwh, 0).toFixed(1),
+  )
+  const todayHvacKwh = Number(
+    todayRecords.reduce((sum, record) => sum + record.hvac_kwh, 0).toFixed(1),
+  )
+  const alertSummary = {
+    high: activeAlerts.filter((alert) => alert.severity === 'high').length,
+    medium: activeAlerts.filter((alert) => alert.severity === 'medium').length,
+    total: activeAlerts.length,
+  }
+  const abnormalCount = statusCounts.warning + statusCounts.maintenance + statusCounts.offline
+  const abnormalRate = abnormalCount / Math.max(monitoringRecords.length, 1)
+  const hvacRatio = todayHvacKwh / Math.max(todayElectricityKwh, 1)
+  const healthScore = Math.round(
+    clamp(
+      96 -
+        alertSummary.high * 9 -
+        alertSummary.medium * 5 -
+        statusCounts.maintenance * 2 -
+        statusCounts.offline * 3 -
+        abnormalRate * 28 -
+        Math.max(0, hvacRatio - 0.42) * 18,
+      52,
+      96,
+    ),
+  )
+
+  const snapshot = {
+    activeAlerts,
+    alertSummary,
+    healthScore,
+    monitoringRecords,
+    statusCounts,
+    todayElectricityKwh,
+    todayHvacKwh,
+    updatedAt: `${anchorDate}T18:00:00.000Z`,
+  }
+  officeOperationsSnapshotCache.set(cacheKey, snapshot)
+  return snapshot
+}
+
+export function getActiveOfficeOperationsSnapshot(
+  projectId: string,
+  anchorDate = todayStr(),
+): OfficeOperationsSnapshot {
+  const snapshot = buildOfficeOperationsSnapshot(projectId, anchorDate)
+  const resolvedAlertIds = new Set(getResolvedOfficeAlertIds(projectId))
+  const activeAlerts = snapshot.activeAlerts.filter((alert) => !resolvedAlertIds.has(alert.id))
+  const alertSummary = {
+    high: activeAlerts.filter((alert) => alert.severity === 'high').length,
+    medium: activeAlerts.filter((alert) => alert.severity === 'medium').length,
+    total: activeAlerts.length,
+  }
+  const resolvedCount = snapshot.alertSummary.total - alertSummary.total
+  const healthScore = Math.round(clamp(snapshot.healthScore + resolvedCount * 5, 52, 96))
+
+  return {
+    ...snapshot,
+    activeAlerts,
+    alertSummary,
+    healthScore,
+  }
 }
 
 // ---- 从 hourly 构建旧版 EnergyApiResponse 兼容结构 ----

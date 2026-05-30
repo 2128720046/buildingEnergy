@@ -1,5 +1,9 @@
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
+import {
+  getActiveOfficeOperationsSnapshot,
+  type OfficeOperationsAlert,
+} from '@/features/energy-insights/lib/energy-mock-data'
 
 export interface OperationsMetric {
   detail: string
@@ -98,10 +102,57 @@ export interface OperationsDashboardData {
   tasks: OperationsTask[]
 }
 
+function formatAlertDelta(alert: OfficeOperationsAlert) {
+  if (alert.unit === '°C') return `+${alert.baselineDeltaPct.toFixed(1)}°C`
+  return `+${alert.baselineDeltaPct.toFixed(1)}%`
+}
+
+function formatAlertCurrent(alert: OfficeOperationsAlert) {
+  if (alert.unit === '°C') return `${alert.currentValue.toFixed(1)}°C`
+  return `${alert.currentValue.toFixed(1)} kWh`
+}
+
+function mapOfficeAlert(alert: OfficeOperationsAlert): OperationsAlert {
+  return {
+    baselineDelta: formatAlertDelta(alert),
+    currentValue: formatAlertCurrent(alert),
+    detail: alert.detail,
+    id: alert.id,
+    location: alert.location,
+    occurredAt: alert.occurredAt,
+    recommendation: alert.recommendation,
+    severity: alert.severity,
+    status: alert.status,
+    title: alert.title,
+  }
+}
+
+function operatorForAlert(alert: OperationsAlert) {
+  if (alert.title.includes('照明')) return '李工 · 照明巡检组'
+  if (alert.title.includes('新风') || alert.title.includes('空调')) return '赵工 · 暖通运维组'
+  return '陈工 · 综合维修组'
+}
+
+function taskTitleForAlert(alert: OperationsAlert) {
+  return `处置 ${alert.title.replace(/^OFFICE-[A-Z]-/, '')}`
+}
+
+function buildAlertTasks(alerts: OperationsAlert[]) {
+  return alerts.slice(0, 2).map((alert, index) => ({
+    assignee: operatorForAlert(alert),
+    code: `WO-BUILDING-${String(31 + index).padStart(3, '0')}`,
+    due: index === 0 ? '今天 16:30' : '明天 10:00',
+    id: `work-order-${String(31 + index).padStart(3, '0')}`,
+    progress: index === 0 ? 65 : 30,
+    status: index === 0 ? '处理中' : '待复核',
+    title: taskTitleForAlert(alert),
+  }))
+}
+
 export function buildOperationsDashboardData({
-  additionalTasks: _additionalTasks,
+  additionalTasks,
   energyResult: _energyResult,
-  projectId: _projectId,
+  projectId,
   queryResults: _queryResults,
   saveStatus: _saveStatus,
   selectedComponentId: _selectedComponentId,
@@ -115,130 +166,37 @@ export function buildOperationsDashboardData({
   selectedComponentId: string | null
   selectedComponentName: string
 }): OperationsDashboardData {
-  const alerts: OperationsAlert[] = [
-    {
-      baselineDelta: '+29.8%',
-      currentValue: '112.4 kWh',
-      detail: 'Level 3 西侧设备间 · 112.4 kWh(+29.8%)',
-      id: 'apt-3f-fresh-air-high-load',
-      location: 'Level 3 西侧设备间',
-      occurredAt: '19:42',
-      recommendation:
-        '运维智能体建议优先处置该异常。先比对近 30 天同时间段基线与实时负荷曲线，再现场核查过滤器压差、阀门开度和送回风温差；若复核后 30 分钟内负荷未回落，建议调整新风策略并升级复核。',
-      severity: 'high',
-      status: '处理中',
-      title: 'BLDG-APT-3F 新风机组 负荷偏高',
-    },
-    {
-      baselineDelta: '+16.4%',
-      currentValue: '78.8 kWh',
-      detail: 'Level 2 公区走廊 · 78.8 kWh(+16.4%)',
-      id: 'apt-2f-lighting-unlocked',
-      location: 'Level 2 公区走廊',
-      occurredAt: '19:18',
-      recommendation: '运维智能体判断为夜间闭锁策略疑似失效。建议调取 21:00-06:00 控制日志，复核定时闭锁、人体感应阈值和回路联动状态，确认后同步修正策略参数。',
-      severity: 'medium',
-      status: '已派单',
-      title: 'BLDG-APT-2F 公区照明回路 夜间未闭锁',
-    },
-    {
-      baselineDelta: '较基线 +6 次/小时',
-      currentValue: '11 次/小时',
-      detail: '地下设备层 · 11 次/小时(较基线 +6 次/小时)',
-      id: 'apt-b1-pump-short-cycle',
-      location: '地下设备层',
-      occurredAt: '18:55',
-      recommendation: '运维智能体判断存在短周期启停风险。建议先校验压差传感器采样，再复核止回阀状态和启停阈值；若启停次数持续高于基线，建议临时收窄告警阈值并持续跟踪。',
-      severity: 'medium',
-      status: '待处理',
-      title: 'BLDG-APT-B1 水泵 频繁启停',
-    },
-    {
-      baselineDelta: '+3.2°C',
-      currentValue: '28.6°C',
-      detail: 'Level 5 · 28.6°C(+3.2)',
-      id: 'apt-5f-ahu-return-temp',
-      location: 'Level 5',
-      occurredAt: '17:30',
-      recommendation: '运维智能体判断回风温度偏离正常区间。建议先核对回风传感器读数，再检查冷冻水阀门开度和末端风量；若温差仍扩大，建议切换为重点监测并复核控制策略。',
-      severity: 'medium',
-      status: '待处理',
-      title: 'BLDG-APT-5F 空调机组 回风温度异常',
-    },
-    {
-      baselineDelta: '较阈值 +0.6 mm/s',
-      currentValue: '4.8 mm/s',
-      detail: '屋面 · 4.8 mm/s(较阈值 +0.6 mm/s)',
-      id: 'apt-rf-cooling-tower-vibration',
-      location: '屋面',
-      occurredAt: '16:12',
-      recommendation: '运维智能体判断为低等级振动偏高。建议纳入巡检队列，重点观察风机轴承、紧固件和基础减振状态；若振动值继续上升，建议提前触发专项检查。',
-      severity: 'low',
-      status: '已确认',
-      title: 'BLDG-APT-RF 屋顶冷却塔 风机振动告警',
-    },
-  ]
-
-  const tasks: OperationsTask[] = [
-    {
-      code: 'WO-BUILDING-031',
-      id: 'work-order-031',
-      progress: 65,
-      status: '处理中',
-      title: '处置 3F 新风机组负荷偏高',
-      assignee: '赵工 · 暖通运维组',
-      due: '今天 16:30',
-    },
-    {
-      code: 'WO-BUILDING-032',
-      id: 'work-order-032',
-      progress: 30,
-      status: '待复核',
-      title: '复核 2F 公区照明回路夜间未闭锁',
-      assignee: '李工 · 照明巡检组',
-      due: '明天 10:00',
-    },
-  ]
+  const operationsSnapshot = getActiveOfficeOperationsSnapshot(projectId)
+  const alerts = operationsSnapshot.activeAlerts.map(mapOfficeAlert)
+  const tasks: OperationsTask[] = [...buildAlertTasks(alerts), ...(additionalTasks ?? [])]
+  const primaryAlert = alerts[0]
 
   const decarbonActions: OperationsDecarbonAction[] = [
     {
       confidence: 0.86,
-      expectedCarbonKg: 10.6,
-      expectedSavingKwh: 18.6,
+      expectedCarbonKg: Number(((alerts[0]?.currentValue ? Number.parseFloat(alerts[0].currentValue) : 0) * 0.12).toFixed(1)),
+      expectedSavingKwh: Number(((alerts[0]?.currentValue ? Number.parseFloat(alerts[0].currentValue) : 0) * 0.21).toFixed(1)),
       id: 'decarbon-3f-fresh-air-review',
-      linkedWorkOrder: 'WO-BUILDING-031',
+      linkedWorkOrder: tasks[0]?.code ?? 'WO-BUILDING-031',
       nextAction: '复核过滤器压差与新风阀开度，确认后调整夜间新风策略。',
       owner: '赵工 · 暖通运维组',
       risk: 'medium',
       source: '智能体问答',
       status: '可执行',
-      title: '3F 新风机组策略复核',
+      title: alerts[0]?.title.includes('新风') ? '18F 新风机组策略复核' : '首要告警策略复核',
     },
     {
       confidence: 0.82,
-      expectedCarbonKg: 7.1,
-      expectedSavingKwh: 12.4,
+      expectedCarbonKg: Number(((alerts[1]?.currentValue ? Number.parseFloat(alerts[1].currentValue) : 0) * 0.1).toFixed(1)),
+      expectedSavingKwh: Number(((alerts[1]?.currentValue ? Number.parseFloat(alerts[1].currentValue) : 0) * 0.18).toFixed(1)),
       id: 'decarbon-2f-lighting-lock',
-      linkedWorkOrder: 'WO-BUILDING-032',
+      linkedWorkOrder: tasks[1]?.code ?? 'WO-BUILDING-032',
       nextAction: '今晚 22:00 下发强制闭锁策略，并回看 21:00-06:00 控制日志。',
       owner: '李工 · 照明巡检组',
       risk: 'low',
       source: '告警中心',
       status: '已关联工单',
       title: '2F 公区照明强制闭锁',
-    },
-    {
-      confidence: 0.74,
-      expectedCarbonKg: 3.3,
-      expectedSavingKwh: 5.9,
-      id: 'decarbon-b1-pump-threshold',
-      linkedWorkOrder: '待纳入巡检项',
-      nextAction: '纳入本周给排水巡检，校准压差传感器采样与启停阈值。',
-      owner: '陈工 · 综合维修组',
-      risk: 'medium',
-      source: '工单进度',
-      status: '待纳入巡检',
-      title: 'B1 水泵启停阈值校准',
     },
   ]
 
@@ -318,13 +276,18 @@ export function buildOperationsDashboardData({
   const metrics = [
     {
       label: '站点健康度',
-      value: '97',
-      detail: '较昨日 +2',
+      value: `${operationsSnapshot.healthScore}`,
+      detail:
+        operationsSnapshot.healthScore >= 85
+          ? '运行稳定'
+          : operationsSnapshot.healthScore >= 72
+            ? '需关注告警闭环'
+            : '需优先处置高优告警',
     },
     {
       label: '活跃告警',
-      value: '5',
-      detail: '高优 1 · 中优 3 · 低优 1',
+      value: `${operationsSnapshot.alertSummary.total}`,
+      detail: `高优 ${operationsSnapshot.alertSummary.high} · 中优 ${operationsSnapshot.alertSummary.medium}`,
     },
     {
       label: '待处理工单',
@@ -354,7 +317,9 @@ export function buildOperationsDashboardData({
   ]
 
   const summary =
-    '运维智能体建议优先处理 BLDG-APT-3F 新风机组负荷偏高。当前负荷 112.4 kWh,较 30 天同时间段基线高 29.8%。处置重点是过滤器压差、阀门开度和送回风温差；今天 16:30 前完成现场复核，若负荷 30 分钟内未回落，同步调整新风策略并升级复核。'
+    primaryAlert
+      ? `运维智能体建议优先处理 ${primaryAlert.title}。当前值 ${primaryAlert.currentValue}，较 30 天同时间段基线 ${primaryAlert.baselineDelta}。处置重点：${primaryAlert.recommendation}`
+      : '当前统一模拟数据集未生成活跃告警，建议保持常规巡检并持续观察能耗基线。'
 
   return {
     alerts,

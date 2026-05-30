@@ -36,6 +36,9 @@ function ResetIcon() {
   )
 }
 
+const cockpitControlClass =
+  'h-10 shrink-0 rounded-md border border-cyan-200/14 bg-[#061522]/72 px-3 text-sm text-cyan-50/88 outline-none shadow-[inset_0_1px_0_rgba(125,249,255,0.08),0_10px_24px_rgba(0,0,0,0.18)] transition-colors hover:border-cyan-200/24 hover:bg-[#082033]/76 focus:border-cyan-200/34'
+
 export interface HostFilterBarProps {
   filters: HostQueryFilters
   levelOptions: HostFilterOption[]
@@ -72,14 +75,14 @@ export default function HostFilterBar({
       <section className="w-full">
         <div className="no-scrollbar flex flex-nowrap items-center justify-start gap-2 overflow-x-auto px-1 py-1.5 whitespace-nowrap">
           <input
-            className="cyber-input h-10 min-w-[220px] shrink-0"
+            className={cn(cockpitControlClass, 'min-w-[220px] placeholder:text-cyan-100/26')}
             onChange={(event) => updateField('keyword', event.target.value)}
             placeholder="搜索楼层/房间/构件"
             value={filters.keyword}
           />
 
           <select
-            className="h-10 min-w-[130px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            className={cn(cockpitControlClass, 'min-w-[140px]')}
             onChange={(event) =>
               onFiltersChange({
                 ...filters,
@@ -98,7 +101,7 @@ export default function HostFilterBar({
           </select>
 
           <select
-            className="h-10 min-w-[130px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            className={cn(cockpitControlClass, 'min-w-[140px]')}
             onChange={(event) => updateField('zoneId', event.target.value)}
             value={filters.zoneId}
           >
@@ -111,7 +114,7 @@ export default function HostFilterBar({
           </select>
 
           <select
-            className="h-10 min-w-[120px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            className={cn(cockpitControlClass, 'min-w-[120px]')}
             onChange={(event) => updateField('timeRange', event.target.value)}
             value={filters.timeRange}
           >
@@ -121,7 +124,7 @@ export default function HostFilterBar({
           </select>
 
           <select
-            className="h-10 min-w-[120px] shrink-0 rounded-xl border border-cyan-300/25 bg-[#0b1018]/80 px-3 text-sm text-cyan-50 outline-none focus:border-cyan-300/45"
+            className={cn(cockpitControlClass, 'min-w-[120px]')}
             onChange={(event) => updateField('energyLevel', event.target.value)}
             value={filters.energyLevel}
           >
@@ -132,7 +135,7 @@ export default function HostFilterBar({
           </select>
 
           <button
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-cyan-300/40 bg-cyan-500/20 px-4 font-medium text-cyan-100 text-sm whitespace-nowrap transition-colors hover:bg-cyan-500/30"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-cyan-200/20 bg-cyan-300/14 px-4 font-semibold text-cyan-50 text-sm whitespace-nowrap shadow-[0_0_18px_rgba(0,245,255,0.10)] transition-colors hover:border-cyan-200/34 hover:bg-cyan-300/20"
             onClick={onQuery}
             type="button"
           >
@@ -140,7 +143,7 @@ export default function HostFilterBar({
           </button>
 
           <button
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-500/60 bg-slate-800/70 px-4 font-medium text-slate-200 text-sm whitespace-nowrap transition-colors hover:bg-slate-700/80"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/7 px-4 font-medium text-slate-200 text-sm whitespace-nowrap transition-colors hover:border-white/18 hover:bg-white/10"
             onClick={() =>
               onFiltersChange({
                 keyword: '',

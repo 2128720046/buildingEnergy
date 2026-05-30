@@ -37,7 +37,7 @@ function ZoneLabelEditor({ zoneId }: { zoneId: ZoneNode['id'] }) {
   // Retries via rAF because the <Html> element from drei may not exist yet at mount time.
   useEffect(() => {
     let cancelled = false
-    let textEl: HTMLElement | undefined
+    let textEl: HTMLElement | null = null
 
     const tryFind = () => {
       const el = document.getElementById(`${zoneId}-label`)
@@ -46,7 +46,7 @@ function ZoneLabelEditor({ zoneId }: { zoneId: ZoneNode['id'] }) {
         return
       }
       setLabelEl(el)
-      textEl = el.children[0] as HTMLElement | undefined
+      textEl = el.querySelector('.zone-name-label') as HTMLElement | null
       if (textEl) textEl.style.display = 'none'
     }
 
@@ -302,6 +302,7 @@ function ZoneLabelEditor({ zoneId }: { zoneId: ZoneNode['id'] }) {
 // ─── System: rendered in the main React tree (outside Canvas) ─────────────────
 
 export function ZoneLabelEditorSystem() {
+  const readOnly = useScene((s) => s.readOnly)
   const zoneIds = useScene(
     useShallow((s) =>
       Object.values(s.nodes)
@@ -309,6 +310,8 @@ export function ZoneLabelEditorSystem() {
         .map((n) => n.id as ZoneNode['id']),
     ),
   )
+
+  if (readOnly) return null
 
   return (
     <>

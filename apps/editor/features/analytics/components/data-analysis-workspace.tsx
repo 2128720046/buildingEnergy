@@ -29,6 +29,7 @@ import type {
   MonitoringStatusBucket,
 } from '@/features/analytics/lib/monitoring-analytics'
 import { buildMonitoringAnalyticsModel } from '@/features/analytics/lib/monitoring-analytics'
+import { OFFICE_ALERTS_CHANGED_EVENT } from '@/features/energy-insights/lib/energy-mock-data'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import { cn } from '@/lib/utils'
 
@@ -139,6 +140,7 @@ function statsFromModel(model: MonitoringAnalyticsModel): GlobalStats {
 
   return {
     ...INITIAL_GLOBAL_STATS,
+    activeAlerts: warning,
     healthScore: model.performanceScore,
     maintenance,
     normal,
@@ -227,47 +229,12 @@ function deriveHourlyInsights(
 }
 
 function normalizeTieredModel(baseModel: MonitoringAnalyticsModel) {
-  const stats = INITIAL_GLOBAL_STATS
-  const peakSnapshot = {
-    ...baseModel.peakSnapshot,
-    buildingId: 'BLDG-C-07',
-    deviceId: 'BLDG-C-07-DEV-15',
-    electricity: 236.8,
-    humidity: 51.2,
-    occupancy: 95.8,
-    temperature: 28.6,
-  }
-
   return withGlobalStats(
     {
       ...baseModel,
-      metrics: updateMetricNumber(
-        updateMetricNumber(
-          updateMetricNumber(baseModel.metrics, '今日累计', 27_606, {
-            decimals: 0,
-            suffix: ' kWh',
-          }),
-          '今日峰值负荷',
-          236.8,
-          {
-            decimals: 1,
-            detail: `${peakSnapshot.buildingId} · ${peakSnapshot.monitorTime}`,
-            suffix: ' kWh',
-          },
-        ),
-        '今日预警',
-        stats.warning,
-        { decimals: 0, suffix: ' 条' },
-      ),
-      peakSnapshot,
       recentRecords: baseModel.recentRecords.slice(0, 10),
-      relationshipInsights: {
-        ...baseModel.relationshipInsights,
-        occupancyCorrelation: 0.8,
-        temperatureCorrelation: 0.64,
-      },
     },
-    stats,
+    statsFromModel(baseModel),
   )
 }
 
@@ -837,9 +804,10 @@ function tableRowTooltip(record: MonitoringRecord) {
 }
 
 function useRealtimeMonitoringModel(projectId: string) {
+  const [alertVersion, setAlertVersion] = useState(0)
   const baseModel = useMemo(
     () => normalizeTieredModel(buildMonitoringAnalyticsModel(projectId)),
-    [projectId],
+    [projectId, alertVersion],
   )
   const [state, setState] = useState<RealtimeModelState>(() => ({
     lastSyncSeconds: 0,
@@ -860,6 +828,12 @@ function useRealtimeMonitoringModel(projectId: string) {
       toasts: [],
     })
   }, [baseModel])
+
+  useEffect(() => {
+    const handleAlertsChanged = () => setAlertVersion((version) => version + 1)
+    window.addEventListener(OFFICE_ALERTS_CHANGED_EVENT, handleAlertsChanged)
+    return () => window.removeEventListener(OFFICE_ALERTS_CHANGED_EVENT, handleAlertsChanged)
+  }, [])
 
   useEffect(() => {
     let tableTimer: number | undefined
@@ -885,32 +859,7 @@ function useRealtimeMonitoringModel(projectId: string) {
               sampleRate: randomInt(24, 36),
             }
 
-            if (newRecord.device_status !== 'warning') return nextState
-
-            const stats = statsFromModel(nextModel)
-            const nextTodayWarnings = getMetricNumber(nextModel.metrics, '今日预警') + 1
-
-            return pushToast(
-              {
-                ...nextState,
-                model: withGlobalStats(
-                  {
-                    ...nextModel,
-                    metrics: updateMetricNumber(nextModel.metrics, '今日预警', nextTodayWarnings, {
-                      decimals: 0,
-                      suffix: ' 条',
-                    }),
-                  },
-                  { ...stats, warning: stats.warning + 1 },
-                ),
-                sampleRate: randomInt(30, 42),
-              },
-              {
-                body: `${newRecord.building_id} 触发预警：电耗 ${newRecord.electricity_kwh.toFixed(1)} kWh`,
-                title: '新监测预警',
-                tone: 'rose',
-              },
-            )
+            return nextState
           })
           scheduleTableInsert()
         },
@@ -921,32 +870,17 @@ function useRealtimeMonitoringModel(projectId: string) {
     const triggerRandomEvent = () => {
       setNonUrgentState((current) => {
         const eventType = randomInt(1, 4)
-        const stats = statsFromModel(current.model)
 
         if (eventType === 1) {
           const warningRecord = makeWarningRecord(Date.now())
-          const nextCurrentWarning = stats.warning + 1
-          const nextTodayWarnings = getMetricNumber(current.model.metrics, '今日预警') + 1
           return pushToast(
             {
               ...current,
               lastSyncSeconds: 0,
-              model: withGlobalStats(
-                {
-                  ...current.model,
-                  metrics: updateMetricNumber(
-                    current.model.metrics,
-                    '今日预警',
-                    nextTodayWarnings,
-                    {
-                      decimals: 0,
-                      suffix: ' 条',
-                    },
-                  ),
-                  recentRecords: [warningRecord, ...current.model.recentRecords].slice(0, 12),
-                },
-                { ...stats, warning: nextCurrentWarning },
-              ),
+              model: {
+                ...current.model,
+                recentRecords: [warningRecord, ...current.model.recentRecords].slice(0, 12),
+              },
               sampleCount: current.sampleCount + 1,
               sampleRate: randomInt(28, 42),
             },
@@ -959,6 +893,7 @@ function useRealtimeMonitoringModel(projectId: string) {
         }
 
         if (eventType === 2) {
+          const stats = statsFromModel(current.model)
           return pushToast(current, {
             body: `共扫描 ${stats.normal + stats.warning + stats.maintenance + stats.offline} 个监测点`,
             title: '系统扫描完成',
@@ -967,40 +902,14 @@ function useRealtimeMonitoringModel(projectId: string) {
         }
 
         if (eventType === 3) {
-          const warningToNormal = stats.warning > 125 && Math.random() > 0.45
-          const nextStats = warningToNormal
-            ? { ...stats, normal: stats.normal + 1, warning: Math.max(0, stats.warning - 1) }
-            : { ...stats, normal: Math.max(0, stats.normal - 1), warning: stats.warning + 1 }
-          const currentTodayWarnings = getMetricNumber(current.model.metrics, '今日预警')
-          const nextTodayWarnings = warningToNormal
-            ? currentTodayWarnings
-            : currentTodayWarnings + 1
-
           return pushToast(
             {
               ...current,
-              model: withGlobalStats(
-                {
-                  ...current.model,
-                  metrics: updateMetricNumber(
-                    current.model.metrics,
-                    '今日预警',
-                    nextTodayWarnings,
-                    {
-                      decimals: 0,
-                      suffix: ' 条',
-                    },
-                  ),
-                },
-                nextStats,
-              ),
             },
             {
-              body: `${LIVE_BUILDINGS[randomInt(0, LIVE_BUILDINGS.length - 1)]!.id} 状态变更：${
-                warningToNormal ? '预警 → 正常' : '正常 → 预警'
-              }`,
+              body: `${LIVE_BUILDINGS[randomInt(0, LIVE_BUILDINGS.length - 1)]!.id} 完成状态巡检`,
               title: '设备状态切换',
-              tone: warningToNormal ? 'emerald' : 'rose',
+              tone: 'emerald',
             },
           )
         }
@@ -1127,34 +1036,12 @@ function useRealtimeMonitoringModel(projectId: string) {
       window.setInterval(
         () => {
           setNonUrgentState((current) => {
-            if (Math.random() < 0.5) return current
-
-            const stats = statsFromModel(current.model)
-            const nextCurrentWarning = stats.warning + 1
-            const nextTodayWarnings = getMetricNumber(current.model.metrics, '今日预警') + 1
             return pushToast(
+              current,
               {
-                ...current,
-                model: withGlobalStats(
-                  {
-                    ...current.model,
-                    metrics: updateMetricNumber(
-                      current.model.metrics,
-                      '今日预警',
-                      nextTodayWarnings,
-                      {
-                        decimals: 0,
-                        suffix: ' 条',
-                      },
-                    ),
-                  },
-                  { ...stats, warning: nextCurrentWarning },
-                ),
-              },
-              {
-                body: `${LIVE_BUILDINGS[randomInt(0, LIVE_BUILDINGS.length - 1)]!.id} 新增预警时段`,
-                title: '预警计数更新',
-                tone: 'rose',
+                body: `统一告警池保持 ${getMetricNumber(current.model.metrics, '今日预警')} 条未闭环告警`,
+                title: '告警口径同步',
+                tone: 'cyan',
               },
             )
           })
@@ -1164,8 +1051,8 @@ function useRealtimeMonitoringModel(projectId: string) {
       window.setInterval(() => {
         setNonUrgentState((current) => {
           const stats = statsFromModel(current.model)
-          const warningDelta = randomInt(-1, 1)
-          const normalDelta = -warningDelta
+          const warningDelta = 0
+          const normalDelta = 0
 
           return {
             ...current,
@@ -1182,10 +1069,16 @@ function useRealtimeMonitoringModel(projectId: string) {
               {
                 ...stats,
                 healthScore: Math.round(
-                  clamp(current.model.performanceScore + randomInt(-1, 1), 72, 97),
+                  clamp(
+                    current.model.performanceScore +
+                      randomInt(-1, 1) -
+                      Math.max(0, stats.warning - 3) * 0.6,
+                    52,
+                    96,
+                  ),
                 ),
                 normal: Math.max(80, stats.normal + normalDelta),
-                warning: Math.max(110, stats.warning + warningDelta),
+                warning: Math.max(0, stats.warning + warningDelta),
               },
             ),
           }

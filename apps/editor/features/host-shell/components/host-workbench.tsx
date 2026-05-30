@@ -41,6 +41,7 @@ import {
   classifyRoomType,
   estimateZoneArea,
 } from '@/features/energy-insights/lib/energy-mock-data'
+import { forceEnergyHighlights } from '@/features/energy-insights/lib/energy-zone-highlight'
 import {
   buildHostQueryModel,
   type HostQueryFilters,
@@ -243,7 +244,7 @@ function HostViewerToolbarRight({
     <div className="flex flex-nowrap items-center gap-2 whitespace-nowrap">
       <DefaultModelingViewerToolbarRight />
       <button
-        className="inline-flex h-8 items-center rounded-xl border border-slate-300/60 bg-slate-900/95 px-3 font-medium text-white text-xs transition-colors hover:bg-slate-800"
+        className="inline-flex h-8 items-center rounded-md border border-cyan-200/12 bg-[#061522]/76 px-3 font-medium text-cyan-50/88 text-xs shadow-[0_10px_28px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(125,249,255,0.08)] transition-colors hover:border-cyan-200/22 hover:bg-cyan-200/8"
         disabled={isImporting}
         onClick={() => inputRef.current?.click()}
         type="button"
@@ -254,8 +255,8 @@ function HostViewerToolbarRight({
         className={cn(
           'inline-flex h-8 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition-colors',
           editEnabled
-            ? 'border-emerald-400/35 bg-emerald-500/15 text-emerald-100 hover:bg-emerald-500/22'
-            : 'border-amber-400/35 bg-amber-500/15 text-amber-100 hover:bg-amber-500/22',
+            ? 'rounded-md border-emerald-300/24 bg-emerald-400/12 text-emerald-100 hover:bg-emerald-400/18'
+            : 'rounded-md border-amber-300/24 bg-amber-300/12 text-amber-100 hover:bg-amber-300/18',
         )}
         onClick={onToggle}
         type="button"
@@ -761,6 +762,7 @@ export default function HostWorkbench({
       levelId: targetLevelId,
       zoneIds,
     }
+    forceEnergyHighlights(zoneIds)
 
     handleWorkspaceChange('energy-query')
     setDraftFilters((prev) => ({
@@ -792,32 +794,40 @@ export default function HostWorkbench({
 
       const targetLevelId = validated.levelId as LevelNode['id']
       const zoneIds = validated.zones.map((zone) => zone.zoneId as ZoneNode['id'])
+      const topZoneId = (validated.topZone.zoneId || zoneIds[0]) as ZoneNode['id']
       pendingLevelZoneHighlightRef.current = {
         levelId: targetLevelId,
         zoneIds,
       }
+      forceEnergyHighlights(zoneIds)
 
       handleWorkspaceChange('energy-query')
       setDraftFilters((prev) => ({
         ...prev,
         levelId: targetLevelId as string,
-        zoneId: '',
+        zoneId: topZoneId as string,
       }))
       setAppliedFilters((prev) => ({
         ...prev,
         levelId: targetLevelId as string,
-        zoneId: '',
+        zoneId: topZoneId as string,
       }))
       setHasQueried(true)
 
       const viewer = useViewer.getState()
       viewer.setSelection({
         levelId: targetLevelId,
-        zoneId: null,
+        zoneId: topZoneId,
         selectedIds: zoneIds,
       })
       viewer.setHoveredId(null)
       viewer.setLevelMode('solo')
+      lastFocusedZoneRef.current = topZoneId
+      requestAnimationFrame(() => {
+        emitter.emit('camera-controls:energy-focus' as any, {
+          nodeId: topZoneId,
+        } as any)
+      })
     },
     [handleWorkspaceChange, nodes],
   )
@@ -947,16 +957,21 @@ export default function HostWorkbench({
 
     if (zoneId) {
       const zoneNode = nodes[zoneId]
+      const pendingHighlight = pendingLevelZoneHighlightRef.current
       const levelId =
         zoneNode?.type === 'zone'
           ? (zoneNode.parentId as LevelNode['id'])
           : ((draftFilters.levelId || null) as LevelNode['id'] | null)
+      const selectedIds =
+        pendingHighlight && pendingHighlight.levelId === levelId
+          ? pendingHighlight.zoneIds
+          : []
 
       if (selection.zoneId !== zoneId || selection.levelId !== (levelId || null)) {
         viewer.setSelection({
           levelId: levelId || null,
           zoneId,
-          selectedIds: [],
+          selectedIds,
         })
         if (isSelectionDebugEnabled()) {
           console.debug('[host-selection-sync] apply zone filter', {
@@ -973,8 +988,17 @@ export default function HostWorkbench({
       viewer.setLevelMode('solo')
 
       if (lastFocusedZoneRef.current !== zoneId) {
-        emitter.emit('camera-controls:focus', { nodeId: zoneId })
+        emitter.emit(
+          pendingHighlight && pendingHighlight.levelId === levelId
+            ? ('camera-controls:energy-focus' as any)
+            : 'camera-controls:focus',
+          { nodeId: zoneId } as any,
+        )
         lastFocusedZoneRef.current = zoneId
+      }
+      if (pendingHighlight && pendingHighlight.levelId === levelId) {
+        forceEnergyHighlights(pendingHighlight.zoneIds)
+        pendingLevelZoneHighlightRef.current = null
       }
       return
     }

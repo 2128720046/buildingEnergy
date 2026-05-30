@@ -58617,7 +58617,7 @@
       "id": "zone_0bt1eqqq6uy0pzex",
       "name": "Lanai",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -59301,7 +59301,7 @@
       "id": "zone_4ksvvnh8k4i85tr3",
       "name": "Lanai",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -60565,7 +60565,7 @@
       "id": "zone_e9z8l8opycwyoa1b",
       "name": "Living room",
       "type": "zone",
-      "color": "#ef4444",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -60749,7 +60749,7 @@
       "id": "zone_gduavxth9lfin14m",
       "name": "Kicthen",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -61845,7 +61845,7 @@
       "id": "zone_pw69r8raou7cqvi4",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#FF3333",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -62233,7 +62233,7 @@
       "id": "zone_utjni4n51ankv7jm",
       "name": "Garage 1",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [
@@ -62585,7 +62585,7 @@
       "id": "zone_xwvi4lsckpyb2nt9",
       "name": "Master bedroom",
       "type": "zone",
-      "color": "#3b82f6",
+      "color": "#0066aa",
       "object": "node",
       "polygon": [
         [

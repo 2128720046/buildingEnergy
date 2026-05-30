@@ -1,6 +1,7 @@
 import type { EnergyAnomalyFocus } from './anomaly-focus'
 import type { EnergyApiResponse } from './energy-api'
 import type { HostQueryResult } from './host-query'
+import { getActiveOfficeOperationsSnapshot } from './energy-mock-data'
 
 export interface EnergyAssistantContext {
   anomalyFocus?: EnergyAnomalyFocus | null
@@ -42,6 +43,7 @@ export function buildEnergyAssistantReply(
   const normalizedMessage = message.trim().toLowerCase()
   const { energyResult, projectId, queryResults, selectedComponentId, selectedComponentName } =
     context
+  const operationsSnapshot = getActiveOfficeOperationsSnapshot(projectId)
 
   if (!energyResult) {
     if (
@@ -96,7 +98,7 @@ export function buildEnergyAssistantReply(
     normalizedMessage.includes('风险') ||
     normalizedMessage.includes('告警')
   ) {
-    return `我对 ${selectedComponentName} 的风险判断是：\n1. 峰值 ${peakPoint.value.toFixed(2)} kWh 出现在 ${peakPoint.time}，这是优先关注时段。\n2. ${resolveTrendDescription(series[0]?.value ?? 0, series.at(-1)?.value ?? 0)}\n3. 当前功率 ${energyResult.currentPower.toFixed(1)} kW，建议和设备额定功率做一次阈值比对，决定是否生成运维告警。`
+    return `我对 ${selectedComponentName} 的风险判断是：\n1. 峰值 ${peakPoint.value.toFixed(2)} kWh 出现在 ${peakPoint.time}，这是优先关注时段。\n2. ${resolveTrendDescription(series[0]?.value ?? 0, series.at(-1)?.value ?? 0)}\n3. 当前统一告警池有 ${operationsSnapshot.alertSummary.total} 条活跃告警，站点健康度 ${operationsSnapshot.healthScore} 分；建议优先闭环高优告警，再复核该设备阈值。`
   }
 
   if (
@@ -112,5 +114,5 @@ export function buildEnergyAssistantReply(
     return `当前筛选结果里更值得关注的对象有：\n${formatTopConsumers(topConsumers)}\n如果你愿意，我下一步可以继续帮你按楼层或房间解释这些对象为什么会排在前面。`
   }
 
-  return `这里是我对 ${selectedComponentName}${selectedComponentId ? `（${selectedComponentId}）` : ''} 的快速结论：\n1. 当前功率 ${energyResult.currentPower.toFixed(1)} kW，今天累计 ${energyResult.todayUsage.toFixed(1)} kWh，本月累计 ${energyResult.monthUsage.toFixed(1)} kWh。\n2. 峰值时段在 ${peakPoint.time}，谷值时段在 ${valleyPoint.time}，平均时段负荷 ${averageValue.toFixed(2)} kWh。\n3. 如果你要继续追问，我建议下一句直接问我“峰值为什么高”“给我优化建议”或“列出高耗能排行”。`
+  return `这里是我对 ${selectedComponentName}${selectedComponentId ? `（${selectedComponentId}）` : ''} 的快速结论：\n1. 当前功率 ${energyResult.currentPower.toFixed(1)} kW，今天累计 ${energyResult.todayUsage.toFixed(1)} kWh，本月累计 ${energyResult.monthUsage.toFixed(1)} kWh。\n2. 峰值时段在 ${peakPoint.time}，谷值时段在 ${valleyPoint.time}，平均时段负荷 ${averageValue.toFixed(2)} kWh。\n3. 统一告警池当前 ${operationsSnapshot.alertSummary.total} 条，站点健康度 ${operationsSnapshot.healthScore} 分；继续追问可直接问“峰值为什么高”“给我优化建议”或“列出高耗能排行”。`
 }

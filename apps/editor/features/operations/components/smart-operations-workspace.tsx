@@ -29,6 +29,7 @@ import {
 } from '@/features/analytics/components/dashboard-tooltip'
 import type { AssistantWorkOrderDraft } from '@/features/energy-insights/components/energy-assistant-chat'
 import type { EnergyApiResponse } from '@/features/energy-insights/lib/energy-api'
+import { markOfficeAlertResolved } from '@/features/energy-insights/lib/energy-mock-data'
 import type { HostQueryResult } from '@/features/energy-insights/lib/host-query'
 import { useNow } from '@/features/host-shell/lib/time-store'
 import {
@@ -36,6 +37,7 @@ import {
   type MobileAlertReport,
   type MobileUploadedWorkOrder,
   type OperationsAlert,
+  type OperationsDashboardData,
   type OperationsDecarbonAction,
   type OperationsOperator,
   type OperationsTask,
@@ -105,35 +107,6 @@ const QUICK_PROMPTS = [
 
 const DEFAULT_AGENT_QUESTION = '总结当前能耗情况'
 
-const DEFAULT_AGENT_ANSWER = `【问题理解】
-快速掌握公寓楼当前整体能耗状况与异常点。
-
-【核心结论】
-整体能耗在合理区间,但有 2 个重点异常:BLDG-APT-3F 新风机组负荷
-高于基线 29.8%,需优先处置;2F 公区照明夜间未按计划闭锁,产生
-16.4% 的无效负荷。
-
-【分析依据】
-● 数据依据:近 1 小时新风机组负荷 112.4 kWh(基线 86.6 kWh);
-  2F 公区照明夜间负荷 78.8 kWh(基线 67.7 kWh)。
-● 知识依据:基线取自过去 30 天同时段加权平均。
-
-【原因分析】
-● 新风机组:阀门开度异常或过滤器压差超标,导致风机长时间高频运转
-  (可能性高)。
-● 公区照明:人体感应阈值过低或定时控制策略失效,触发夜间常亮
-  (可能性中)。
-
-【排查与优化建议】
-● 排查步骤:
-  1. 现场核查 3F 新风机组过滤器压差与送回风温差
-  2. 调取 2F 照明回路 21:00–06:00 控制日志
-● 优化措施:
-  - 短期:推进工单 WO-BUILDING-031,今晚前完成新风机组复核;
-    调整 2F 公区照明定时策略至 22:00 强制闭锁
-  - 中长期:为新风机组增配振动传感器,接入预测性维护模型;
-    统一公区照明人体感应阈值标准`
-
 const ANSWER_BANK: Record<string, AgentAnswer> = {
   派发工单: {
     followUps: ['总结当前能耗情况', '列出当前高能耗设备'],
@@ -143,40 +116,11 @@ const ANSWER_BANK: Record<string, AgentAnswer> = {
   },
   总结当前能耗情况: {
     followUps: ['新风机组的能耗趋势怎么样?', '怎么排查照明回路夜间未闭锁?'],
-    text: `【问题理解】
-快速复盘当前运行负荷和未闭环异常。
-【核心结论】
-站点健康度 97 分,活跃告警 5 条。
-当前优先级最高的是 3F 新风机组。
-【分析依据】
-● 新风机组当前 112.4 kWh,高于基线 29.8%。
-● 2F 公区照明当前 78.8 kWh,高于基线 16.4%。
-【原因分析】
-● 暖通侧更像过滤器压差或阀门开度问题。
-● 照明侧更像夜间闭锁策略未生效。
-【排查与优化建议】
-● 今天先推进 WO-BUILDING-031。
-● 同步复核 WO-BUILDING-032 的夜间控制日志。
-● B1 水泵和 5F 空调机组纳入当班巡检清单。`,
+    text: '从当前统一告警池、健康分和工单状态生成摘要。',
   },
   '峰值出现在什么时段?': {
     followUps: ['新风机组的能耗趋势怎么样?', '列出当前高能耗设备'],
-    text: `【问题理解】
-定位今天能耗峰值的时间窗口和主因设备。
-【核心结论】
-峰值集中在 19:00-20:00。
-峰值主要由 3F 新风机组和 2F 公区照明叠加造成。
-【分析依据】
-● 19:42 新风机组负荷达到 112.4 kWh。
-● 19:18 公区照明负荷达到 78.8 kWh。
-● 两项异常都高于过去 30 天同时段基线。
-【原因分析】
-● 新风机组可能在晚高峰后仍保持高频运行。
-● 照明回路未闭锁扩大了夜间底负荷。
-【排查与优化建议】
-● 先核对 18:30-20:30 的设备启停记录。
-● 检查新风阀门开度是否自动回落。
-● 将 2F 照明 22:00 强制闭锁策略今晚生效。`,
+    text: '从当前首要告警的发生时间和告警详情生成峰值解释。',
   },
   给我三条优化建议: {
     followUps: ['怎么排查照明回路夜间未闭锁?', '列出当前高能耗设备'],
@@ -198,59 +142,15 @@ const ANSWER_BANK: Record<string, AgentAnswer> = {
   },
   列出当前高能耗设备: {
     followUps: ['新风机组的能耗趋势怎么样?', '峰值出现在什么时段?'],
-    text: `【问题理解】
-列出当前最影响能耗的设备和处理顺序。
-【核心结论】
-当前高能耗设备有 4 类。
-首位是 BLDG-APT-3F 新风机组。
-【分析依据】
-● 3F 新风机组:112.4 kWh,+29.8%。
-● 2F 公区照明回路:78.8 kWh,+16.4%。
-● 5F 空调机组:回风温度 28.6°C,+3.2°C。
-● B1 水泵:11 次/小时,启停频次偏高。
-【原因分析】
-● 暖通负荷和照明底负荷共同抬高晚间总负荷。
-【排查与优化建议】
-● 先处理新风机组,再复核照明闭锁。
-● 空调回风和水泵启停纳入当班复核。`,
+    text: '从当前告警中心排序生成高能耗设备列表。',
   },
   '新风机组的能耗趋势怎么样?': {
     followUps: ['峰值出现在什么时段?', '给我三条优化建议'],
-    text: `【问题理解】
-判断 3F 新风机组是短时波动还是持续偏高。
-【核心结论】
-近 1 小时呈持续高位,不是单个采样点异常。
-当前 112.4 kWh,较 86.6 kWh 基线高 29.8%。
-【分析依据】
-● 告警发生在 19:42,状态为处理中。
-● 工单 WO-BUILDING-031 已推进到 65%。
-● 偏差幅度超过当班复核阈值。
-【原因分析】
-● 过滤器压差超标会抬高风机功率。
-● 阀门开度异常会导致系统持续补风。
-【排查与优化建议】
-● 现场复核过滤器压差、送回风温差和电流。
-● 若压差超标,本周内完成过滤器更换。
-● 复核后观察 30 分钟负荷是否回落。`,
+    text: '从当前新风/暖通告警详情生成趋势判断。',
   },
   '怎么排查照明回路夜间未闭锁?': {
     followUps: ['列出当前高能耗设备', '给我三条优化建议'],
-    text: `【问题理解】
-给出 2F 公区照明夜间常亮的排查路径。
-【核心结论】
-优先检查时控策略,再检查人体感应阈值。
-当前负荷 78.8 kWh,较基线高 16.4%。
-【分析依据】
-● 告警发生在 19:18,状态为已派单。
-● 关联工单 WO-BUILDING-032 进度 30%。
-● 异常位置为 Level 2 公区走廊。
-【原因分析】
-● 定时闭锁未下发会导致夜间常亮。
-● 感应阈值过低会频繁触发照明保持。
-【排查与优化建议】
-● 调取 21:00-06:00 控制日志。
-● 抽查网关策略是否覆盖该回路。
-● 今晚将 22:00 强制闭锁策略先行生效。`,
+    text: '从当前照明告警详情生成闭锁策略排查路径。',
   },
 }
 
@@ -708,7 +608,7 @@ const AlertCenter = memo(function AlertCenter({
       icon={<AlertTriangle className="h-5 w-5" strokeWidth={1.8} />}
       rightSlot={
         <div className="flex items-center gap-2">
-          <StatusBadge tone="rose">5 条活跃</StatusBadge>
+          <StatusBadge tone="rose">{alerts.length} 条活跃</StatusBadge>
           <button className="operations-one-click-btn" onClick={onOneClickDispatch} type="button">
             一键派发
           </button>
@@ -1379,31 +1279,122 @@ function TypingText({
   return <>{visible}</>
 }
 
-function buildFallbackAnswer(prompt: string): AgentAnswer {
+function firstAlertSummary(alerts: OperationsAlert[]) {
+  const alert = alerts[0]
+  if (!alert) return '当前没有未闭环告警。'
+  return `${alert.title}，当前值 ${alert.currentValue}，较基线 ${alert.baselineDelta}。`
+}
+
+function buildContextualAnswer(prompt: string, dashboard: OperationsDashboardData): AgentAnswer {
+  const health = metricValue(dashboard.metrics, '站点健康度', 72)
+  const highAlerts = dashboard.alerts.filter((alert) => alert.severity === 'high').length
+  const mediumAlerts = dashboard.alerts.filter((alert) => alert.severity === 'medium').length
+  const alertCount = dashboard.alerts.length
+  const primary = dashboard.alerts[0]
+  const secondary = dashboard.alerts[1]
+  const topAlertLines = dashboard.alerts
+    .slice(0, 4)
+    .map((alert) => `● ${alert.title}:${alert.currentValue},${alert.baselineDelta}。`)
+    .join('\n')
+
+  if (prompt === '总结当前能耗情况') {
+    return {
+      followUps: ['峰值出现在什么时段?', '列出当前高能耗设备'],
+      text: `【问题理解】
+快速复盘当前运行负荷和未闭环异常。
+【核心结论】
+站点健康度 ${health} 分,活跃告警 ${alertCount} 条。
+当前优先级最高的是${primary ? primary.title : '暂无高优告警'}。
+【分析依据】
+${topAlertLines || '● 当前统一告警池为空。'}
+【原因分析】
+● 健康分按未闭环告警数量、优先级和设备状态扣减，不再使用固定高分。
+【排查与优化建议】
+● 先闭环高优告警 ${highAlerts} 条。
+● 同步复核中优告警 ${mediumAlerts} 条的控制策略和现场读数。`,
+    }
+  }
+
+  if (prompt === '峰值出现在什么时段?') {
+    return {
+      followUps: ['总结当前能耗情况', '给我三条优化建议'],
+      text: `【问题理解】
+定位今天能耗峰值的时间窗口和主因设备。
+【核心结论】
+当前峰值优先看 ${primary?.occurredAt ?? '--:--'} 附近。
+【分析依据】
+● ${firstAlertSummary(dashboard.alerts)}
+${secondary ? `● 次要异常:${secondary.title}，发生在 ${secondary.occurredAt}。` : ''}
+【排查与优化建议】
+● 核对峰值前后 30 分钟设备启停记录。
+● 复核对应回路和暖通策略是否按计划回落。`,
+    }
+  }
+
+  if (prompt === '列出当前高能耗设备') {
+    return {
+      followUps: ['总结当前能耗情况', '给我三条优化建议'],
+      text: `【问题理解】
+列出当前最影响能耗的设备和处理顺序。
+【核心结论】
+当前统一告警池共有 ${alertCount} 个高能耗/运行异常对象。
+【分析依据】
+${topAlertLines || '● 当前没有高能耗告警对象。'}
+【排查与优化建议】
+● 按高优先级到中优先级依次派单。
+● 处理后观察能耗查询页告警数是否同步下降。`,
+    }
+  }
+
+  if (prompt === '给我三条优化建议') {
+    return {
+      followUps: ['总结当前能耗情况', '派发工单'],
+      text: `【问题理解】
+给出可执行、能落到班组的优化动作。
+【核心结论】
+建议先做 3 项:高优告警复核、照明/空调策略闭环、健康分回归复盘。
+【分析依据】
+● 当前活跃告警 ${alertCount} 条,站点健康度 ${health} 分。
+● 高优 ${highAlerts} 条,中优 ${mediumAlerts} 条。
+【排查与优化建议】
+● 优先处理:${firstAlertSummary(dashboard.alerts)}
+● 将所有已派工单回填为闭环后,能耗查询页告警数会同步下降。
+● 复核第二天同时间段负荷是否回到基线附近。`,
+    }
+  }
+
+  return buildFallbackAnswer(prompt, dashboard)
+}
+
+function buildFallbackAnswer(prompt: string, dashboard?: OperationsDashboardData): AgentAnswer {
+  const alertCount = dashboard?.alerts.length ?? 0
+  const taskCount = dashboard?.tasks.length ?? 0
   return {
     followUps: ['总结当前能耗情况', '给我三条优化建议'],
     text: `【问题理解】
 你想确认:${prompt}
 【核心结论】
-当前先按 5 条活跃告警和 2 条待处理工单处置。
+当前先按 ${alertCount} 条活跃告警和 ${taskCount} 条待处理工单处置。
 【分析依据】
-● 高优告警为 3F 新风机组负荷偏高。
-● 两张工单均未超期。
+● 告警数量来自统一模拟数据集。
+● 工单数量来自当前告警派生和手动新增工单。
 【原因分析】
-● 当前主要风险来自暖通负荷和夜间照明策略。
+● 当前主要风险来自未闭环告警对应的能耗或环境偏离。
 【排查与优化建议】
-● 优先查看 WO-BUILDING-031。
-● 同步复核 WO-BUILDING-032。
+● 优先查看高优告警。
+● 同步复核已派发工单。
 ● 处理后再观察 30 分钟负荷回落情况。`,
   }
 }
 
 const AgentChat = memo(function AgentChat({
   agentPulse,
+  dashboard,
   onOneClickDispatch,
   trigger,
 }: {
   agentPulse: boolean
+  dashboard: OperationsDashboardData
   onOneClickDispatch: () => void
   trigger?: AgentTrigger | null
 }) {
@@ -1418,7 +1409,7 @@ const AgentChat = memo(function AgentChat({
       role: 'user',
     },
     {
-      content: DEFAULT_AGENT_ANSWER,
+      content: buildContextualAnswer(DEFAULT_AGENT_QUESTION, dashboard).text,
       followUps: ['新风机组的能耗趋势怎么样?', '怎么排查照明回路夜间未闭锁?'],
       id: 'assistant-default-summary',
       role: 'assistant',
@@ -1465,7 +1456,7 @@ const AgentChat = memo(function AgentChat({
     const prompt = rawPrompt.trim()
     if (!prompt || thinking) return
 
-    const answer = overrideAnswer ?? ANSWER_BANK[prompt] ?? buildFallbackAnswer(prompt)
+    const answer = overrideAnswer ?? buildContextualAnswer(prompt, dashboard)
     messageSequenceRef.current += 1
     const messageKey = `${Date.now()}-${messageSequenceRef.current}`
     const assistantId = `assistant-${messageKey}`
@@ -1498,7 +1489,7 @@ const AgentChat = memo(function AgentChat({
       requestChatScroll()
       window.setTimeout(() => setActivePrompt(null), 520)
     }, 5000)
-  }, [onOneClickDispatch, requestChatScroll, thinking])
+  }, [dashboard, onOneClickDispatch, requestChatScroll, thinking])
 
   useEffect(() => {
     if (!trigger) return
@@ -1854,7 +1845,7 @@ const OperationsStatusBar = memo(function OperationsStatusBar({
           {...tooltipAttrs({
             rows: [
               { label: '累计口径', value: '今日 00:00 至当前全部新增告警' },
-              { label: '活跃口径', value: '当前未闭环告警 5 条' },
+              { label: '活跃口径', value: `当前未闭环告警 ${todayAlerts} 条` },
             ],
             title: '今日新增告警口径',
           })}
@@ -1978,6 +1969,7 @@ export default function SmartOperationsWorkspace({
   const [reviewedMobileOrderIds, setReviewedMobileOrderIds] = useState<string[]>([])
   const [rejectionOpinions, setRejectionOpinions] = useState<Record<string, string>>({})
   const [manualTasks, setManualTasks] = useState<LiveTask[]>([])
+  const [resolvedPlatformAlertIds, setResolvedPlatformAlertIds] = useState<string[]>([])
   const [mobileDetail, setMobileDetail] = useState<MobileDetailState>(null)
   const [dispatchPlan, setDispatchPlan] = useState<DispatchPlanItem[]>([])
   const [adoptedDecarbonActionIds, setAdoptedDecarbonActionIds] = useState<string[]>([])
@@ -2042,17 +2034,19 @@ export default function SmartOperationsWorkspace({
 
   const liveAlerts = useMemo<LiveAlert[]>(
     () =>
-      dashboard.alerts.map((alert, index) => ({
-        ...alert,
-        status:
-          manualTasks.some((task) => task.linkedAlertId === alert.id) || index < 2
-            ? '已派单'
-            : alert.status,
-        linkedTaskId:
-          manualTasks.find((task) => task.linkedAlertId === alert.id)?.id ??
-          (index < 2 ? liveTasks[index]?.id : undefined),
-      })),
-    [dashboard.alerts, liveTasks, manualTasks],
+      dashboard.alerts
+        .filter((alert) => !resolvedPlatformAlertIds.includes(alert.id))
+        .map((alert, index) => ({
+          ...alert,
+          status:
+            manualTasks.some((task) => task.linkedAlertId === alert.id) || index < 2
+              ? '已派单'
+              : alert.status,
+          linkedTaskId:
+            manualTasks.find((task) => task.linkedAlertId === alert.id)?.id ??
+            (index < 2 ? liveTasks[index]?.id : undefined),
+        })),
+    [dashboard.alerts, liveTasks, manualTasks, resolvedPlatformAlertIds],
   )
 
   const mobileAlerts = useMemo(
@@ -2173,6 +2167,16 @@ export default function SmartOperationsWorkspace({
     }, 1800)
   }
 
+  const resolvePlatformAlert = useCallback(
+    (alertId: string) => {
+      setResolvedPlatformAlertIds((current) =>
+        current.includes(alertId) ? current : [...current, alertId],
+      )
+      markOfficeAlertResolved(projectId, alertId)
+    },
+    [projectId],
+  )
+
   const adoptDecarbonAction = (action: OperationsDecarbonAction) => {
     setAdoptedDecarbonActionIds((current) => (current.includes(action.id) ? current : [...current, action.id]))
 
@@ -2239,13 +2243,14 @@ export default function SmartOperationsWorkspace({
         due: item.due,
         opinion: item.opinion,
       })
+      window.setTimeout(() => resolvePlatformAlert(item.alert.id), 1200)
     })
     setDispatchPlan([])
     setMobileDispatchStatus('已发至手机端')
     window.setTimeout(() => setMobileDispatchStatus('手机端处理中'), 1200)
   }
 
-  const activeAlertCount = liveAlerts.length + mobileAlerts.filter((alert) => alert.status !== '已受理').length
+  const activeAlertCount = liveAlerts.length
   const pendingTaskCount =
     liveTasks.length + dashboard.mobileWorkOrders.filter((order) => !reviewedOrderIdSet.has(order.id)).length
 
@@ -2254,7 +2259,7 @@ export default function SmartOperationsWorkspace({
       detail: dashboard.metrics.find((metric) => metric.label === '站点健康度')?.detail ?? '较昨日 +2',
       icon: <ShieldCheck className="h-7 w-7" strokeWidth={1.7} />,
       label: '站点健康度',
-      numeric: metricValue(dashboard.metrics, '站点健康度', 97),
+      numeric: metricValue(dashboard.metrics, '站点健康度', 72),
       suffix: '分',
       tone: 'cyan' as const,
     },
@@ -2413,6 +2418,7 @@ export default function SmartOperationsWorkspace({
             />
             <AgentChat
               agentPulse={agentPulse}
+              dashboard={dashboard}
               onOneClickDispatch={() => openDispatchPlan()}
               trigger={agentTrigger}
             />
@@ -2430,7 +2436,7 @@ export default function SmartOperationsWorkspace({
           doneTasks={8 + reviewedOrderIdSet.size}
           lastSyncSeconds={lastSyncSeconds}
           operators={operators}
-          todayAlerts={237 + dashboard.mobileAlerts.length}
+          todayAlerts={activeAlertCount}
         />
       </div>
     </div>

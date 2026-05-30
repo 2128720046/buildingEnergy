@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import NumberFlow from '@number-flow/react'
-import { type AnyNode, useScene } from '@pascal-app/core'
+import { emitter, type AnyNode, useScene } from '@pascal-app/core'
 import { useEditor, type ViewMode } from '@pascal-app/editor'
 import type { EChartsCoreOption as EChartsOption } from 'echarts/core'
 import ReactEChartsCore from 'echarts-for-react/lib/core'
@@ -21,9 +21,11 @@ import {
   type ComponentProps,
   memo,
   type ReactNode,
+  type WheelEvent,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { BevelCard } from '@/features/analytics/components/dashboard-primitives'
@@ -32,6 +34,13 @@ import EnergyAssistantChat from '@/features/energy-insights/components/energy-as
 import EnergyTimelineStrip, {
   type TimelineState,
 } from '@/features/energy-insights/components/energy-timeline-strip'
+import {
+  ENERGY_OVERLAY_TIMELINE_EVENT,
+  ENERGY_OVERLAY_TIMELINE_GLOBAL,
+  ENERGY_OVERLAY_ZONE_RESOLVER_GLOBAL,
+  type EnergyOverlayTimelineState,
+  type EnergyOverlayZoneSnapshotResolver,
+} from '@pascal-app/editor/energy-overlay-state'
 import FloorHeatmapOverlay from '@/features/energy-insights/components/floor-heatmap-overlay'
 import {
   buildAnomalyFocusFromHeatmap,
@@ -47,7 +56,12 @@ import type {
   RankingItem,
   WeeklyTrendData,
 } from '@/features/energy-insights/lib/energy-dashboard-data'
-import { buildDashboardData } from '@/features/energy-insights/lib/energy-dashboard-data'
+import {
+  buildDashboardData,
+  buildScopeHourlyAggregate,
+  buildZoneOverlaySnapshot,
+} from '@/features/energy-insights/lib/energy-dashboard-data'
+import { OFFICE_ALERTS_CHANGED_EVENT } from '@/features/energy-insights/lib/energy-mock-data'
 import {
   buildPrediction,
   type EditImpact,
@@ -59,7 +73,6 @@ import {
 } from '@/features/energy-insights/lib/energy-zone-highlight'
 import {
   buildFloorHeatmapData,
-  buildFloorHourlyAggregate,
 } from '@/features/energy-insights/lib/floor-heatmap'
 import type {
   HostFilterOption,
@@ -71,8 +84,6 @@ import { cn } from '@/lib/utils'
 
 const RIGHT_CHART_RAIL_WIDTH = 360
 const ASSISTANT_PANEL_WIDTH = 400
-const EDITOR_PANEL_AVOID_GAP = 20
-const EDITOR_PANEL_AVOID_VAR = '--host-editor-panel-avoid-right'
 const COCKPIT_SIDE_RAIL_WIDTH = 'clamp(280px, 22vw, 360px)'
 const BOTTOM_CENTER_OVERLAY_WIDTH = `calc(100% - ${COCKPIT_SIDE_RAIL_WIDTH} - ${COCKPIT_SIDE_RAIL_WIDTH} - 80px)`
 const ECHARTS_CANVAS_DPR =
@@ -86,6 +97,10 @@ const CHART_STATIC_PERF = {
   animationDuration: 0,
   animationDurationUpdate: 0,
 } as const
+
+function stopWheelPropagation(event: WheelEvent<HTMLElement>) {
+  event.stopPropagation()
+}
 
 const ReactECharts = memo(function ReactECharts(props: ComponentProps<typeof ReactEChartsCore>) {
   return (
@@ -409,10 +424,11 @@ function buildCompositionDonut(c: CompositionData): EChartsOption {
 
 function buildRankingBar(items: RankingItem[]): EChartsOption {
   if (items.length === 0) return {}
+  const maxNameLength = Math.max(...items.map((item) => item.name.length))
   return {
     backgroundColor: 'transparent',
     ...CHART_STATIC_PERF,
-    grid: { top: 8, right: 18, bottom: 8, left: 78 },
+    grid: { top: 8, right: 18, bottom: 8, left: Math.min(128, Math.max(96, maxNameLength * 7)) },
     xAxis: {
       type: 'value',
       splitLine: splitLine(),
@@ -426,8 +442,10 @@ function buildRankingBar(items: RankingItem[]): EChartsOption {
       axisLabel: {
         ...chartAxisLabel(DASHBOARD_FONTS.cn),
         color: LABEL,
-        width: 68,
-        overflow: 'truncate',
+        interval: 0,
+        width: Math.min(118, Math.max(86, maxNameLength * 7)),
+        overflow: 'break',
+        lineHeight: 14,
       },
       axisTick: { show: false },
       axisLine: { show: false },
@@ -662,29 +680,59 @@ function buildPredictionOption(
 
 /** 数字过渡动画包装 */
 const AnimatedValue = memo(function AnimatedValue({
+  animate = true,
   value,
   suffix = '',
   className = '',
 }: {
+  animate?: boolean
   value: number
   suffix?: string
   className?: string
 }) {
+  const formatted = new Intl.NumberFormat('zh-CN', {
+    notation: 'compact',
+    maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2,
+  }).format(value)
+
   return (
     <span className={cn('inline-flex items-baseline gap-0.5', className)}>
-      <NumberFlow
-        value={value}
-        format={{
-          notation: 'compact',
-          maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2,
-        }}
-        locales="zh-CN"
-        willChange
-      />
+      {animate ? (
+        <NumberFlow
+          value={value}
+          format={{
+            notation: 'compact',
+            maximumFractionDigits: value >= 100 ? 0 : value >= 10 ? 1 : 2,
+          }}
+          locales="zh-CN"
+          willChange
+        />
+      ) : (
+        formatted
+      )}
       {suffix ? <span className="text-[0.55em] opacity-60">{suffix}</span> : null}
     </span>
   )
 })
+
+function MaybeNumberFlow({
+  animate,
+  format,
+  value,
+}: {
+  animate: boolean
+  format?: {
+    maximumFractionDigits?: number
+    minimumFractionDigits?: number
+    notation?: 'standard' | 'compact'
+  }
+  value: number
+}) {
+  if (!animate) {
+    return <>{new Intl.NumberFormat('zh-CN', format).format(value)}</>
+  }
+  return <NumberFlow format={format} value={value} />
+}
 
 const CardHeader = memo(function CardHeader({
   action,
@@ -813,6 +861,11 @@ export default function EnergyTwinDashboard({
   editSnapshot,
 }: EnergyTwinDashboardProps) {
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const [alertVersion, setAlertVersion] = useState(0)
+  const [heatmapDismissedLevelId, setHeatmapDismissedLevelId] = useState<string | null>(null)
+  const [timelinePlaying, setTimelinePlaying] = useState(false)
+  const previousAnomalyZonesRef = useRef<Set<string>>(new Set())
+  const lastFocusedAnomalyRef = useRef<string | null>(null)
   const sceneNodes = useScene((state) => state.nodes) as Record<string, AnyNode>
   const readOnly = useScene((state) => state.readOnly)
 
@@ -823,6 +876,41 @@ export default function EnergyTwinDashboard({
 
   const [timelineDate, setTimelineDate] = useState(todayStr)
   const [timelineHour, setTimelineHour] = useState(() => new Date().getHours())
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    ;(window as unknown as Record<string, unknown>)[ENERGY_OVERLAY_TIMELINE_GLOBAL] = {
+      date: timelineDate,
+      hour: timelineHour,
+    }
+    window.dispatchEvent(
+      new CustomEvent(ENERGY_OVERLAY_TIMELINE_EVENT, {
+        detail: { date: timelineDate, hour: timelineHour },
+      }),
+    )
+  }, [timelineDate, timelineHour])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const resolver: EnergyOverlayZoneSnapshotResolver = (
+      zoneId: string,
+      state: EnergyOverlayTimelineState,
+    ) => buildZoneOverlaySnapshot(sceneNodes, zoneId, state.date)
+    ;(window as unknown as Record<string, unknown>)[ENERGY_OVERLAY_ZONE_RESOLVER_GLOBAL] =
+      resolver
+    return () => {
+      const globals = window as unknown as Record<string, unknown>
+      if (globals[ENERGY_OVERLAY_ZONE_RESOLVER_GLOBAL] === resolver) {
+        delete globals[ENERGY_OVERLAY_ZONE_RESOLVER_GLOBAL]
+      }
+    }
+  }, [sceneNodes])
+
+  useEffect(() => {
+    const handleAlertsChanged = () => setAlertVersion((version) => version + 1)
+    window.addEventListener(OFFICE_ALERTS_CHANGED_EVENT, handleAlertsChanged)
+    return () => window.removeEventListener(OFFICE_ALERTS_CHANGED_EVENT, handleAlertsChanged)
+  }, [])
 
   const handleTimelineChange = useCallback(
     (state: TimelineState) => {
@@ -852,35 +940,80 @@ export default function EnergyTwinDashboard({
 
   // 联动 3D 场景 zone 颜色：高能耗区变红
   useEffect(() => {
-    if (!floorHeatmapData) {
+    if (!floorHeatmapData || !filters.levelId) {
       resetAllEnergyHighlights()
+      previousAnomalyZonesRef.current = new Set()
+      lastFocusedAnomalyRef.current = null
       return
     }
-    applyEnergyHighlights(
-      floorHeatmapData.zones.map((z) => ({
-        zoneId: z.zoneId,
-        normalizedEnergy: z.normalizedEnergy,
-      })),
+    const previousHourData = buildFloorHeatmapData(sceneNodes, filters.levelId, queryResults, {
+      targetDate: timelineDate,
+      targetHour: (timelineHour + 23) % 24,
+    })
+    const previousEnergyByZone = new Map(
+      previousHourData?.zones.map((zone) => [zone.zoneId, zone.totalEnergy]) ?? [],
     )
-  }, [floorHeatmapData])
+    const anomalyZones = new Set(
+      floorHeatmapData.zones
+        .filter((zone) => zone.normalizedEnergy > 0.7)
+        .map((zone) => zone.zoneId),
+    )
+    const previousAnomalyZones = previousAnomalyZonesRef.current
+    if (lastFocusedAnomalyRef.current && !anomalyZones.has(lastFocusedAnomalyRef.current)) {
+      lastFocusedAnomalyRef.current = null
+    }
+    const newAnomaly = floorHeatmapData.zones.find(
+      (zone) => anomalyZones.has(zone.zoneId) && !previousAnomalyZones.has(zone.zoneId),
+    )
+
+    const overlayZoneIds = new Set([...anomalyZones, ...previousAnomalyZones])
+
+    applyEnergyHighlights(
+      floorHeatmapData.zones.filter((zone) => overlayZoneIds.has(zone.zoneId)).map((zone) => {
+        const previousEnergy = previousEnergyByZone.get(zone.zoneId) ?? zone.totalEnergy
+        const deltaKwh = Number((zone.totalEnergy - previousEnergy).toFixed(2))
+        const deltaPct =
+          previousEnergy > 0 ? Number(((deltaKwh / previousEnergy) * 100).toFixed(1)) : 0
+        return {
+          currentKwh: Number(zone.totalEnergy.toFixed(2)),
+          deltaKwh,
+          deltaPct,
+          normalizedEnergy: zone.normalizedEnergy,
+          zoneId: zone.zoneId,
+        }
+      }),
+    )
+
+    if (timelinePlaying && newAnomaly && lastFocusedAnomalyRef.current !== newAnomaly.zoneId) {
+      lastFocusedAnomalyRef.current = newAnomaly.zoneId
+      emitter.emit('camera-controls:energy-focus' as any, {
+        nodeId: newAnomaly.zoneId,
+      } as any)
+    }
+
+    previousAnomalyZonesRef.current = anomalyZones
+  }, [
+    floorHeatmapData,
+    filters.levelId,
+    queryResults,
+    sceneNodes,
+    timelineDate,
+    timelineHour,
+    timelinePlaying,
+  ])
 
   const hourlySamples = useMemo(() => {
-    if (!filters.levelId) return null
-    return buildFloorHourlyAggregate(sceneNodes, filters.levelId, timelineDate)
-  }, [sceneNodes, filters.levelId, timelineDate])
+    return buildScopeHourlyAggregate(sceneNodes, filters.levelId, filters.zoneId, timelineDate)
+  }, [sceneNodes, filters.levelId, filters.zoneId, timelineDate])
+
+  const showFloorHeatmap = Boolean(
+    floorHeatmapData && filters.levelId && heatmapDismissedLevelId !== filters.levelId,
+  )
 
   useEffect(() => {
-    if (typeof document === 'undefined') return
-
-    const chartRailOffset = RIGHT_CHART_RAIL_WIDTH + EDITOR_PANEL_AVOID_GAP
-    const assistantOffset = assistantOpen ? ASSISTANT_PANEL_WIDTH + EDITOR_PANEL_AVOID_GAP : 0
-    const nextOffset = Math.max(chartRailOffset, assistantOffset)
-    document.documentElement.style.setProperty(EDITOR_PANEL_AVOID_VAR, `${nextOffset}px`)
-
-    return () => {
-      document.documentElement.style.setProperty(EDITOR_PANEL_AVOID_VAR, '0px')
-    }
-  }, [assistantOpen])
+    if (filters.levelId && heatmapDismissedLevelId === filters.levelId) return
+    setHeatmapDismissedLevelId(null)
+  }, [filters.levelId, heatmapDismissedLevelId])
 
   const dashboardData = useMemo(
     () =>
@@ -890,9 +1023,19 @@ export default function EnergyTwinDashboard({
         zoneId: filters.zoneId,
         date: timelineDate,
         hour: timelineHour,
+        projectId,
         queryResults,
       }),
-    [sceneNodes, filters.levelId, filters.zoneId, timelineDate, timelineHour, queryResults],
+    [
+      sceneNodes,
+      filters.levelId,
+      filters.zoneId,
+      timelineDate,
+      timelineHour,
+      projectId,
+      queryResults,
+      alertVersion,
+    ],
   )
 
   const predictionData = useMemo(
@@ -975,7 +1118,10 @@ export default function EnergyTwinDashboard({
       >
         <div className="pointer-events-none min-h-0 w-full max-w-[360px]">
           <div className="h-full">
-            <div className="no-scrollbar pointer-events-none h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
+            <div
+              className="no-scrollbar pointer-events-auto h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out"
+              onWheel={stopWheelPropagation}
+            >
               {/* 1. 告警状态 — 脉冲动画 + 占比条 */}
               <GlassCard>
                 <CardHeader
@@ -1003,7 +1149,7 @@ export default function EnergyTwinDashboard({
                           className="mt-0.5 text-3xl font-bold tabular-nums text-[#FF3333]"
                           style={{ fontFamily: DASHBOARD_FONTS.num }}
                         >
-                          <NumberFlow value={dashboardData.left.alert.high} />
+                          <MaybeNumberFlow animate={!timelinePlaying} value={dashboardData.left.alert.high} />
                         </div>
                       </div>
                       <div
@@ -1024,7 +1170,7 @@ export default function EnergyTwinDashboard({
                           className="mt-0.5 text-3xl font-bold tabular-nums text-white/80"
                           style={{ fontFamily: DASHBOARD_FONTS.num }}
                         >
-                          <NumberFlow value={dashboardData.left.alert.medium} />
+                          <MaybeNumberFlow animate={!timelinePlaying} value={dashboardData.left.alert.medium} />
                         </div>
                       </div>
                       <div className="rounded-lg border border-slate-300/10 bg-slate-500/8 p-2 text-center">
@@ -1038,7 +1184,7 @@ export default function EnergyTwinDashboard({
                           className="mt-0.5 text-3xl font-bold tabular-nums text-slate-300"
                           style={{ fontFamily: DASHBOARD_FONTS.num }}
                         >
-                          <NumberFlow value={dashboardData.left.alert.total} />
+                          <MaybeNumberFlow animate={!timelinePlaying} value={dashboardData.left.alert.total} />
                         </div>
                       </div>
                     </div>
@@ -1083,7 +1229,8 @@ export default function EnergyTwinDashboard({
                         className="text-3xl font-bold tabular-nums text-white/95 kpi-glow"
                         style={{ fontFamily: DASHBOARD_FONTS.num }}
                       >
-                        <NumberFlow
+                        <MaybeNumberFlow
+                          animate={!timelinePlaying}
                           value={dashboardData.left.realtimePower.currentKw}
                           format={{ maximumFractionDigits: 1 }}
                         />
@@ -1244,23 +1391,24 @@ export default function EnergyTwinDashboard({
         </div>
 
         <div className="pointer-events-none relative min-h-0 min-w-0">
-          {floorHeatmapData ? (
+          {showFloorHeatmap && floorHeatmapData ? (
             <div
-              className="pointer-events-auto absolute top-3 z-30 transition-[right,opacity] duration-200 ease-out"
-              style={{
-                right: selectedComponentId
-                  ? 'calc(var(--host-editor-panel-width, 320px) + 64px)'
-                  : '12px',
-              }}
+              className="pointer-events-auto absolute right-3 top-3 z-30 transition-opacity duration-200 ease-out"
             >
-              <FloorHeatmapOverlay data={floorHeatmapData} />
+              <FloorHeatmapOverlay
+                data={floorHeatmapData}
+                onClose={() => setHeatmapDismissedLevelId(filters.levelId || null)}
+              />
             </div>
           ) : null}
         </div>
 
         <div className="pointer-events-none min-h-0 w-full max-w-[360px] justify-self-end">
           <div className="h-full">
-            <div className="no-scrollbar pointer-events-none h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out">
+            <div
+              className="no-scrollbar pointer-events-auto h-full space-y-3 overflow-y-auto pr-1 transition-[opacity,transform,filter] duration-500 ease-out"
+              onWheel={stopWheelPropagation}
+            >
               {/* 6. 能耗排行 */}
               <GlassCard>
                 <CardHeader
@@ -1277,11 +1425,11 @@ export default function EnergyTwinDashboard({
                 </div>
               </GlassCard>
 
-              {/* 7. 峰值功率 — 仪表盘样式 */}
+              {/* 7. 峰值负荷 — 当前值相对今日峰值 */}
               <GlassCard>
                 <CardHeader
                   icon={<Siren className="h-4 w-4" strokeWidth={1.8} />}
-                  title="今日峰值"
+                  title="峰值负荷"
                 />
                 <div className="space-y-2">
                   <div className="flex items-end justify-between">
@@ -1291,7 +1439,8 @@ export default function EnergyTwinDashboard({
                           className="text-3xl font-bold text-white/95 kpi-glow"
                           style={{ fontFamily: DASHBOARD_FONTS.num }}
                         >
-                          <NumberFlow
+                          <MaybeNumberFlow
+                            animate={!timelinePlaying}
                             value={dashboardData.right.peakPower.value}
                             format={{ maximumFractionDigits: 1 }}
                           />
@@ -1313,12 +1462,17 @@ export default function EnergyTwinDashboard({
                       </span>
                     </div>
                   </div>
-                  {/* 峰值占比进度条 */}
+                  {/* 当前负荷占今日峰值比例 */}
                   <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-[#00F5FF]/60 via-[#00F5FF]/80 to-[#FF3333]/70 transition-all"
                       style={{
-                        width: `${Math.min(100, (dashboardData.right.peakPower.value / Math.max(1, dashboardData.left.realtimePower.currentKw + dashboardData.right.peakPower.value)) * 100)}%`,
+                        width: `${Math.min(
+                          100,
+                          (dashboardData.left.realtimePower.currentKw /
+                            Math.max(1, dashboardData.right.peakPower.value)) *
+                            100,
+                        )}%`,
                       }}
                     />
                   </div>
@@ -1327,7 +1481,7 @@ export default function EnergyTwinDashboard({
                     style={{ fontFamily: DASHBOARD_FONTS.cn }}
                   >
                     <span>当前 {dashboardData.left.realtimePower.currentKw.toFixed(1)} kW</span>
-                    <span>峰值 {dashboardData.right.peakPower.value.toFixed(1)} kW</span>
+                    <span>今日峰值 {dashboardData.right.peakPower.value.toFixed(1)} kW</span>
                   </div>
                 </div>
               </GlassCard>
@@ -1484,7 +1638,7 @@ export default function EnergyTwinDashboard({
                         className="text-3xl font-bold text-white/95 kpi-glow"
                         style={{ fontFamily: DASHBOARD_FONTS.num }}
                       >
-                        ¥<NumberFlow value={dashboardData.right.cost.today} />
+                        ¥<MaybeNumberFlow animate={!timelinePlaying} value={dashboardData.right.cost.today} />
                       </span>
                     </div>
                   </div>
@@ -1500,7 +1654,7 @@ export default function EnergyTwinDashboard({
                         className="text-3xl font-bold text-white/80"
                         style={{ fontFamily: DASHBOARD_FONTS.num }}
                       >
-                        ¥<NumberFlow value={dashboardData.right.cost.month} />
+                        ¥<MaybeNumberFlow animate={!timelinePlaying} value={dashboardData.right.cost.month} />
                       </span>
                     </div>
                   </div>
@@ -1571,6 +1725,7 @@ export default function EnergyTwinDashboard({
             hour={timelineHour}
             hourlySamples={hourlySamples}
             onChange={handleTimelineChange}
+            onPlaybackChange={setTimelinePlaying}
           />
         </div>
       ) : null}

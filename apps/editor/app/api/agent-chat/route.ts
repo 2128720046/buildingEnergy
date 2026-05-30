@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getActiveOfficeOperationsSnapshot } from '@/features/energy-insights/lib/energy-mock-data'
 
 interface EnergySeriesPoint {
   time: string
@@ -34,10 +35,13 @@ interface AgentChatRequestBody {
 }
 
 function buildContextPrompt(prompt: string, context: EnergyAssistantContextPayload) {
+  const operationsSnapshot = getActiveOfficeOperationsSnapshot(context.projectId)
   const lines: string[] = [
     '你是建筑能耗与智慧运维助手，请使用简体中文回答。',
     `当前项目：${context.projectId}`,
     `当前选中构件：${context.selectedComponentName}${context.selectedComponentId ? ` (${context.selectedComponentId})` : ''}`,
+    `统一告警池：活跃告警 ${operationsSnapshot.alertSummary.total} 条，高优 ${operationsSnapshot.alertSummary.high} 条，中优 ${operationsSnapshot.alertSummary.medium} 条。`,
+    `站点健康度：${operationsSnapshot.healthScore} 分；今日整栋写字楼采样电耗 ${operationsSnapshot.todayElectricityKwh.toFixed(1)} kWh。`,
   ]
 
   if (context.energyResult) {

@@ -3,6 +3,7 @@ import {
   estimateZoneArea,
   classifyRoomType,
   buildDailySummary,
+  getActiveOfficeOperationsSnapshot,
   todayStr,
   yesterdayStr,
   shiftDateStr,
@@ -20,6 +21,7 @@ export interface DashboardContext {
   date: string
   hour: number
   queryResults: any[]
+  projectId?: string
 }
 
 // ============ 左侧面板数据 ============
@@ -112,11 +114,11 @@ function getApplicableZones(ctx: DashboardContext): ZoneNode[] {
     (n): n is ZoneNode =>
       n.type === 'zone' && Array.isArray(n.polygon) && n.polygon.length >= 3,
   )
-  if (ctx.levelId) {
-    return zones.filter((z) => z.parentId === ctx.levelId)
-  }
   if (ctx.zoneId) {
     return zones.filter((z) => z.id === ctx.zoneId)
+  }
+  if (ctx.levelId) {
+    return zones.filter((z) => z.parentId === ctx.levelId)
   }
   return zones
 }
@@ -179,37 +181,126 @@ function aggregateHourlyAcrossZones(
   return { electricity: elec, hvac: hvacR, lighting: lightR, socket: sockR, temp, humidity, co2, pm25 }
 }
 
+export function buildScopeHourlyAggregate(
+  nodes: Record<string, AnyNode>,
+  levelId: string,
+  zoneId: string,
+  date: string,
+): HourlyEnergyRecord[] | null {
+  const ctx: DashboardContext = {
+    nodes,
+    levelId,
+    zoneId,
+    date,
+    hour: 0,
+    queryResults: [],
+  }
+  const zones = getApplicableZones(ctx)
+  if (zones.length === 0) return null
+
+  const hourly: HourlyEnergyRecord[] = Array.from({ length: 24 }, (_, h) => ({
+    hour: h,
+    electricity_kwh: 0,
+    hvac_kwh: 0,
+    lighting_kwh: 0,
+    socket_kwh: 0,
+    water_m3: 0,
+    indoor_temp_c: 0,
+    indoor_humidity_pct: 0,
+    outdoor_temp_c: 0,
+    outdoor_humidity_pct: 0,
+    precipitation_mm: 0,
+    occupancy_count: 0,
+    co2_ppm: 0,
+    pm25_ugm3: 0,
+  }))
+
+  for (const zone of zones) {
+    const daily = getZoneDaily(ctx, zone, date)
+    for (let h = 0; h < 24; h++) {
+      const record = daily.hourly[h]
+      if (!record) continue
+      const agg = hourly[h]!
+      agg.electricity_kwh += record.electricity_kwh
+      agg.hvac_kwh += record.hvac_kwh
+      agg.lighting_kwh += record.lighting_kwh
+      agg.socket_kwh += record.socket_kwh
+      agg.water_m3 += record.water_m3
+      agg.indoor_temp_c += record.indoor_temp_c
+      agg.indoor_humidity_pct += record.indoor_humidity_pct
+      agg.outdoor_temp_c = record.outdoor_temp_c
+      agg.outdoor_humidity_pct = record.outdoor_humidity_pct
+      agg.precipitation_mm += record.precipitation_mm
+      agg.occupancy_count += record.occupancy_count
+      agg.co2_ppm = Math.max(agg.co2_ppm, record.co2_ppm)
+      agg.pm25_ugm3 = Math.max(agg.pm25_ugm3, record.pm25_ugm3)
+    }
+  }
+
+  return hourly.map((record) => ({
+    ...record,
+    electricity_kwh: Number(record.electricity_kwh.toFixed(3)),
+    hvac_kwh: Number(record.hvac_kwh.toFixed(3)),
+    lighting_kwh: Number(record.lighting_kwh.toFixed(3)),
+    socket_kwh: Number(record.socket_kwh.toFixed(3)),
+    water_m3: Number(record.water_m3.toFixed(4)),
+    indoor_temp_c: Number((record.indoor_temp_c / zones.length).toFixed(1)),
+    indoor_humidity_pct: Math.round(record.indoor_humidity_pct / zones.length),
+    outdoor_temp_c: Number(record.outdoor_temp_c.toFixed(1)),
+    outdoor_humidity_pct: Math.round(record.outdoor_humidity_pct),
+    precipitation_mm: Number(record.precipitation_mm.toFixed(1)),
+  }))
+}
+
+export function buildZoneOverlaySnapshot(
+  nodes: Record<string, AnyNode>,
+  zoneId: string,
+  date: string,
+) {
+  const zone = nodes[zoneId]
+  if (zone?.type !== 'zone' || !Array.isArray(zone.polygon) || zone.polygon.length < 3) {
+    return null
+  }
+  const areaM2 = estimateZoneArea(zone.polygon)
+  const roomType = classifyRoomType(zone.name || zone.id)
+  const daily = buildDailySummary(zone.id, roomType, areaM2, date)
+  const peakHour = daily.hourly.reduce(
+    (bestHour, record) =>
+      record.electricity_kwh > (daily.hourly[bestHour]?.electricity_kwh ?? 0)
+        ? record.hour
+        : bestHour,
+    0,
+  )
+
+  return {
+    zoneId: zone.id,
+    zoneName: zone.name || zone.id,
+    areaM2: Number(areaM2.toFixed(1)),
+    roomType,
+    totalElectricityKwh: daily.total_electricity_kwh,
+    totalHvacKwh: daily.total_hvac_kwh,
+    totalLightingKwh: daily.total_lighting_kwh,
+    totalSocketKwh: daily.total_socket_kwh,
+    totalWaterM3: daily.total_water_m3,
+    peakPowerKw: daily.peak_power_kw,
+    peakHour,
+    avgIndoorTempC: daily.avg_indoor_temp_c,
+    avgIndoorHumidityPct: daily.avg_indoor_humidity_pct,
+    avgOccupancy: daily.avg_occupancy,
+    hourly: daily.hourly,
+  }
+}
+
 export function buildDashboardData(ctx: DashboardContext): DashboardResult {
   const today = ctx.date
   const yesterday = yesterdayStr()
   const curHour = ctx.hour
+  const operationsSnapshot = getActiveOfficeOperationsSnapshot(ctx.projectId ?? 'office-demo', today)
 
   // --- 左侧 ---
-  // 告警：基于能耗/环境异常检测（真实运维阈值）
-  // 高优先：室外高温导致室内超标、峰值突出、设备异常
-  // 中优先：能耗偏高或室内环境接近阈值
   const zones = getApplicableZones(ctx)
-  let highAlerts = 0
-  let mediumAlerts = 0
-  for (const z of zones) {
-    const d = getZoneDaily(ctx, z, today)
-    const avgHourly = d.total_electricity_kwh / 24
-    const peakRatio = d.peak_power_kw / Math.max(avgHourly, 0.001)
-    // 真实阈值：峰值 > 日均 1.8 倍视为异常（办公楼正常峰谷比约 1.5-1.7）
-    const tempHigh = d.avg_indoor_temp_c > 28
-    const tempLow = d.avg_indoor_temp_c < 16
-
-    if (peakRatio > 1.85 || tempHigh || tempLow) {
-      highAlerts++
-    } else if (peakRatio > 1.5) {
-      mediumAlerts++
-    }
-  }
-  // 保底：大规模楼层中低保至少有部分告警
-  if (zones.length >= 3 && highAlerts === 0 && mediumAlerts === 0) {
-    highAlerts = Math.max(1, Math.floor(zones.length * 0.12))
-    mediumAlerts = Math.max(1, Math.floor(zones.length * 0.18))
-  }
+  const highAlerts = operationsSnapshot.alertSummary.high
+  const mediumAlerts = operationsSnapshot.alertSummary.medium
 
   // 实时功率
   const hourlyAgg = aggregateHourlyAcrossZones(ctx, today)
@@ -227,7 +318,11 @@ export function buildDashboardData(ctx: DashboardContext): DashboardResult {
 
   // 24h 曲线
   const peakIdx = hourlyAgg.electricity.indexOf(Math.max(...hourlyAgg.electricity))
-  const valleyIdx = hourlyAgg.electricity.indexOf(Math.min(...hourlyAgg.electricity.filter(Boolean)))
+  const nonZeroHourly = hourlyAgg.electricity.filter((value) => value > 0)
+  const valleyIdx =
+    nonZeroHourly.length > 0
+      ? hourlyAgg.electricity.indexOf(Math.min(...nonZeroHourly))
+      : 0
 
   // 分项占比
   const hvacTotal = hourlyAgg.hvac.reduce((s, v) => s + v, 0)
@@ -300,7 +395,7 @@ export function buildDashboardData(ctx: DashboardContext): DashboardResult {
 
   return {
     left: {
-      alert: { total: highAlerts + mediumAlerts, high: highAlerts, medium: mediumAlerts },
+      alert: { total: operationsSnapshot.alertSummary.total, high: highAlerts, medium: mediumAlerts },
       realtimePower: {
         currentKw: Number(todayPower.toFixed(1)),
         yesterdayKw: Number(yesterdayPower.toFixed(1)),

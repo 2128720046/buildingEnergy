@@ -13,11 +13,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './primitives/tooltip'
 
 /** Container for a group of buttons — no padding, overflow-hidden clips children flush. */
 const TOOLBAR_CONTAINER =
-  'inline-flex h-8 items-stretch overflow-hidden rounded-xl border border-border bg-background/90 shadow-2xl backdrop-blur-md'
+  'inline-flex h-8 items-stretch overflow-hidden rounded-md border border-cyan-200/12 bg-[#061522]/76 shadow-[0_10px_28px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(125,249,255,0.08)] backdrop-blur-md'
 
 /** Ghost button inside a container — flush edges, no individual border/radius. */
 const TOOLBAR_BTN =
-  'flex items-center justify-center w-8 text-muted-foreground/80 transition-colors hover:bg-white/8 hover:text-foreground/90'
+  'flex items-center justify-center w-8 text-cyan-50/58 transition-colors hover:bg-cyan-200/8 hover:text-cyan-50/88'
 
 // ── View mode segmented control ─────────────────────────────────────────────
 
@@ -52,8 +52,8 @@ function ViewModeControl() {
             className={cn(
               'flex items-center justify-center gap-1.5 px-2.5 font-medium text-xs transition-colors',
               isActive
-                ? 'bg-white/10 text-foreground'
-                : 'text-muted-foreground/70 hover:bg-white/8 hover:text-muted-foreground',
+                ? 'bg-cyan-200/12 text-cyan-50'
+                : 'text-cyan-50/58 hover:bg-cyan-200/8 hover:text-cyan-50/82',
             )}
             key={mode.id}
             onClick={() => setViewMode(mode.id)}
@@ -167,7 +167,7 @@ function LevelModeToggle() {
           className={cn(
             TOOLBAR_BTN,
             'w-auto gap-1.5 px-2.5',
-            !isDefault && 'bg-white/10 text-foreground/90',
+            !isDefault && 'bg-cyan-200/12 text-cyan-50/90',
           )}
           onClick={cycle}
           type="button"
@@ -218,8 +218,8 @@ function WallModeToggle() {
             TOOLBAR_BTN,
             'w-auto gap-1.5 px-2.5',
             wallMode !== 'cutaway'
-              ? 'bg-white/10'
-              : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0',
+              ? 'bg-cyan-200/12'
+              : 'opacity-70 grayscale hover:opacity-100 hover:grayscale-0',
           )}
           onClick={cycle}
           type="button"
@@ -245,7 +245,7 @@ function CameraModeToggle() {
         <button
           className={cn(
             TOOLBAR_BTN,
-            cameraMode === 'orthographic' && 'bg-white/10 text-foreground/90',
+            cameraMode === 'orthographic' && 'bg-cyan-200/12 text-cyan-50/90',
           )}
           onClick={() =>
             setCameraMode(cameraMode === 'perspective' ? 'orthographic' : 'perspective')

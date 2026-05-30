@@ -141,8 +141,8 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
       <Html
         name="label"
         position={[centroid[0], 1, centroid[1]]}
-        style={{ pointerEvents: 'none' }}
-        zIndexRange={[10, 0]}
+        style={{ pointerEvents: 'none', zIndex: 12 }}
+        zIndexRange={[30, 0]}
       >
         <div
           id={`${node.id}-label`}
@@ -151,13 +151,37 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
             flexDirection: 'column',
             alignItems: 'center',
             transform: 'translate3d(-50%, -50%, 0)',
-            opacity: 1,
+            opacity: 0,
           }}
         >
           <div
+            className="zone-energy-badge"
+            style={{
+              background: 'transparent',
+              border: '1px solid transparent',
+              borderRadius: '4px',
+              boxShadow: 'none',
+              color: 'rgba(236,254,255,0.92)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+              fontSize: '13px',
+              fontWeight: 800,
+              letterSpacing: '0.02em',
+              lineHeight: '17px',
+              marginBottom: '8px',
+              opacity: 0,
+              padding: '2px 8px',
+              textShadow: '0 0 10px rgba(0,245,255,0.86), 0 1px 3px rgba(0,0,0,0.88)',
+              transform: 'translateY(-7px)',
+              transition: 'opacity 160ms ease, transform 160ms ease, color 160ms ease',
+              whiteSpace: 'nowrap',
+            }}
+          />
+          <div
+            className="zone-name-label"
             style={{
               width: 'max-content',
               color: 'white',
+              opacity: 0,
               textShadow: `-1px -1px 0 ${currentColor}, 1px -1px 0 ${currentColor}, -1px 1px 0 ${currentColor}, 1px 1px 0 ${currentColor}`,
               textAlign: 'center',
             }}
@@ -171,7 +195,7 @@ export const ZoneRenderer = ({ node }: { node: ZoneNode }) => {
               flexDirection: 'column',
               alignItems: 'center',
               marginTop: '2px',
-              opacity: 1,
+              opacity: 0,
             }}
           >
             <div style={{ width: '2px', height: '40px', backgroundColor: currentColor }} />

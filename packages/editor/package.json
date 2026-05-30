@@ -8,6 +8,7 @@
     "./modeling": "./src/public/modeling.ts",
     "./chrome": "./src/public/chrome.ts",
     "./host": "./src/public/host.ts",
+    "./energy-overlay-state": "./src/lib/energy-overlay-state.ts",
     "./auto-modeling": "./src/public/auto-modeling.ts",
     "./zone-mapping": "./src/public/zone-mapping.ts",
     "./catalog": "./src/components/ui/item-catalog/catalog-items.tsx"

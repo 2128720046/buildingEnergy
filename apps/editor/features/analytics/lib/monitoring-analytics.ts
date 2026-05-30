@@ -1,3 +1,9 @@
+import {
+  buildOfficeMonitoringDataset,
+  getActiveOfficeOperationsSnapshot,
+  type OfficeMonitoringRecord,
+} from '@/features/energy-insights/lib/energy-mock-data'
+
 export interface MonitoringRecord {
   building_id: string
   building_type: string
@@ -172,7 +178,6 @@ const BUILDINGS = [
 ] as const
 
 const HOURS = [0, 6, 12, 18] as const
-const MONTHLY_COMPOSITION_TOTAL = 46_106
 const MONTHLY_COMPOSITION_RATIOS = [
   { color: '#3b82f6', label: '暖通系统', ratio: 0.429 },
   { color: '#22c55e', label: '照明系统', ratio: 0.183 },
@@ -184,33 +189,6 @@ const MONTHLY_COMPOSITION_RATIOS = [
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
-}
-
-function hashString(input: string): number {
-  let value = 0
-
-  for (let index = 0; index < input.length; index += 1) {
-    value = (value * 33 + input.charCodeAt(index)) % 100003
-  }
-
-  return value
-}
-
-function formatDate(date: Date) {
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function getReferenceTime() {
-  const referenceTime = new Date()
-  referenceTime.setHours(18, 0, 0, 0)
-  return referenceTime
-}
-
-function formatTimestamp(date: Date, hour: number) {
-  return `${formatDate(date)} ${`${hour}`.padStart(2, '0')}:00`
 }
 
 function statusLabel(status: MonitoringRecord['device_status']) {
@@ -271,107 +249,20 @@ function pearsonCorrelation(values: Array<{ x: number; y: number }>) {
 }
 
 function createMonitoringRecords(projectId: string): MonitoringRecord[] {
-  const records: MonitoringRecord[] = []
-  const referenceTime = getReferenceTime()
-  let id = 1
-
-  for (let dayOffset = 11; dayOffset >= 0; dayOffset -= 1) {
-    const date = new Date(referenceTime)
-    date.setDate(referenceTime.getDate() - dayOffset)
-
-    for (const building of BUILDINGS) {
-      for (const hour of HOURS) {
-        const seed = hashString(`${projectId}-${building.id}-${dayOffset}-${hour}`)
-        const dailyWave = Math.sin((dayOffset / 11) * Math.PI)
-        const hourlyOccupancyBoost =
-          hour === 12 ? 0.28 : hour === 18 ? 0.14 : hour === 6 ? 0.08 : -0.16
-        const weatherSwing = ((seed % 9) - 4) * 0.3
-        const envTemperature =
-          building.temperatureBase +
-          dailyWave * 2.3 +
-          (hour === 12 ? 2.7 : hour === 18 ? 1.6 : hour === 6 ? 0.9 : 0.1) +
-          weatherSwing
-        const occupancyDensity =
-          building.occupancyBase +
-          hourlyOccupancyBoost +
-          (((seed >> 3) % 9) - 4) * 0.03 +
-          dailyWave * 0.05
-        const occupancyPercent = clamp(occupancyDensity * 100, 22, 98)
-        const occupancyLoadFactor = Math.max(0, occupancyDensity - 0.42) * 58
-        const coolingLoadFactor = Math.max(0, envTemperature - 24) * 4.8
-        const electricity =
-          building.electricityBase +
-          dailyWave * 15 +
-          (hour === 12 ? 18 : hour === 18 ? 10 : hour === 6 ? 6 : -12) +
-          occupancyLoadFactor +
-          coolingLoadFactor +
-          ((seed >> 5) % 15) -
-          5
-        const hvac =
-          building.hvacBase +
-          dailyWave * 8.2 +
-          coolingLoadFactor * 1.7 +
-          occupancyLoadFactor * 0.32 +
-          ((seed >> 6) % 10) -
-          3
-        const water =
-          building.waterBase +
-          dailyWave * 2.1 +
-          occupancyDensity * 4.6 +
-          (hour === 12 ? 1.7 : hour === 18 ? 1.1 : 0.3) +
-          (((seed >> 7) % 11) - 4) * 0.18
-        const envHumidity =
-          building.humidityBase +
-          dailyWave * 4.2 +
-          (hour === 0 ? 4.8 : hour === 6 ? 2.7 : 0.9) +
-          (((seed >> 8) % 7) - 3) * 0.9
-        const supplyTemp = building.supplyBase + dailyWave * 0.35 + (((seed >> 9) % 8) - 4) * 0.08
-        const returnTemp =
-          supplyTemp +
-          4.6 +
-          Math.max(0, envTemperature - 24) * 0.12 +
-          (((seed >> 10) % 9) - 4) * 0.08
-
-        let deviceStatus: MonitoringRecord['device_status'] = 'normal'
-        if (electricity > building.electricityBase + 44 || envTemperature > 30.8) {
-          deviceStatus = 'warning'
-        } else if ((seed >> 11) % 21 === 0) {
-          deviceStatus = 'maintenance'
-        } else if ((seed >> 12) % 39 === 0) {
-          deviceStatus = 'offline'
-        }
-
-        records.push({
-          id,
-          building_id: building.id,
-          building_type: building.type,
-          chilled_water_return_temp: Number(returnTemp.toFixed(2)),
-          chilled_water_supply_temp: Number(supplyTemp.toFixed(2)),
-          device_id: `${building.id}-DEV-${`${(seed % 27) + 1}`.padStart(2, '0')}`,
-          device_status: deviceStatus,
-          electricity_kwh: Number(electricity.toFixed(1)),
-          env_humidity: Number(envHumidity.toFixed(1)),
-          env_temperature: Number(envTemperature.toFixed(1)),
-          hvac_kwh: Number(hvac.toFixed(1)),
-          monitor_time: formatTimestamp(date, hour),
-          occupancy_density: Number(occupancyPercent.toFixed(1)),
-          water_m3: Number(water.toFixed(1)),
-        })
-
-        id += 1
-      }
-    }
-  }
-
-  return records.sort((left, right) => right.monitor_time.localeCompare(left.monitor_time))
+  return buildOfficeMonitoringDataset(projectId).map((record: OfficeMonitoringRecord) => ({
+    ...record,
+  }))
 }
 
 export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnalyticsModel {
   const records = createMonitoringRecords(projectId)
+  const operationsSnapshot = getActiveOfficeOperationsSnapshot(projectId)
   const totalElectricity = records.reduce((sum, record) => sum + record.electricity_kwh, 0)
   const totalWater = records.reduce((sum, record) => sum + record.water_m3, 0)
   const totalHvac = records.reduce((sum, record) => sum + record.hvac_kwh, 0)
-  const warningCount = records.filter((record) => record.device_status === 'warning').length
+  const warningCount = operationsSnapshot.alertSummary.total
+  const abnormalCount = records.filter((record) => record.device_status !== 'normal').length
+  const abnormalRate = abnormalCount / Math.max(records.length, 1)
   const latestRecord = records[0]!
   const latestDate = latestRecord.monitor_time.slice(0, 10)
   const latestDateTime = new Date(`${latestDate}T00:00:00`).getTime()
@@ -403,7 +294,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
   const metrics: MonitoringMetric[] = [
     {
       label: '今日累计',
-      value: '27606 kWh',
+      value: `${Math.round(totalElectricity)} kWh`,
       detail: '今日 00:00 起累计电耗，只随实时采样累加。',
       tone: 'sky',
     },
@@ -415,7 +306,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
     },
     {
       label: '今日峰值负荷',
-      value: `${Math.max(peakRecord.electricity_kwh, 236.8).toFixed(1)} kWh`,
+      value: `${peakRecord.electricity_kwh.toFixed(1)} kWh`,
       detail: `${peakRecord.building_id} · ${peakRecord.monitor_time}`,
       tone: 'amber',
     },
@@ -427,7 +318,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
     },
     {
       label: '今日预警',
-      value: `${Math.max(warningCount, 133)} 条`,
+      value: `${warningCount} 条`,
       detail: `最新监测时间 ${latestRecord.monitor_time}`,
       tone: 'rose',
     },
@@ -585,6 +476,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
   for (const record of records) {
     statusCounts.set(record.device_status, (statusCounts.get(record.device_status) ?? 0) + 1)
   }
+  statusCounts.set('warning', operationsSnapshot.alertSummary.total)
 
   const statusDistribution: MonitoringStatusBucket[] = (
     ['normal', 'warning', 'maintenance', 'offline'] as const
@@ -610,7 +502,7 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
   const composition: MonitoringCompositionItem[] = MONTHLY_COMPOSITION_RATIOS.map((item) => ({
     color: item.color,
     label: item.label,
-    value: Number((MONTHLY_COMPOSITION_TOTAL * item.ratio).toFixed(1)),
+    value: Number((totalElectricity * item.ratio).toFixed(1)),
   }))
 
   const heatmapSource = [...dailyGroups.values()]
@@ -663,23 +555,13 @@ export function buildMonitoringAnalyticsModel(projectId: string): MonitoringAnal
 
   const relationshipInsights: MonitoringRelationshipInsights = {
     busiestHour,
-    occupancyCorrelation: 0.8,
+    occupancyCorrelation: Number(occupancyCorrelation.toFixed(2)),
     peakHour,
     quietHour,
-    temperatureCorrelation: 0.64,
+    temperatureCorrelation: Number(temperatureCorrelation.toFixed(2)),
   }
 
-  const performanceScore = Math.round(
-    clamp(
-      92 -
-        warningCount * 0.28 -
-        Math.max(0, (totalHvac / totalElectricity) * 12 - 4) +
-        occupancyCorrelation * 6 +
-        Math.max(0, temperatureCorrelation) * 3,
-      72,
-      97,
-    ),
-  )
+  const performanceScore = operationsSnapshot.healthScore
 
   const fieldGlossary: MonitoringFieldGlossaryItem[] = [
     { field: 'id', dataType: 'BIGINT', description: '监测记录主键，便于做明细追踪和数据回溯。' },

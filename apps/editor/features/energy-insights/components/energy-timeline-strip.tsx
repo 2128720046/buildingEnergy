@@ -9,7 +9,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Calendar, Play, Pause, Zap, The
 export interface TimelineState { date: string; hour: number }
 export interface EnergyTimelineProps {
   date: string; hour: number; hourlySamples: HourlyEnergyRecord[] | null
-  onChange: (state: TimelineState) => void; className?: string
+  onChange: (state: TimelineState) => void; className?: string; onPlaybackChange?: (playing: boolean) => void
 }
 
 function todayStr(): string { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -25,7 +25,7 @@ function useAutoPlay(hour: number, onTick: (h: number) => void) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const hourRef = useRef(hour); hourRef.current = hour
   const onTickRef = useRef(onTick); onTickRef.current = onTick
-  const start = useCallback(() => { if (intervalRef.current) return; intervalRef.current = setInterval(() => { onTickRef.current((hourRef.current + 1) % 24) }, 1600) }, [])
+  const start = useCallback(() => { if (intervalRef.current) return; intervalRef.current = setInterval(() => { onTickRef.current((hourRef.current + 1) % 24) }, 2500) }, [])
   const stop = useCallback(() => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null } }, [])
   useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current) }, [])
   return { start, stop }
@@ -92,13 +92,13 @@ function CalendarPopup({ date, onSelect, onClose, triggerRef }: { date: string; 
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 
-export default function EnergyTimelineStrip({ date, hour, hourlySamples, onChange, className }: EnergyTimelineProps) {
+export default function EnergyTimelineStrip({ date, hour, hourlySamples, onChange, className, onPlaybackChange }: EnergyTimelineProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const dateBtnRef = useRef<HTMLButtonElement>(null)
   const goToHour = useCallback((h: number) => onChange({ date, hour: ((h % 24) + 24) % 24 }), [date, onChange])
   const { start, stop } = useAutoPlay(hour, goToHour)
-  const togglePlayback = useCallback(() => { setIsPlaying((prev) => { if (prev) { stop(); return false } start(); return true }) }, [start, stop])
+  const togglePlayback = useCallback(() => { setIsPlaying((prev) => { const next = !prev; if (prev) stop(); else start(); onPlaybackChange?.(next); return next }) }, [onPlaybackChange, start, stop])
   const activeSample = hourlySamples?.[hour] ?? null
   const today = todayStr(); const isToday = date === today
   const pd = parseYMD(date)
@@ -121,7 +121,7 @@ export default function EnergyTimelineStrip({ date, hour, hourlySamples, onChang
             <div className="absolute inset-x-2 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-gradient-to-r from-white/3 via-white/10 to-white/3" />
             <div className="relative z-10 flex w-full items-center justify-between px-1">
               {HOURS.map((h) => { const isActive = h === hour; const isMajor = h % 6 === 0
-                return <button aria-label={`${hourLabel(h)}${isActive ? ' selected' : ''}`} className="group relative flex h-12 w-4 flex-col items-center justify-center" key={h} onClick={() => { if (isPlaying) stop(); goToHour(h) }} type="button">
+                return <button aria-label={`${hourLabel(h)}${isActive ? ' selected' : ''}`} className="group relative flex h-12 w-4 flex-col items-center justify-center" key={h} onClick={() => { if (isPlaying) { stop(); setIsPlaying(false); onPlaybackChange?.(false) } goToHour(h) }} type="button">
                   <span className="absolute inset-0" />
                   <span className={cn('relative block rounded-full transition-all duration-200', isMajor ? 'h-2.5 w-[3px]' : 'h-1.5 w-[2px]', isActive ? 'bg-[#00F5FF]' : 'bg-white/15 group-hover:bg-white/30')} />
                   <span className={cn('relative block rounded-full transition-all duration-200', isActive ? 'mt-1 h-[11px] w-[11px] bg-[#00F5FF] shadow-[0_0_12px_rgba(92,148,187,0.4)] ring-[3px] ring-[#00F5FF]/30' : isMajor ? 'mt-1 h-[7px] w-[7px] bg-white/25 group-hover:bg-white/40' : 'mt-1 h-[5px] w-[5px] bg-white/15 group-hover:bg-white/30')} />

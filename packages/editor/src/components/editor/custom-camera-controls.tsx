@@ -106,6 +106,36 @@ export const CustomCameraControls = () => {
     [isPreviewMode],
   )
 
+  const focusEnergyNode = useCallback(
+    (nodeId: string) => {
+      if (isPreviewMode || !controls.current) return
+
+      const object3D = sceneRegistry.nodes.get(nodeId)
+      if (!object3D) return
+
+      tempBox.setFromObject(object3D)
+      if (tempBox.isEmpty()) return
+
+      tempBox.getCenter(tempCenter)
+      tempBox.getSize(tempSize)
+      const maxDim = Math.max(tempSize.x, tempSize.z, 6)
+      const distance = Math.max(maxDim * 1.9, 12)
+      const angle = controls.current.azimuthAngle + Math.PI / 4
+      const height = Math.max(maxDim * 0.9, 8)
+
+      controls.current.setLookAt(
+        tempCenter.x + Math.cos(angle) * distance,
+        tempCenter.y + height,
+        tempCenter.z + Math.sin(angle) * distance,
+        tempCenter.x,
+        tempCenter.y,
+        tempCenter.z,
+        true,
+      )
+    },
+    [isPreviewMode],
+  )
+
   // Configure mouse buttons based on control mode and camera mode
   const cameraMode = useViewer((state) => state.cameraMode)
   const mouseButtons = useMemo(() => {
@@ -351,8 +381,13 @@ export const CustomCameraControls = () => {
       focusNode(nodeId)
     }
 
+    const handleEnergyFocus = ({ nodeId }: CameraControlEvent) => {
+      focusEnergyNode(nodeId)
+    }
+
     emitter.on('camera-controls:capture', handleNodeCapture)
     emitter.on('camera-controls:focus', handleNodeFocus)
+    emitter.on('camera-controls:energy-focus' as any, handleEnergyFocus as any)
     emitter.on('camera-controls:view', handleNodeView)
     emitter.on('camera-controls:top-view', handleTopView)
     emitter.on('camera-controls:orbit-cw', handleOrbitCW)
@@ -361,12 +396,13 @@ export const CustomCameraControls = () => {
     return () => {
       emitter.off('camera-controls:capture', handleNodeCapture)
       emitter.off('camera-controls:focus', handleNodeFocus)
+      emitter.off('camera-controls:energy-focus' as any, handleEnergyFocus as any)
       emitter.off('camera-controls:view', handleNodeView)
       emitter.off('camera-controls:top-view', handleTopView)
       emitter.off('camera-controls:orbit-cw', handleOrbitCW)
       emitter.off('camera-controls:orbit-ccw', handleOrbitCCW)
     }
-  }, [focusNode])
+  }, [focusEnergyNode, focusNode])
 
   const onTransitionStart = useCallback(() => {
     useViewer.getState().setCameraDragging(true)
