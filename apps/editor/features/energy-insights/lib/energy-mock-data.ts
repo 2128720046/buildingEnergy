@@ -277,6 +277,14 @@ function clamp(value: number, min: number, max: number): number {
 export function classifyRoomType(name: string): RoomType {
   const n = name.toLowerCase()
 
+  if (n.includes('\u529e\u516c') || n.includes('\u5de5\u4f4d') || n.includes('\u4eba\u529b') || n.includes('\u8d22\u52a1') || n.includes('\u6cd5\u52a1') || n.includes('\u91c7\u8d2d') || n.includes('\u884c\u653f') || n.includes('\u7814\u53d1') || n.includes('\u5ba2\u6237\u6210\u529f') || n.includes('\u5ba2\u6237\u670d\u52a1') || n.includes('\u6218\u7565\u7ba1\u7406')) return 'office'
+  if (n.includes('\u8d70\u5eca') || n.includes('\u8fc7\u9053') || n.includes('\u7535\u68af\u5385')) return 'corridor'
+  if (n.includes('\u673a\u623f') || n.includes('\u8bbe\u5907') || n.includes('\u76d1\u63a7') || n.includes('\u914d\u7535') || n.includes('\u80fd\u8017\u76d1\u63a7') || n.includes('\u8fd0\u7ef4') || n.includes('\u5e94\u6025\u6307\u6325')) return 'server_room'
+  if (n.includes('\u6d17\u624b\u95f4') || n.includes('\u536b\u751f\u95f4') || n.includes('\u65e0\u969c\u788d')) return 'restroom'
+  if (n.includes('\u5927\u5802') || n.includes('\u63a5\u5f85') || n.includes('\u7b49\u5019') || n.includes('\u4f53\u9a8c\u5927\u5385') || n.includes('\u529e\u516c\u5927\u5385') || n.includes('\u6307\u6325\u5927\u5385')) return 'lobby'
+  if (n.includes('\u4f1a\u8bae') || n.includes('\u6d3d\u8c08') || n.includes('\u4f1a\u5546') || n.includes('\u7814\u8ba8') || n.includes('\u57f9\u8bad') || n.includes('\u8bc4\u5ba1') || n.includes('\u8ba8\u8bba') || n.includes('\u6f14\u793a')) return 'meeting'
+  if (n.includes('\u5e93') || n.includes('\u50a8\u85cf') || n.includes('\u50a8\u7269') || n.includes('\u6863\u6848') || n.includes('\u7269\u8d44') || n.includes('\u5907\u54c1') || n.includes('\u6587\u5370') || n.includes('\u4fdd\u6d01\u5de5\u5177')) return 'storage'
+
   if (n.includes('办公') || n.includes('office') || n.includes('工作')) return 'office'
   if (n.includes('走廊') || n.includes('走道') || n.includes('过道') || n.includes('corridor')) return 'corridor'
   if (

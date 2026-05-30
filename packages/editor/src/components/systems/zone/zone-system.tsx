@@ -10,6 +10,7 @@ import useEditor from '../../../store/use-editor'
 // Zone selection in the editor is handled exclusively via the HTML label overlay.
 const noopRaycast = () => {}
 const energyColor = new Color('#FF3333')
+const selectionColor = new Color('#00E5FF')
 const restoreColor = new Color()
 
 interface EnergyOverlayInfoSnapshot {
@@ -36,25 +37,17 @@ interface ZoneLabelCache {
   root: HTMLElement
 }
 
-function getEnergyHighlightSnapshot():
-  | {
-      highlightedZones: Map<string, number>
-      overlayInfo?: Map<
-        string,
-        EnergyOverlayInfoSnapshot
-      >
-      revision: number
-    }
-  | null {
+function getEnergyHighlightSnapshot(): {
+  highlightedZones: Map<string, number>
+  overlayInfo?: Map<string, EnergyOverlayInfoSnapshot>
+  revision: number
+} | null {
   if (typeof window === 'undefined') return null
   const value = (window as unknown as Record<string, unknown>).__pascalEnergyZoneHighlights
   if (!value || typeof value !== 'object') return null
   const snapshot = value as {
     highlightedZones?: Map<string, number>
-    overlayInfo?: Map<
-      string,
-      EnergyOverlayInfoSnapshot
-    >
+    overlayInfo?: Map<string, EnergyOverlayInfoSnapshot>
     revision?: number
   }
   if (!(snapshot.highlightedZones instanceof Map)) return null
@@ -72,21 +65,24 @@ function applyMaterialColor(material: MeshBasicNodeMaterial, color: Color) {
 
 function updateZoneMaterial(
   material: MeshBasicNodeMaterial,
-  isEnergyHighlighted: boolean,
+  highlightColor: Color | null,
   baseColor: string,
   targetOpacity: number,
   lerpSpeed: number,
 ) {
   if (!material?.userData?.uOpacity) return
 
-  if (isEnergyHighlighted) {
-    applyMaterialColor(material, energyColor)
-    material.userData.__energyHighlightApplied = true
-    material.userData.uOpacity.value = Math.max(material.userData.uOpacity.value, 0.92)
-  } else if (material.userData.__energyHighlightApplied) {
+  const nextHighlightColor = highlightColor?.getHexString() ?? ''
+  if (highlightColor) {
+    if (material.userData.__zoneHighlightColor !== nextHighlightColor) {
+      applyMaterialColor(material, highlightColor)
+      material.userData.__zoneHighlightColor = nextHighlightColor
+    }
+    material.userData.uOpacity.value = Math.max(material.userData.uOpacity.value, targetOpacity)
+  } else if (material.userData.__zoneHighlightColor) {
     restoreColor.set(baseColor)
     applyMaterialColor(material, restoreColor)
-    material.userData.__energyHighlightApplied = false
+    material.userData.__zoneHighlightColor = ''
   }
 
   material.userData.uOpacity.value = MathUtils.lerp(
@@ -148,6 +144,7 @@ export const ZoneSystem = () => {
     const selectedLevelId = useViewer.getState().selection.levelId
     const selectedZoneId = useViewer.getState().selection.zoneId
     const hoveredId = useViewer.getState().hoveredId
+    const readOnly = useScene.getState().readOnly
 
     const zoneGeometryVisible = structureLayer === 'zones'
     const zones = sceneRegistry.byType.zone || new Set()
@@ -171,23 +168,38 @@ export const ZoneSystem = () => {
       const info = energyOverlayInfo?.get(zoneId)
 
       // Keep group visible (so <Html> labels stay active), hide/show meshes only.
-      // Show meshes when: in zone mode, selected, or delete-hovered.
+      // In read-only energy dashboards the filtered room uses the same stable
+      // uniform path as anomaly zones, avoiding selection material churn.
       if (!obj.visible) obj.visible = true
+      const showSelectedGeometry = isSelected
+      const isReadOnlySelected = readOnly && isSelected && !isEnergyHighlighted
+      const highlightColor = isEnergyHighlighted
+        ? energyColor
+        : isReadOnlySelected
+          ? selectionColor
+          : null
       const meshVisible =
-        zoneGeometryVisible || isSelected || isDeleteHovered || isEnergyHighlighted
+        (!readOnly && zoneGeometryVisible) ||
+        showSelectedGeometry ||
+        isDeleteHovered ||
+        isEnergyHighlighted
       const targetOpacity =
-        isSelected || isDeleteHovered || isEnergyHighlighted
+        isEnergyHighlighted || isDeleteHovered
           ? 1
-          : zoneGeometryVisible
-            ? 1
-            : 0
+          : isReadOnlySelected
+            ? 0.88
+            : showSelectedGeometry
+              ? 1
+              : !readOnly && zoneGeometryVisible
+                ? 1
+                : 0
       const baseColor = zone?.color || '#3b82f6'
 
       const walls = (obj as Group).getObjectByName('walls') as Mesh | undefined
       if (walls) {
         updateZoneMaterial(
           walls.material as MeshBasicNodeMaterial,
-          isEnergyHighlighted,
+          highlightColor,
           baseColor,
           targetOpacity,
           lerpSpeed,
@@ -199,7 +211,7 @@ export const ZoneSystem = () => {
       if (floor) {
         updateZoneMaterial(
           floor.material as MeshBasicNodeMaterial,
-          isEnergyHighlighted,
+          highlightColor,
           baseColor,
           targetOpacity,
           lerpSpeed,

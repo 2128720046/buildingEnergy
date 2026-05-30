@@ -142,7 +142,9 @@ function createHighlightedMaterials(
 
 function disposeHighlightedMaterials(material: Material | Material[]) {
   if (Array.isArray(material)) {
-    material.forEach((entry) => entry.dispose())
+    for (const entry of material) {
+      entry.dispose()
+    }
     return
   }
 
@@ -775,7 +777,7 @@ const SelectionMaterialSync = () => {
 
     for (const [id, kind] of activeHighlightKindsRef.current.entries()) {
       const node = useScene.getState().nodes[id as AnyNodeId]
-      if (node?.type === 'wall') {
+      if (node?.type === 'wall' || node?.type === 'zone') {
         continue
       }
 

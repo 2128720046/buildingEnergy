@@ -535,9 +535,9 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, max))
 }
 
-function resolveFloatingLayout(anchorScreenX: number): FloatingLayout {
+function resolveFloatingLayout(anchorScreenX: number, preferredSide: 1 | -1 = -1): FloatingLayout {
   if (typeof window === 'undefined') {
-    return { xOffset: -220, cardWidth: FLOATING_CARD_WIDTH }
+    return { xOffset: preferredSide > 0 ? 220 : -220, cardWidth: FLOATING_CARD_WIDTH }
   }
 
   const panelLeftBoundary = getEditorPanelLeftBoundary()
@@ -549,7 +549,7 @@ function resolveFloatingLayout(anchorScreenX: number): FloatingLayout {
     FLOATING_CARD_MAX_WIDTH,
   )
 
-  const desiredCenterX = anchorScreenX - 220
+  const desiredCenterX = anchorScreenX + preferredSide * 220
   const minCenterX = nextCardWidth / 2 + VIEWPORT_SAFE_GAP
   const maxCenterX = Math.min(
     window.innerWidth - nextCardWidth / 2 - VIEWPORT_SAFE_GAP,
@@ -563,7 +563,11 @@ function resolveFloatingLayout(anchorScreenX: number): FloatingLayout {
   }
 }
 
-function resolveFloatingAnchor(targetId: string, camera: THREE.Camera): FloatingAnchor | null {
+function resolveFloatingAnchor(
+  targetId: string,
+  camera: THREE.Camera,
+  targetKind: 'device' | 'room',
+): FloatingAnchor | null {
   const object = sceneRegistry.nodes.get(targetId)
   if (!object) return null
 
@@ -571,7 +575,10 @@ function resolveFloatingAnchor(targetId: string, camera: THREE.Camera): Floating
   if (box.isEmpty()) return null
 
   const center = box.getCenter(new THREE.Vector3())
-  const anchor = new THREE.Vector3(center.x, box.max.y + 1.3, center.z)
+  const isRoom = targetKind === 'room'
+  const anchor = isRoom
+    ? new THREE.Vector3(box.max.x + 1.2, box.max.y + 1.8, center.z)
+    : new THREE.Vector3(center.x, box.max.y + 1.3, center.z)
   const projected = anchor.clone().project(camera)
   const screenX = typeof window === 'undefined' ? 0 : ((projected.x + 1) / 2) * window.innerWidth
 
@@ -648,21 +655,22 @@ export function EnergyFloatingOverlay() {
     return null
   }, [selectedIds.length, selectedItemNode, selectedZoneNode, nodes])
   const overlayTargetId = overlayTarget?.anchorId ?? null
+  const overlayKind = selectedItemNode?.type === 'item' ? 'device' : 'room'
 
   const shouldRender =
     Boolean(overlayTarget) && mode !== 'delete' && !(isFloorplanHovered && viewMode !== '3d')
 
   const anchor = useMemo(() => {
     if (!overlayTarget) return null
-    return resolveFloatingAnchor(overlayTarget.anchorId, camera)
-  }, [overlayTarget, camera])
+    return resolveFloatingAnchor(overlayTarget.anchorId, camera, overlayKind)
+  }, [overlayTarget, camera, overlayKind])
 
   const initialLayout = useMemo(
     () =>
       anchor
-        ? resolveFloatingLayout(anchor.screenX)
-        : { xOffset: -220, cardWidth: FLOATING_CARD_WIDTH },
-    [anchor],
+        ? resolveFloatingLayout(anchor.screenX, overlayKind === 'room' ? 1 : -1)
+        : { xOffset: overlayKind === 'room' ? 220 : -220, cardWidth: FLOATING_CARD_WIDTH },
+    [anchor, overlayKind],
   )
 
   const snapshot = useMemo(() => {
@@ -683,7 +691,7 @@ export function EnergyFloatingOverlay() {
 
     const projected = groupRef.current.position.clone().project(camera)
     const anchorScreenX = ((projected.x + 1) / 2) * window.innerWidth
-    const nextLayout = resolveFloatingLayout(anchorScreenX)
+    const nextLayout = resolveFloatingLayout(anchorScreenX, overlayKind === 'room' ? 1 : -1)
     setFrameLayoutState((prev) => {
       if (
         prev?.targetId === overlayTargetId &&
