@@ -1,5 +1,6 @@
 import { GeistPixelSquare } from 'geist/font/pixel'
 import localFont from 'next/font/local'
+import { ClientBootstrap } from './client-bootstrap'
 import './globals.css'
 
 const geistSans = localFont({
@@ -21,7 +22,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${GeistPixelSquare.variable}`}
       lang="en"
     >
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <ClientBootstrap>{children}</ClientBootstrap>
+      </body>
     </html>
   )
 }

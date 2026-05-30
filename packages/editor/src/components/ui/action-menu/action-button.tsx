@@ -7,7 +7,9 @@ import {
 } from './../../../components/ui/primitives/tooltip'
 import { cn } from './../../../lib/utils'
 
-interface ActionButtonProps extends React.ComponentProps<typeof Button> {
+interface ActionButtonProps
+  extends React.ComponentPropsWithoutRef<'button'>,
+    React.ComponentProps<typeof Button> {
   label: string
   shortcut?: string
   isActive?: boolean

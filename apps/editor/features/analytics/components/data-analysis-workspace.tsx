@@ -100,6 +100,7 @@ type DashboardToast = {
 
 type RealtimeModelState = {
   lastSyncSeconds: number
+  nextLiveId: number
   notificationPulse: number
   sampleCount: number
   sampleRate: number
@@ -288,9 +289,10 @@ function addMonthlyCompositionEnergy(composition: MonitoringCompositionItem[]) {
 }
 
 function pushToast(state: RealtimeModelState, toast: Omit<DashboardToast, 'id'>) {
-  const id = Date.now() + randomInt(0, 999)
+  const id = state.nextLiveId
   return {
     ...state,
+    nextLiveId: id + 1,
     notificationPulse: state.notificationPulse + 1,
     toasts: [{ ...toast, id }, ...state.toasts].slice(0, 3),
   }
@@ -812,6 +814,7 @@ function useRealtimeMonitoringModel(projectId: string) {
   const [state, setState] = useState<RealtimeModelState>(() => ({
     lastSyncSeconds: 0,
     model: baseModel,
+    nextLiveId: Date.now(),
     notificationPulse: 0,
     sampleCount: 1286,
     sampleRate: 28,
@@ -822,6 +825,7 @@ function useRealtimeMonitoringModel(projectId: string) {
     setState({
       lastSyncSeconds: 0,
       model: baseModel,
+      nextLiveId: Date.now(),
       notificationPulse: 0,
       sampleCount: 1286,
       sampleRate: 28,
@@ -846,7 +850,8 @@ function useRealtimeMonitoringModel(projectId: string) {
       tableTimer = window.setTimeout(
         () => {
           setNonUrgentState((current) => {
-            const newRecord = createLiveMonitoringRecord(Date.now())
+            const recordId = current.nextLiveId
+            const newRecord = createLiveMonitoringRecord(recordId)
             const nextModel = updateLiveMetrics({
               ...current.model,
               recentRecords: [newRecord, ...current.model.recentRecords].slice(0, 12),
@@ -855,6 +860,7 @@ function useRealtimeMonitoringModel(projectId: string) {
               ...current,
               lastSyncSeconds: 0,
               model: nextModel,
+              nextLiveId: recordId + 1,
               sampleCount: current.sampleCount + 1,
               sampleRate: randomInt(24, 36),
             }
@@ -872,7 +878,8 @@ function useRealtimeMonitoringModel(projectId: string) {
         const eventType = randomInt(1, 4)
 
         if (eventType === 1) {
-          const warningRecord = makeWarningRecord(Date.now())
+          const recordId = current.nextLiveId
+          const warningRecord = makeWarningRecord(recordId)
           return pushToast(
             {
               ...current,
@@ -881,6 +888,7 @@ function useRealtimeMonitoringModel(projectId: string) {
                 ...current.model,
                 recentRecords: [warningRecord, ...current.model.recentRecords].slice(0, 12),
               },
+              nextLiveId: recordId + 1,
               sampleCount: current.sampleCount + 1,
               sampleRate: randomInt(28, 42),
             },

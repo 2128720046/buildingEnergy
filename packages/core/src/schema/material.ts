@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AssetUrl } from './asset-url'
 
 export const MaterialPreset = z.enum([
   'white',
@@ -25,17 +26,86 @@ export const MaterialProperties = z.object({
 export type MaterialProperties = z.infer<typeof MaterialProperties>
 
 export const MaterialSchema = z.object({
+  id: z.string().optional(),
   preset: MaterialPreset.optional(),
   properties: MaterialProperties.optional(),
   texture: z
     .object({
-      url: z.string(),
+      url: AssetUrl,
       repeat: z.tuple([z.number(), z.number()]).optional(),
       scale: z.number().optional(),
     })
     .optional(),
 })
 export type MaterialSchema = z.infer<typeof MaterialSchema>
+
+export const MaterialTarget = z.enum([
+  'wall',
+  'roof',
+  'roof-segment',
+  'stair',
+  'stair-segment',
+  'fence',
+  'column',
+  'slab',
+  'ceiling',
+  'door',
+  'window',
+  'shelf',
+  'chimney',
+  'skylight',
+  'dormer',
+  'box-vent',
+  'ridge-vent',
+])
+export type MaterialTarget = z.infer<typeof MaterialTarget>
+
+export const TextureWrapMode = z.enum(['Repeat', 'ClampToEdge', 'MirroredRepeat'])
+export type TextureWrapMode = z.infer<typeof TextureWrapMode>
+
+export const MaterialMapsSchema = z.object({
+  albedoMap: AssetUrl.optional(),
+  metalnessMap: AssetUrl.optional(),
+  roughnessMap: AssetUrl.optional(),
+  normalMap: AssetUrl.optional(),
+  displacementMap: AssetUrl.optional(),
+  aoMap: AssetUrl.optional(),
+  emissiveMap: AssetUrl.optional(),
+  bumpMap: AssetUrl.optional(),
+  alphaMap: AssetUrl.optional(),
+  lightMap: AssetUrl.optional(),
+})
+export type MaterialMaps = z.infer<typeof MaterialMapsSchema>
+
+export const MaterialMapPropertiesSchema = z.object({
+  color: z.string().default('#ffffff'),
+  roughness: z.number().min(0).max(1).default(0.5),
+  metalness: z.number().min(0).max(1).default(0),
+  repeatX: z.number().default(1),
+  repeatY: z.number().default(1),
+  rotation: z.number().default(0),
+  wrapS: TextureWrapMode.default('Repeat'),
+  wrapT: TextureWrapMode.default('Repeat'),
+  normalScaleX: z.number().default(1),
+  normalScaleY: z.number().default(1),
+  emissiveIntensity: z.number().default(1),
+  displacementScale: z.number().default(0.02),
+  transparent: z.boolean().default(false),
+  flipY: z.boolean().default(true),
+  bumpScale: z.number().default(1),
+  emissiveColor: z.string().default('#000000'),
+  aoMapIntensity: z.number().default(1),
+  side: z.number().default(0),
+  opacity: z.number().min(0).max(1).default(1),
+  lightMapIntensity: z.number().default(1),
+})
+export type MaterialMapProperties = z.infer<typeof MaterialMapPropertiesSchema>
+
+export const MaterialPresetPayloadSchema = z.object({
+  maps: MaterialMapsSchema,
+  mapProperties: MaterialMapPropertiesSchema,
+})
+export type MaterialPresetPayload = z.infer<typeof MaterialPresetPayloadSchema>
 
 export const DEFAULT_MATERIALS: Record<MaterialPreset, MaterialProperties> = {
   white: {

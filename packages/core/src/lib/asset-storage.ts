@@ -14,6 +14,44 @@ export async function saveAsset(file: File): Promise<string> {
   return `asset://${id}`
 }
 
+export async function getAssetFile(assetId: string): Promise<File | Blob | null> {
+  try {
+    return (await get<File | Blob>(`${ASSET_PREFIX}${assetId}`)) ?? null
+  } catch (error) {
+    console.error('Failed to read asset:', error)
+    return null
+  }
+}
+
+export function collectAssetIds(nodes: Record<string, unknown>): string[] {
+  const ids = new Set<string>()
+
+  const visit = (value: unknown) => {
+    if (typeof value === 'string') {
+      if (value.startsWith('asset://')) {
+        ids.add(value.replace('asset://', ''))
+      }
+      return
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        visit(item)
+      }
+      return
+    }
+
+    if (value && typeof value === 'object') {
+      for (const child of Object.values(value)) {
+        visit(child)
+      }
+    }
+  }
+
+  visit(nodes)
+  return Array.from(ids)
+}
+
 /**
  * Load a file from IndexedDB and return an object URL
  * If the URL is not a custom protocol URL, return it as is
@@ -52,38 +90,4 @@ export async function loadAssetUrl(url: string): Promise<string | null> {
 
   // Legacy data URLs are returned as is
   return url
-}
-
-/**
- * Retrieve a raw file/blob from IndexedDB by asset URL or ID.
- * Returns null if not found.
- */
-export async function getAssetFile(assetUrlOrId: string): Promise<File | Blob | null> {
-  const id = assetUrlOrId.startsWith('asset://')
-    ? assetUrlOrId.replace('asset://', '')
-    : assetUrlOrId
-
-  try {
-    const file = await get<File | Blob>(`${ASSET_PREFIX}${id}`)
-    return file ?? null
-  } catch {
-    return null
-  }
-}
-
-/**
- * Collect all unique asset:// IDs referenced in a scene nodes record.
- */
-export function collectAssetIds(nodes: Record<string, unknown>): string[] {
-  const ids = new Set<string>()
-
-  for (const node of Object.values(nodes)) {
-    if (!node || typeof node !== 'object') continue
-    const url = (node as Record<string, unknown>).url
-    if (typeof url === 'string' && url.startsWith('asset://')) {
-      ids.add(url.replace('asset://', ''))
-    }
-  }
-
-  return Array.from(ids)
 }

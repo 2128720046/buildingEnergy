@@ -1,27 +1,38 @@
 export type {
+  BoxVentEvent,
   BuildingEvent,
   CameraControlEvent,
+  CameraControlFitSceneEvent,
   CeilingEvent,
+  ChimneyEvent,
+  ColumnEvent,
   DoorEvent,
+  DormerEvent,
+  ElevatorEvent,
   EventSuffix,
+  FenceEvent,
   GridEvent,
+  GuideEvent,
   ItemEvent,
   LevelEvent,
   NodeEvent,
+  RidgeVentEvent,
   RoofEvent,
   RoofSegmentEvent,
+  ScanEvent,
+  ShelfEvent,
   SiteEvent,
+  SkylightEvent,
   SlabEvent,
+  SolarPanelEvent,
+  SpawnEvent,
   StairEvent,
   StairSegmentEvent,
   WallEvent,
   WindowEvent,
   ZoneEvent,
 } from './events/bus'
-export {
-  emitter, eventSuffixes,
-  type ScanEvent,
-} from './events/bus'
+export { emitter, eventSuffixes } from './events/bus'
 export {
   sceneRegistry,
   useRegistry,
@@ -29,31 +40,125 @@ export {
 export { pointInPolygon, spatialGridManager } from './hooks/spatial-grid/spatial-grid-manager'
 export {
   initSpatialGridSync,
+  resolveBuildingForLevel,
   resolveLevelId,
 } from './hooks/spatial-grid/spatial-grid-sync'
 export { useSpatialQuery } from './hooks/spatial-grid/use-spatial-query'
 export { collectAssetIds, getAssetFile, loadAssetUrl, saveAsset } from './lib/asset-storage'
 export {
+  clampDoorOperationState,
+  getDoorRenderOpenAmount,
+  getGarageVisibleOpeningRatio,
+  isOperationDoorType,
+  SECTIONAL_GARAGE_RENDER_OPEN_SCALE,
+} from './lib/door-operation'
+export { getRenderableSlabPolygon } from './lib/slab-polygon'
+export {
+  type AutoCeilingSyncPlan,
+  type AutoSlabSyncPlan,
   detectSpacesForLevel,
   initSpaceDetectionSync,
+  isSpaceDetectionPaused,
+  pauseSpaceDetection,
+  planAutoCeilingsForLevel,
+  planAutoSlabsForLevel,
+  resumeSpaceDetection,
   type Space,
   wallTouchesOthers,
 } from './lib/space-detection'
-export { baseMaterial, glassMaterial } from './materials'
+export {
+  getCatalogMaterialById,
+  getLibraryMaterialIdFromRef,
+  getMaterialPresetByRef,
+  getMaterialsForCategory,
+  LIBRARY_MATERIAL_REF_PREFIX,
+  MATERIAL_CATALOG,
+  MATERIAL_CATEGORIES,
+  type MaterialCatalogItem,
+  type MaterialCategory,
+  toLibraryMaterialRef,
+} from './material-library'
+export * from './registry'
 export * from './schema'
+export * from './services'
+export {
+  getSceneHistoryPauseDepth,
+  pauseSceneHistory,
+  resetSceneHistoryPauseDepth,
+  resumeSceneHistory,
+} from './store/history-control'
 export {
   type ControlValue,
+  type DoorAnimationState,
+  type DoorInteractiveState,
+  type ElevatorInteractiveState,
+  type ElevatorPhase,
   type ItemInteractiveState,
+  type SkylightAnimationState,
+  type SkylightInteractiveState,
   useInteractive,
+  type WindowAnimationState,
+  type WindowInteractiveState,
 } from './store/use-interactive'
+export {
+  default as useLiveNodeOverrides,
+  type LiveNodeOverrides,
+  getEffectiveNode,
+} from './store/use-live-node-overrides'
 export { default as useLiveTransforms, type LiveTransform } from './store/use-live-transforms'
 export { clearSceneHistory, default as useScene } from './store/use-scene'
-export { CeilingSystem } from './systems/ceiling/ceiling-system'
-export { DoorSystem } from './systems/door/door-system'
-export { ItemSystem } from './systems/item/item-system'
-export { RoofSystem } from './systems/roof/roof-system'
-export { SlabSystem } from './systems/slab/slab-system'
-export { StairSystem } from './systems/stair/stair-system'
+export { resolveElevatorDispatchTarget } from './systems/elevator/elevator-dispatch'
+export {
+  type ElevatorDoorSide,
+  getElevatorCabCenterZ,
+  getElevatorCabDepth,
+  getElevatorCabWidth,
+  getElevatorDoorLeafSides,
+  getElevatorDoorLeafWidth,
+  getElevatorDoorLeafX,
+  getElevatorShaftDepth,
+  getElevatorShaftWallThickness,
+  getElevatorShaftWidth,
+  getResolvedElevatorDoorPanelStyle,
+  getResolvedElevatorDoorStyle,
+  getResolvedElevatorShaftStyle,
+} from './systems/elevator/elevator-geometry'
+export { syncAutoElevatorOpenings } from './systems/elevator/elevator-opening-sync'
+export { ElevatorOpeningSystem } from './systems/elevator/elevator-opening-system'
+export {
+  createElevatorInteractiveState,
+  openElevatorDoor,
+  openElevatorDoorState,
+  queueElevatorRequest,
+  requestElevatorLevel,
+  stepElevatorRuntimeState,
+  stepElevatorRuntimes,
+} from './systems/elevator/elevator-runtime'
+export { ElevatorRuntimeSystem } from './systems/elevator/elevator-runtime-system'
+export {
+  DEFAULT_ELEVATOR_LEVEL_HEIGHT,
+  type ElevatorLevelEntry,
+  getElevatorLevelHeight,
+  resolveElevatorBuildingLevels,
+  resolveElevatorLevels,
+  resolveElevatorServiceLevelIds,
+  resolveElevatorServiceLevels,
+} from './systems/elevator/elevator-service'
+export { syncAutoStairOpenings } from './systems/stair/stair-opening-sync'
+export { StairOpeningSystem } from './systems/stair/stair-opening-system'
+export {
+  getClampedWallCurveOffset,
+  getMaxWallCurveOffset,
+  getWallChordFrame,
+  getWallCurveFrameAt,
+  getWallCurveLength,
+  getWallMidpointHandlePoint,
+  getWallStraightSnapOffset,
+  getWallSurfacePolygon,
+  isCurvedWall,
+  normalizeWallCurveOffset,
+  sampleWallCenterline,
+} from './systems/wall/wall-curve'
 export {
   DEFAULT_WALL_HEIGHT,
   DEFAULT_WALL_THICKNESS,
@@ -62,12 +167,34 @@ export {
 } from './systems/wall/wall-footprint'
 export {
   calculateLevelMiters,
+  getAdjacentWallIds,
+  getWallMiterBoundaryPoints,
   type Point2D,
   pointToKey,
+  type WallMiterBoundaryPoints,
   type WallMiterData,
 } from './systems/wall/wall-mitering'
-export { WallSystem } from './systems/wall/wall-system'
-export { WindowSystem } from './systems/window/window-system'
+export {
+  constrainWallMoveDeltaToAxis,
+  getLinkedWallUpdates,
+  getPerpendicularWallMoveAxis,
+  getPlannedLinkedWallUpdates,
+  planWallMoveJunctions,
+  type WallMoveAxis,
+  type WallMoveBridgePlan,
+  type WallMoveJunctionPlan,
+  type WallMoveLinkedWallTargetPlan,
+  type WallPlanPoint,
+} from './systems/wall/wall-move'
 export type { SceneGraph } from './utils/clone-scene-graph'
 export { cloneLevelSubtree, cloneSceneGraph, forkSceneGraph } from './utils/clone-scene-graph'
 export { isObject } from './utils/types'
+export {
+  type BuildStats,
+  type ParsedBuildJson,
+  type SchemaIssue,
+  type ValidateBuildJsonResult,
+  type ValidationIssue,
+  type ValidationSeverity,
+  validateBuildJson,
+} from './validation/validate-build-json'

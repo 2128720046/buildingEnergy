@@ -19,16 +19,27 @@ export type ToolConfig = {
 }
 
 export const tools: ToolConfig[] = [
-  { id: 'wall', iconSrc: '/icons/wall.png', label: '墙体' },
+  { id: 'wall', iconSrc: '/icons/wall.png', label: 'Wall' },
+  { id: 'door', iconSrc: '/icons/door.png', label: 'Door' },
+  { id: 'window', iconSrc: '/icons/window.png', label: 'Window' },
+  { id: 'stair', iconSrc: '/icons/stairs.png', label: 'Stairs' },
+  { id: 'roof', iconSrc: '/icons/roof.png', label: 'Gable Roof' },
+  { id: 'fence', iconSrc: '/icons/fence.png', label: 'Fence' },
+  { id: 'column', iconSrc: '/icons/column.png', label: 'Column' },
+  { id: 'elevator', iconSrc: '/icons/elevator.png', label: 'Elevator' },
   // { id: 'room', iconSrc: '/icons/room.png', label: 'Room' },
   // { id: 'custom-room', iconSrc: '/icons/custom-room.png', label: 'Custom Room' },
-  { id: 'slab', iconSrc: '/icons/floor.png', label: '楼板' },
-  { id: 'ceiling', iconSrc: '/icons/ceiling.png', label: '吊顶' },
-  { id: 'roof', iconSrc: '/icons/roof.png', label: '坡屋顶' },
-  { id: 'stair', iconSrc: '/icons/stairs.png', label: '楼梯' },
-  { id: 'door', iconSrc: '/icons/door.png', label: '门' },
-  { id: 'window', iconSrc: '/icons/window.png', label: '窗' },
-  { id: 'zone', iconSrc: '/icons/zone.png', label: '区域' },
+  { id: 'slab', iconSrc: '/icons/floor.png', label: 'Slab' },
+  { id: 'ceiling', iconSrc: '/icons/ceiling.png', label: 'Ceiling' },
+  { id: 'zone', iconSrc: '/icons/zone.png', label: 'Zone' },
+  { id: 'spawn', iconSrc: '/icons/site.png', label: 'Spawn Point' },
+  { id: 'shelf', iconSrc: '/icons/shelf.png', label: 'Shelf' },
+  // Roof-mounted accessories (box-vent / ridge-vent / chimney /
+  // solar-panel / skylight / dormer) are intentionally NOT in the top
+  // palette — they only make sense in the context of a selected roof.
+  // The roof inspector's "Add element" section is the entry point
+  // (`packages/nodes/src/roof/panel.tsx`), which activates the same
+  // registry-driven placement tools via `setTool(kind)`.
 ]
 
 export function StructureTools() {

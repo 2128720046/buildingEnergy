@@ -6,21 +6,13 @@ import { useFrame } from '@react-three/fiber'
 import type { Mesh } from 'three'
 import useEditor from '../store/use-editor'
 
-function hasEnergyZoneOverlay() {
-  if (typeof window === 'undefined') return false
-  const snapshot = (window as unknown as Record<string, unknown>).__pascalEnergyZoneHighlights
-  return !!snapshot && typeof snapshot === 'object'
-}
-
 export const ViewerZoneSystem = () => {
   useFrame(() => {
     const { levelId, zoneId } = useViewer.getState().selection
     const structureLayer = useEditor.getState().structureLayer
     const nodes = useScene.getState().nodes
-    const readOnly = useScene.getState().readOnly
-    const energyOverlayActive = hasEnergyZoneOverlay()
 
-    sceneRegistry.byType.zone.forEach((id) => {
+    sceneRegistry.byType.zone!.forEach((id) => {
       const obj = sceneRegistry.nodes.get(id)
       if (!obj) return
 
@@ -28,30 +20,25 @@ export const ViewerZoneSystem = () => {
       if (!zone) return
 
       const isOnSelectedLevel = zone.parentId === levelId
+
+      // Keep group visible (so <Html> labels stay active), hide/show meshes only.
+      // Zone geometry: visible in zone mode on the right level, OR when this zone is selected.
+      // The editor ZoneSystem handles the selected zone's opacity animation.
       const isSelected = id === zoneId
-      const shouldShowGeometry = readOnly
-        ? energyOverlayActive
-          ? false
-          : !!levelId && isOnSelectedLevel
-        : (structureLayer === 'zones' && !!levelId && isOnSelectedLevel) || isSelected
+      const shouldShowGeometry =
+        (structureLayer === 'zones' && !!levelId && isOnSelectedLevel) || isSelected
+      if (!obj.visible) obj.visible = true
+      obj.traverse((child) => {
+        if ((child as Mesh).isMesh) {
+          child.visible = shouldShowGeometry
+        }
+      })
 
-      if (!energyOverlayActive) {
-        if (!obj.visible) obj.visible = true
-        obj.traverse((child) => {
-          if ((child as Mesh).isMesh) {
-            child.visible = shouldShowGeometry
-          }
-        })
-      }
-
-      const showLabel = readOnly
-        ? energyOverlayActive
-          ? false
-          : !!levelId && isOnSelectedLevel
-        : zoneId === id && !!levelId && isOnSelectedLevel
+      // Labels: always visible on the current level (regardless of mode or zone selection)
+      const showLabel = !!levelId && isOnSelectedLevel
       const targetOpacity = showLabel ? '1' : '0'
       const labelEl = document.getElementById(`${id}-label`)
-      if (!energyOverlayActive && labelEl && labelEl.style.opacity !== targetOpacity) {
+      if (labelEl && labelEl.style.opacity !== targetOpacity) {
         labelEl.style.opacity = targetOpacity
       }
     })

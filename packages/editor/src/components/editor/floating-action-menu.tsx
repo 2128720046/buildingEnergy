@@ -3,22 +3,34 @@
 import {
   type AnyNode,
   type AnyNodeId,
+  type CeilingNode,
+  ColumnNode,
   DoorNode,
+  ElevatorNode,
+  FenceNode,
+  generateId,
   ItemNode,
-  RoofNode,
+  isRegistryMovable,
+  isRegistrySelectable,
+  nodeRegistry,
   RoofSegmentNode,
+  type SlabNode,
+  SpawnNode,
   StairNode,
   StairSegmentNode,
   sceneRegistry,
   useScene,
+  WallNode,
   WindowNode,
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import * as THREE from 'three'
+import { duplicateRoofSubtree } from '../../lib/roof-duplication'
 import { sfxEmitter } from '../../lib/sfx-bus'
+import { duplicateStairSubtree } from '../../lib/stair-duplication'
 import useEditor from '../../store/use-editor'
 import { NodeActionMenu } from './node-action-menu'
 
@@ -26,76 +38,138 @@ const ALLOWED_TYPES = [
   'item',
   'door',
   'window',
+  'elevator',
   'roof',
   'roof-segment',
   'stair',
   'stair-segment',
   'wall',
+  'fence',
+  'column',
   'slab',
+  'ceiling',
+  'spawn',
 ]
-const DELETE_ONLY_TYPES = ['wall', 'slab']
+const DELETE_ONLY_TYPES: string[] = []
+const HOLE_TYPES = ['slab', 'ceiling']
+
+// Menu scales with camera zoom so it feels anchored to the object, but is
+// clamped on both ends so it stays readable when zoomed way out and doesn't
+// dominate the screen when zoomed in close. Reference values are picked so
+// scale = 1 lands near the editor's default framing.
+const MIN_MENU_SCALE = 0.5
+// Cap at 1 so zooming in doesn't grow the menu past its default pixel size —
+// only zoom-out shrinks it (down to MIN_MENU_SCALE).
+const MAX_MENU_SCALE = 1
+const REF_ORTHO_ZOOM = 20
+const REF_CAMERA_DISTANCE = 12
+
+// World-space Y distance from a node's bbox top to the floating menu anchor.
+// Per-type because in-world chrome above the node (height-resize arrows,
+// measurement labels) varies in vertical reach.
+// `EXTRA_MENU_LIFT` is a uniform global nudge — easier to tune one
+// constant than to bump every per-type entry below.
+const EXTRA_MENU_LIFT = 0.35
+const MENU_Y_OFFSET_DEFAULT = 0.3
+const MENU_Y_OFFSETS: Record<string, number> = {
+  wall: 0.5,
+  door: 0.6,
+  window: 0.6,
+  column: 0.6,
+  // Fence: clears the height-resize arrow (sits at fence.height + 0.45)
+  // plus the chevron's own visual size, so the menu floats just above it.
+  fence: 1.05,
+  // Elevator: clears the cab-height arrow which sits above the SHAFT
+  // top (resolved through level entries), so the menu floats above it.
+  elevator: 0.9,
+  stair: 0.2,
+  'stair-stair': 1.1,
+  'stair-landing': 0.9,
+  // Slab: clears the height arrow that sits at elevation + 0.22 plus the
+  // chevron's own visual reach, so the menu floats just above it.
+  slab: 0.7,
+  // Ceiling: clears the upward height arrow that sits ~0.22 above the
+  // ceiling plane, plus extra headroom so the menu doesn't crowd the
+  // chevron at any zoom level.
+  ceiling: 1.0,
+  // Shelf: clears the height arrow that sits at shelf.height + 0.22
+  // plus the chevron's visual reach.
+  shelf: 0.6,
+}
+
+function getMenuYOffset(node: AnyNode | null): number {
+  if (!node) return MENU_Y_OFFSET_DEFAULT + EXTRA_MENU_LIFT
+  if (node.type === 'stair-segment') {
+    return (
+      (MENU_Y_OFFSETS[`stair-${node.segmentType}`] ?? MENU_Y_OFFSET_DEFAULT) + EXTRA_MENU_LIFT
+    )
+  }
+  return (MENU_Y_OFFSETS[node.type] ?? MENU_Y_OFFSET_DEFAULT) + EXTRA_MENU_LIFT
+}
 
 export function FloatingActionMenu() {
   const selectedIds = useViewer((s) => s.selection.selectedIds)
-  const nodes = useScene((s) => s.nodes)
+  const updateNode = useScene((s) => s.updateNode)
   const mode = useEditor((s) => s.mode)
-  const viewMode = useEditor((s) => s.viewMode)
-  const setMode = useEditor((s) => s.setMode)
   const isFloorplanHovered = useEditor((s) => s.isFloorplanHovered)
+  const movingWallEndpoint = useEditor((s) => s.movingWallEndpoint)
+  const movingFenceEndpoint = useEditor((s) => s.movingFenceEndpoint)
+  const curvingFence = useEditor((s) => s.curvingFence)
   const setMovingNode = useEditor((s) => s.setMovingNode)
+  const setCurvingWall = useEditor((s) => s.setCurvingWall)
+  const setCurvingFence = useEditor((s) => s.setCurvingFence)
   const setSelection = useViewer((s) => s.setSelection)
+  const setEditingHole = useEditor((s) => s.setEditingHole)
 
   const groupRef = useRef<THREE.Group>(null)
+  const menuScaleRef = useRef<HTMLDivElement>(null)
 
   // Only show for single selection of specific types
   const selectedId = selectedIds.length === 1 ? selectedIds[0] : null
-  const node = selectedId ? nodes[selectedId as AnyNodeId] : null
-  const isValidType = node ? ALLOWED_TYPES.includes(node.type) : false
-  const isBlockedByFloorplan = isFloorplanHovered && viewMode !== '3d'
-  const shouldRender = Boolean(selectedId && node && isValidType && !isBlockedByFloorplan && mode !== 'delete')
 
-  const isSelectionDebugEnabled =
-    process.env.NODE_ENV !== 'production' &&
-    typeof window !== 'undefined' &&
-    (window.localStorage.getItem('editor:debug:selection') === '1' ||
-      window.location.search.includes('debugSelection=1'))
+  // Subscribe just to the selected node so unrelated scene updates do not
+  // re-render this menu.
+  const node = useScene((s) => (selectedId ? (s.nodes[selectedId as AnyNodeId] ?? null) : null))
+  // ALLOWED_TYPES is the hardcoded set; registry-driven kinds (any
+  // NodeDefinition with `capabilities.selectable`) get the floating menu
+  // by default too. Phase 4 collapses these into a single registry check.
+  const isValidType = node
+    ? ALLOWED_TYPES.includes(node.type) || isRegistrySelectable(node.type)
+    : false
 
-  useEffect(() => {
-    if (!isSelectionDebugEnabled) return
-
-    console.info('[floating-action-menu] visibility check', {
-      selectedIds,
-      selectedId,
-      nodeType: node?.type ?? null,
-      isValidType,
-      mode,
-      viewMode,
-      isFloorplanHovered,
-      isBlockedByFloorplan,
-      shouldRender,
-      blockReasons: {
-        missingSingleSelection: selectedIds.length !== 1,
-        missingNode: !node,
-        unsupportedType: Boolean(node && !isValidType),
-        deleteMode: mode === 'delete',
-        floorplanHoverBlocked: isBlockedByFloorplan,
-      },
+  // Boolean selector, only re-renders when curving availability actually flips.
+  const canCurveSelectedWall = useScene((s) => {
+    if (!selectedId) return false
+    const selectedNode = s.nodes[selectedId as AnyNodeId]
+    if (selectedNode?.type !== 'wall') return false
+    return !(selectedNode.children ?? []).some((childId) => {
+      const child = s.nodes[childId as AnyNodeId]
+      if (!child) return false
+      if (child.type === 'door' || child.type === 'window') return true
+      if (child.type === 'item') {
+        const attachTo = child.asset?.attachTo
+        return attachTo === 'wall' || attachTo === 'wall-side'
+      }
+      return false
     })
-  }, [
-    isBlockedByFloorplan,
-    isFloorplanHovered,
-    isSelectionDebugEnabled,
-    isValidType,
-    mode,
-    node,
-    selectedId,
-    selectedIds,
-    shouldRender,
-    viewMode,
-  ])
+  })
 
-  useFrame(() => {
+  useFrame((state) => {
     if (!(selectedId && isValidType && groupRef.current)) return
+
+    // Scale the HTML menu with camera zoom (ortho) or inverse distance
+    // (perspective) so it feels anchored to the world, clamped on both ends
+    // so it stays readable at extreme zoom-out and doesn't fill the screen
+    // when zoomed in close.
+    if (menuScaleRef.current) {
+      const raw =
+        state.camera instanceof THREE.OrthographicCamera
+          ? state.camera.zoom / REF_ORTHO_ZOOM
+          : REF_CAMERA_DISTANCE /
+            Math.max(state.camera.position.distanceTo(groupRef.current.position), 0.001)
+      const scale = Math.min(MAX_MENU_SCALE, Math.max(MIN_MENU_SCALE, raw))
+      menuScaleRef.current.style.transform = `scale(${scale})`
+    }
 
     const obj = sceneRegistry.nodes.get(selectedId)
     if (obj) {
@@ -103,53 +177,56 @@ export function FloatingActionMenu() {
       const box = new THREE.Box3().setFromObject(obj)
       if (!box.isEmpty()) {
         const center = box.getCenter(new THREE.Vector3())
-        // Position above the object, with extra offset for walls/slabs to avoid covering measurement labels
-        const isDeleteOnly = node && DELETE_ONLY_TYPES.includes(node.type)
-        const yOffset = isDeleteOnly ? 0.8 : 0.3
-        groupRef.current.position.set(center.x, box.max.y + yOffset, center.z)
+        // Position above the object. Per-type offsets clear each kind's
+        // in-world chrome (height-resize arrows, measurement labels).
+        groupRef.current.position.set(center.x, box.max.y + getMenuYOffset(node), center.z)
       }
+
     }
   })
 
+  const handleCurve = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (!node) return
+      sfxEmitter.emit('sfx:item-pick')
+      if (node.type === 'wall') {
+        if (!canCurveSelectedWall) return
+        setCurvingWall(node)
+      } else if (node.type === 'fence') {
+        setCurvingFence(node)
+      } else {
+        return
+      }
+      setSelection({ selectedIds: [] })
+    },
+    [canCurveSelectedWall, node, setCurvingFence, setCurvingWall, setSelection],
+  )
   const handleMove = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
       if (!node) return
-      if (isSelectionDebugEnabled) {
-        console.info('[floating-action-menu] action move', {
-          nodeId: node.id,
-          nodeType: node.type,
-        })
-      }
       sfxEmitter.emit('sfx:item-pick')
-      if (
-        node.type === 'item' ||
-        node.type === 'window' ||
-        node.type === 'door' ||
-        node.type === 'roof' ||
-        node.type === 'roof-segment' ||
-        node.type === 'stair' ||
-        node.type === 'stair-segment'
-      ) {
-        setMovingNode(node as any)
-      }
+      setMovingNode(node as any)
       setSelection({ selectedIds: [] })
     },
-    [isSelectionDebugEnabled, node, setMovingNode, setSelection],
+    [node, setMovingNode, setSelection],
   )
-
   const handleDuplicate = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
       if (!node?.parentId) return
-      if (isSelectionDebugEnabled) {
-        console.info('[floating-action-menu] action duplicate', {
-          nodeId: node.id,
-          nodeType: node.type,
-          parentId: node.parentId,
-        })
-      }
       sfxEmitter.emit('sfx:item-pick')
+
+      if (node.type === 'roof') {
+        try {
+          duplicateRoofSubtree(node.id as AnyNodeId, { mode: 'move' })
+        } catch (error) {
+          console.error('Failed to duplicate roof', error)
+        }
+        return
+      }
+
       useScene.temporal.getState().pause()
 
       let duplicateInfo = structuredClone(node) as any
@@ -164,25 +241,62 @@ export function FloatingActionMenu() {
           duplicate = WindowNode.parse(duplicateInfo)
         } else if (node.type === 'item') {
           duplicate = ItemNode.parse(duplicateInfo)
-        } else if (node.type === 'roof') {
-          duplicate = RoofNode.parse(duplicateInfo)
+        } else if (node.type === 'elevator') {
+          duplicate = ElevatorNode.parse(duplicateInfo)
+        } else if (node.type === 'column') {
+          duplicate = ColumnNode.parse(duplicateInfo)
+        } else if (node.type === 'wall') {
+          duplicate = WallNode.parse(duplicateInfo)
+        } else if (node.type === 'fence') {
+          duplicate = FenceNode.parse(duplicateInfo)
+          duplicate.start = [duplicate.start[0] + 1, duplicate.start[1] + 1]
+          duplicate.end = [duplicate.end[0] + 1, duplicate.end[1] + 1]
         } else if (node.type === 'roof-segment') {
+          duplicateInfo.id = generateId('rseg')
           duplicate = RoofSegmentNode.parse(duplicateInfo)
         } else if (node.type === 'stair') {
+          duplicateInfo.children = []
+          duplicateInfo.metadata = { ...duplicateInfo.metadata }
+          delete duplicateInfo.metadata?.isNew
           duplicate = StairNode.parse(duplicateInfo)
         } else if (node.type === 'stair-segment') {
           duplicate = StairSegmentNode.parse(duplicateInfo)
+        } else if (node.type === 'spawn') {
+          duplicate = SpawnNode.parse(duplicateInfo)
+        }
+
+        // Registry-driven fallback: any kind with a NodeDefinition can be
+        // duplicated through its schema's parse(). Future built-in kinds
+        // get duplicate for free.
+        if (!duplicate) {
+          const def = nodeRegistry.get(node.type)
+          if (def) {
+            duplicate = def.schema.parse(duplicateInfo) as AnyNode
+          }
         }
       } catch (error) {
         console.error('Failed to parse duplicate', error)
+        useScene.temporal.getState().resume()
+        return
+      }
+
+      if (!duplicate) {
+        useScene.temporal.getState().resume()
         return
       }
 
       if (duplicate) {
-        if (duplicate.type === 'door' || duplicate.type === 'window') {
+        if (
+          duplicate.type === 'door' ||
+          duplicate.type === 'window' ||
+          duplicate.type === 'elevator'
+        ) {
+          useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
+        } else if (duplicate.type === 'wall') {
+          useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
+        } else if (duplicate.type === 'fence') {
           useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
         } else if (
-          duplicate.type === 'roof' ||
           duplicate.type === 'roof-segment' ||
           duplicate.type === 'stair' ||
           duplicate.type === 'stair-segment'
@@ -195,99 +309,167 @@ export function FloatingActionMenu() {
               duplicate.position[2] + 1,
             ]
           }
-          useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
-
-          // Duplicate children for roof nodes
-          if (node.type === 'roof' && node.children) {
-            const nodesState = useScene.getState().nodes
-            for (const childId of node.children) {
-              const childNode = nodesState[childId]
-              if (childNode && childNode.type === 'roof-segment') {
-                let childDuplicateInfo = structuredClone(childNode) as any
-                delete childDuplicateInfo.id
-                childDuplicateInfo.metadata = { ...childDuplicateInfo.metadata, isNew: true }
-                try {
-                  const childDuplicate = RoofSegmentNode.parse(childDuplicateInfo)
-                  useScene.getState().createNode(childDuplicate, duplicate.id as AnyNodeId)
-                } catch (e) {
-                  console.error('Failed to duplicate roof segment', e)
-                }
-              }
-            }
+          if (node.type === 'stair' && duplicate.type === 'stair') {
+            duplicateStairSubtree(node.id as AnyNodeId, { mode: 'move' })
+          } else {
+            useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
           }
 
           // Duplicate children for stair nodes
-          if (node.type === 'stair' && node.children) {
-            const nodesState = useScene.getState().nodes
-            for (const childId of node.children) {
-              const childNode = nodesState[childId]
-              if (childNode && childNode.type === 'stair-segment') {
-                let childDuplicateInfo = structuredClone(childNode) as any
-                delete childDuplicateInfo.id
-                childDuplicateInfo.metadata = { ...childDuplicateInfo.metadata, isNew: true }
-                try {
-                  const childDuplicate = StairSegmentNode.parse(childDuplicateInfo)
-                  useScene.getState().createNode(childDuplicate, duplicate.id as AnyNodeId)
-                } catch (e) {
-                  console.error('Failed to duplicate stair segment', e)
-                }
-              }
-            }
+        } else if (duplicate.type === 'chimney' || duplicate.type === 'dormer') {
+          // Chimney & dormer use pure drag-to-place: NO node is
+          // inserted into the scene until the user clicks a roof
+          // segment. The `setMovingNode` call below hands the clone
+          // (with `metadata.isNew = true` + no id) to
+          // `MoveChimneyTool` / `MoveDormerTool`, which call
+          // `createNode` on the click that commits the placement.
+          // Skipping the auto-create avoids the "duplicate appears at
+          // +1 offset before drag" UX the other registry kinds use.
+        } else if (nodeRegistry.has(duplicate.type)) {
+          // Registry-driven kinds: offset the position slightly so the
+          // duplicate doesn't overlap exactly, then create + hand to the
+          // move tool. Mirrors the roof-segment / stair-segment behavior.
+          if ('position' in duplicate && Array.isArray((duplicate as any).position)) {
+            const pos = (duplicate as { position: [number, number, number] }).position
+            ;(duplicate as { position: [number, number, number] }).position = [
+              pos[0] + 1,
+              pos[1],
+              pos[2] + 1,
+            ]
           }
+          useScene.getState().createNode(duplicate, duplicate.parentId as AnyNodeId)
         }
         if (
           duplicate.type === 'item' ||
+          duplicate.type === 'elevator' ||
+          duplicate.type === 'column' ||
+          duplicate.type === 'wall' ||
+          duplicate.type === 'fence' ||
           duplicate.type === 'window' ||
           duplicate.type === 'door' ||
-          duplicate.type === 'roof' ||
           duplicate.type === 'roof-segment' ||
-          duplicate.type === 'stair' ||
-          duplicate.type === 'stair-segment'
+          duplicate.type === 'spawn' ||
+          duplicate.type === 'stair-segment' ||
+          // Registry-driven kinds get picked up by MoveTool's generic
+          // fallback (MoveRegistryNodeTool) so the user can reposition.
+          nodeRegistry.has(duplicate.type)
         ) {
           setMovingNode(duplicate as any)
+        } else if (duplicate.type === 'stair') {
+          setSelection({ selectedIds: [duplicate.id as AnyNodeId] })
         }
-        setSelection({ selectedIds: [] })
+        if (duplicate.type !== 'stair') {
+          setSelection({ selectedIds: [] })
+        }
       }
     },
-    [isSelectionDebugEnabled, node, setMovingNode, setSelection],
+    [node, setMovingNode, setSelection],
+  )
+
+  const handleAddHole = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (!(node && selectedId && (node.type === 'slab' || node.type === 'ceiling'))) return
+
+      const polygon = (node as SlabNode | CeilingNode).polygon
+      let cx = 0
+      let cz = 0
+      for (const [x, z] of polygon) {
+        cx += x
+        cz += z
+      }
+      cx /= polygon.length
+      cz /= polygon.length
+
+      const holeSize = 0.5
+      const newHole: Array<[number, number]> = [
+        [cx - holeSize, cz - holeSize],
+        [cx + holeSize, cz - holeSize],
+        [cx + holeSize, cz + holeSize],
+        [cx - holeSize, cz + holeSize],
+      ]
+      const surfaceNode = node as SlabNode | CeilingNode
+      const currentHoles = surfaceNode.holes || []
+      const currentMetadata = currentHoles.map(
+        (_, index) => surfaceNode.holeMetadata?.[index] ?? { source: 'manual' as const },
+      )
+      updateNode(selectedId as AnyNodeId, {
+        holes: [...currentHoles, newHole],
+        holeMetadata: [...currentMetadata, { source: 'manual' }],
+      })
+      setEditingHole({ nodeId: selectedId, holeIndex: currentHoles.length })
+      // Re-assert selection so the node stays selected
+      setSelection({ selectedIds: [selectedId] })
+    },
+    [node, selectedId, updateNode, setEditingHole, setSelection],
   )
 
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      // Activate delete mode (sledgehammer tool) instead of deleting directly
-      if (isSelectionDebugEnabled) {
-        console.info('[floating-action-menu] action delete-mode', {
-          nodeId: node?.id ?? null,
-          nodeType: node?.type ?? null,
-        })
+      if (!selectedId) return
+      if (node?.type === 'item') {
+        sfxEmitter.emit('sfx:item-delete')
+      } else {
+        sfxEmitter.emit('sfx:structure-delete')
       }
       setSelection({ selectedIds: [] })
-      setMode('delete')
+      useScene.getState().deleteNode(selectedId as AnyNodeId)
     },
-    [isSelectionDebugEnabled, node, setSelection, setMode],
+    [node?.type, selectedId, setSelection],
   )
 
-  if (!shouldRender) return null
+  if (
+    !(selectedId && node && isValidType && !isFloorplanHovered && mode !== 'delete') ||
+    movingWallEndpoint ||
+    movingFenceEndpoint ||
+    curvingFence
+  )
+    return null
 
   return (
-    <group ref={groupRef}>
-      <Html
-        center
-        style={{
-          pointerEvents: 'auto',
-          touchAction: 'none',
-        }}
-        zIndexRange={[100, 0]}
-      >
-        <NodeActionMenu
-          onDelete={handleDelete}
-          onDuplicate={node && !DELETE_ONLY_TYPES.includes(node.type) ? handleDuplicate : undefined}
-          onMove={node && !DELETE_ONLY_TYPES.includes(node.type) ? handleMove : undefined}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        />
-      </Html>
+    <group>
+      <group ref={groupRef}>
+        <Html
+          center
+          style={{
+            pointerEvents: 'auto',
+            touchAction: 'none',
+          }}
+          zIndexRange={[100, 0]}
+        >
+          <div ref={menuScaleRef} style={{ transformOrigin: 'center center' }}>
+            <NodeActionMenu
+              onAddHole={node && HOLE_TYPES.includes(node.type) ? handleAddHole : undefined}
+              onCurve={
+                node?.type === 'fence' || (node?.type === 'wall' && canCurveSelectedWall)
+                  ? handleCurve
+                  : undefined
+              }
+              onMove={
+                // Registry-driven: any kind that declares
+                // `capabilities.movable`, a `floorplanMoveTarget`, or a
+                // 3D `affordanceTools.move` mover gets the Move button.
+                // Replaces the previous 13-arm `node?.type === '…'`
+                // chain so adding a new movable kind doesn't touch this
+                // file.
+                node && isRegistryMovable(node.type) ? handleMove : undefined
+              }
+              onDelete={handleDelete}
+              onDuplicate={
+                node &&
+                node.type !== 'spawn' &&
+                !DELETE_ONLY_TYPES.includes(node.type) &&
+                !HOLE_TYPES.includes(node.type)
+                  ? handleDuplicate
+                  : undefined
+              }
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            />
+          </div>
+        </Html>
+      </group>
     </group>
   )
 }

@@ -23,9 +23,11 @@ import {
   Moon,
   MousePointer2,
   Package,
+  PaintBucket,
   PencilLine,
   Plus,
   Redo2,
+  Sparkles,
   Square,
   SquareStack,
   Sun,
@@ -34,6 +36,7 @@ import {
   Video,
 } from 'lucide-react'
 import { useEffect } from 'react'
+import { runRedo, runUndo } from '../../../lib/history'
 import { deleteLevelWithFallbackSelection } from '../../../lib/level-selection'
 import { useCommandRegistry } from '../../../store/use-command-registry'
 import type { StructureTool } from '../../../store/use-editor'
@@ -44,8 +47,13 @@ export function EditorCommands() {
   const register = useCommandRegistry((s) => s.register)
   const { navigateTo, setInputValue, setOpen } = useCommandPalette()
 
-  const { setPhase, setMode, setTool, setStructureLayer, isPreviewMode, setPreviewMode } =
-    useEditor()
+  const setPhase = useEditor((s) => s.setPhase)
+  const setMode = useEditor((s) => s.setMode)
+  const setTool = useEditor((s) => s.setTool)
+  const setStructureLayer = useEditor((s) => s.setStructureLayer)
+  const primeMaterialPaintFromSelection = useEditor((s) => s.primeMaterialPaintFromSelection)
+  const isPreviewMode = useEditor((s) => s.isPreviewMode)
+  const setPreviewMode = useEditor((s) => s.setPreviewMode)
 
   const exportScene = useViewer((s) => s.exportScene)
 
@@ -145,6 +153,21 @@ export function EditorCommands() {
             useScene.getState().deleteNodes(selectedIds as any[])
           }),
       },
+      {
+        id: 'editor.mode.material-paint',
+        label: 'Material Paint',
+        group: 'Scene',
+        icon: <PaintBucket className="h-4 w-4" />,
+        keywords: ['paint', 'material', 'texture', 'bucket', 'surface'],
+        shortcut: ['P'],
+        execute: () =>
+          run(() => {
+            primeMaterialPaintFromSelection()
+            setPhase('structure')
+            setStructureLayer('elements')
+            setMode('material-paint')
+          }),
+      },
 
       // ── Levels ───────────────────────────────────────────────────────────
       {
@@ -168,8 +191,11 @@ export function EditorCommands() {
             const { nodes } = useScene.getState()
             const building = Object.values(nodes).find((n) => n.type === 'building')
             if (!building) return
+            const levelCount = building.children.filter(
+              (childId) => nodes[childId as keyof typeof nodes]?.type === 'level',
+            ).length
             const newLevel = LevelNode.parse({
-              level: building.children.length,
+              level: levelCount,
               children: [],
               parentId: building.id,
             })
@@ -256,28 +282,31 @@ export function EditorCommands() {
           }),
       },
       {
-        id: 'editor.viewer.theme',
-        label: () => {
-          const theme = useViewer.getState().theme
-          return theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'
-        },
+        id: 'editor.viewer.shading-solid',
+        label: 'Switch to Solid',
         group: 'Viewer Controls',
-        icon: <Sun className="h-4 w-4" />, // icon is static; label conveys the action
-        keywords: ['theme', 'dark', 'light', 'appearance', 'color'],
-        execute: () =>
-          run(() => {
-            const { theme, setTheme } = useViewer.getState()
-            setTheme(theme === 'dark' ? 'light' : 'dark')
-          }),
+        icon: <Box className="h-4 w-4" />,
+        keywords: ['solid', 'shading', 'render', 'mode', 'performance'],
+        execute: () => run(() => useViewer.getState().setShading('solid')),
+      },
+      {
+        id: 'editor.viewer.shading-rendered',
+        label: 'Switch to Rendered',
+        group: 'Viewer Controls',
+        icon: <Sparkles className="h-4 w-4" />,
+        keywords: ['rendered', 'shading', 'render', 'mode', 'quality'],
+        execute: () => run(() => useViewer.getState().setShading('rendered')),
       },
       {
         id: 'editor.viewer.camera-snapshot',
-        label: 'Camera Snapshot',
+        label: 'Take Snapshot',
         group: 'Viewer Controls',
         icon: <Camera className="h-4 w-4" />,
         keywords: ['camera', 'snapshot', 'capture', 'save', 'view', 'bookmark'],
-        navigate: true,
-        execute: () => navigateTo('camera-view'),
+        execute: () => {
+          setOpen(false)
+          useEditor.getState().setCaptureMode(true)
+        },
       },
 
       // ── View ─────────────────────────────────────────────────────────────
@@ -309,7 +338,7 @@ export function EditorCommands() {
         group: 'History',
         icon: <Undo2 className="h-4 w-4" />,
         keywords: ['undo', 'revert', 'back'],
-        execute: () => run(() => useScene.temporal.getState().undo()),
+        execute: () => run(() => runUndo()),
       },
       {
         id: 'editor.history.redo',
@@ -317,7 +346,7 @@ export function EditorCommands() {
         group: 'History',
         icon: <Redo2 className="h-4 w-4" />,
         keywords: ['redo', 'forward', 'repeat'],
-        execute: () => run(() => useScene.temporal.getState().redo()),
+        execute: () => run(() => runRedo()),
       },
 
       // ── Export & Share ───────────────────────────────────────────────────

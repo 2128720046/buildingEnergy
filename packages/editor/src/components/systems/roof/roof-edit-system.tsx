@@ -22,14 +22,14 @@ export const RoofEditSystem = () => {
   useEffect(() => {
     const nodes = useScene.getState().nodes
 
-    // Collect which roof nodes should be in "edit mode"
+    // Collect which roof nodes should be in "edit mode".
+    // Selecting the roof itself should keep the merged visual intact so
+    // material appearance does not jump between merged and per-segment meshes.
     const activeRoofIds = new Set<string>()
     for (const id of selectedIds) {
       const node = nodes[id as AnyNodeId]
       if (!node) continue
-      if (node.type === 'roof') {
-        activeRoofIds.add(id)
-      } else if (node.type === 'roof-segment' && node.parentId) {
+      if (node.type === 'roof-segment' && node.parentId) {
         activeRoofIds.add(node.parentId)
       }
     }

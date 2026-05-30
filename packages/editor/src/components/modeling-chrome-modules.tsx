@@ -4,7 +4,8 @@ import type { ReactNode } from 'react'
 import type { EditorProps } from './editor'
 import { AutoModelingImporter } from './ui/auto-modeling-importer'
 import { ActionMenu } from './ui/action-menu'
-import { ViewerToolbarLeft, ViewerToolbarRight } from './ui/viewer-toolbar'
+import { CameraActions as ViewerToolbarRight } from './ui/action-menu/camera-actions'
+import { ViewToggles as ViewerToolbarLeft } from './ui/action-menu/view-toggles'
 import { SettingsPanel, type SettingsPanelProps } from './ui/sidebar/panels/settings-panel'
 import { SitePanel, type SitePanelProps } from './ui/sidebar/panels/site-panel'
 import { ZoneComponentPanel } from './ui/zone-component-panel'
@@ -175,7 +176,7 @@ export function ModelingHostToolbox({ className, variant = 'panel' }: ModelingHo
           </div>
         ) : null}
 
-        <ActionMenu layout="embedded" />
+        <ActionMenu />
       </section>
     </div>
   )

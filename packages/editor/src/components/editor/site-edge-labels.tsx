@@ -2,7 +2,7 @@
 
 import type { SiteNode } from '@pascal-app/core'
 import { sceneRegistry, useScene } from '@pascal-app/core'
-import { useViewer } from '@pascal-app/viewer'
+import { getSceneTheme, useViewer } from '@pascal-app/viewer'
 import { Html } from '@react-three/drei'
 import { createPortal, useFrame } from '@react-three/fiber'
 import { useMemo, useRef, useState } from 'react'
@@ -20,15 +20,20 @@ function formatMeasurement(value: number, unit: 'metric' | 'imperial') {
 }
 
 export function SiteEdgeLabels() {
-  const rootNodeIds = useScene((state) => state.rootNodeIds)
-  const nodes = useScene((state) => state.nodes)
+  // Narrow subscription to just the site node — subscribing to the full
+  // s.nodes dict re-rendered this on every wall/level mutation even though
+  // the site itself rarely changes.
+  const siteNode = useScene((state) => {
+    const firstRoot = state.rootNodeIds[0]
+    if (!firstRoot) return null
+    const node = state.nodes[firstRoot]
+    return node?.type === 'site' ? (node as SiteNode) : null
+  })
   const unit = useViewer((state) => state.unit)
-  const theme = useViewer((state) => state.theme)
+  const isNight = useViewer((state) => getSceneTheme(state.sceneTheme).appearance === 'dark')
 
-  const siteNode = rootNodeIds[0] ? (nodes[rootNodeIds[0]] as SiteNode) : null
   const siteNodeId = siteNode?.id
 
-  const isNight = theme === 'dark'
   const color = isNight ? '#ffffff' : '#111111'
   const shadowColor = isNight ? '#111111' : '#ffffff'
 

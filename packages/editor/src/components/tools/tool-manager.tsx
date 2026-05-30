@@ -1,41 +1,52 @@
-import { type AnyNodeId, type CeilingNode, type SlabNode, useScene } from '@pascal-app/core'
+import {
+  type AnyNodeId,
+  type BuildingNode,
+  type CeilingNode,
+  nodeRegistry,
+  type SlabNode,
+  useScene,
+} from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import { type ComponentType, lazy, Suspense } from 'react'
 import useEditor, { type Phase, type Tool } from '../../store/use-editor'
-import { CeilingBoundaryEditor } from './ceiling/ceiling-boundary-editor'
-import { CeilingHoleEditor } from './ceiling/ceiling-hole-editor'
-import { CeilingTool } from './ceiling/ceiling-tool'
-import { DoorTool } from './door/door-tool'
-import { ItemTool } from './item/item-tool'
+import { ColumnTool } from './column/column-tool'
+import { ElevatorTool } from './elevator/elevator-tool'
 import { MoveTool } from './item/move-tool'
 import { RoofTool } from './roof/roof-tool'
+import { getRegistryAffordanceTool } from './shared/affordance-dispatch'
 import { SiteBoundaryEditor } from './site/site-boundary-editor'
-import { SlabBoundaryEditor } from './slab/slab-boundary-editor'
-import { SlabHoleEditor } from './slab/slab-hole-editor'
-import { SlabTool } from './slab/slab-tool'
 import { StairTool } from './stair/stair-tool'
-import { WallTool } from './wall/wall-tool'
-import { WindowTool } from './window/window-tool'
 import { ZoneBoundaryEditor } from './zone/zone-boundary-editor'
 import { ZoneTool } from './zone/zone-tool'
 
+// Cache lazy tool components keyed by their loader so React.lazy isn't
+// re-invoked across renders.
+const lazyToolCache = new WeakMap<() => Promise<unknown>, ComponentType>()
+
+function getRegistryTool(tool: Tool | null): ComponentType | null {
+  if (!tool) return null
+  const def = nodeRegistry.get(tool)
+  if (!def?.tool) return null
+  const cached = lazyToolCache.get(def.tool)
+  if (cached) return cached
+  const Comp = lazy(def.tool as () => Promise<{ default: ComponentType }>)
+  lazyToolCache.set(def.tool, Comp)
+  return Comp
+}
+
+// Legacy tool fallbacks — kinds whose placement tools haven't migrated
+// to `def.tool` yet. Wall / fence / slab / ceiling / door / window /
+// item / shelf / spawn now go through the registry path above.
 const tools: Record<Phase, Partial<Record<Tool, React.FC>>> = {
   site: {
     'property-line': SiteBoundaryEditor,
   },
   structure: {
-    wall: WallTool,
-    slab: SlabTool,
-    ceiling: CeilingTool,
     roof: RoofTool,
     stair: StairTool,
-    door: DoorTool,
-    item: ItemTool,
     zone: ZoneTool,
-    window: WindowTool,
   },
-  furnish: {
-    item: ItemTool,
-  },
+  furnish: {},
 }
 
 export const ToolManager: React.FC = () => {
@@ -43,10 +54,25 @@ export const ToolManager: React.FC = () => {
   const mode = useEditor((state) => state.mode)
   const tool = useEditor((state) => state.tool)
   const movingNode = useEditor((state) => state.movingNode)
+  const movingWallEndpoint = useEditor((state) => state.movingWallEndpoint)
+  const movingFenceEndpoint = useEditor((state) => state.movingFenceEndpoint)
+  const curvingWall = useEditor((state) => state.curvingWall)
+  const curvingFence = useEditor((state) => state.curvingFence)
   const editingHole = useEditor((state) => state.editingHole)
   const selectedZoneId = useViewer((state) => state.selection.zoneId)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
+  const buildingId = useViewer((state) => state.selection.buildingId)
+  const activeLevelId = useViewer((state) => state.selection.levelId)
+  const setSelection = useViewer((state) => state.setSelection)
   const nodes = useScene((state) => state.nodes)
+
+  // Building transform for the local group — all building-relative tools live inside this group
+  // so their cursor positions and committed data are naturally in building-local space.
+  const building = buildingId
+    ? (nodes[buildingId as AnyNodeId] as BuildingNode | undefined)
+    : undefined
+  const buildingPosition = building?.position ?? [0, 0, 0]
+  const buildingRotation = building?.rotation ?? [0, 0, 0]
 
   // Check if a slab is selected
   const selectedSlabId = selectedIds.find((id) => nodes[id as AnyNodeId]?.type === 'slab') as
@@ -97,24 +123,149 @@ export const ToolManager: React.FC = () => {
   // Show build tools when in build mode
   const showBuildTool = mode === 'build' && tool !== null
 
-  const BuildToolComponent = showBuildTool ? tools[phase]?.[tool] : null
+  // Registry-first: if the active tool's kind has a NodeDefinition with a
+  // tool contribution, the registry-driven tool takes over.
+  const RegistryToolComponent = showBuildTool ? getRegistryTool(tool) : null
+  const useRegistryTool = RegistryToolComponent != null
+
+  const BuildToolComponent = showBuildTool && !useRegistryTool ? tools[phase]?.[tool] : null
+  const handlePlacedNodeSelected = (nodeId: AnyNodeId) => {
+    setSelection({ selectedIds: [nodeId] })
+  }
+  const handlePlacedElevatorSelected = (
+    nodeId: AnyNodeId,
+    elevatorBuildingId: BuildingNode['id'],
+  ) => {
+    setSelection({ buildingId: elevatorBuildingId, selectedIds: [nodeId] })
+  }
 
   return (
     <>
+      {/* World-space tools: site boundary and building movement operate in world coordinates */}
       {showSiteBoundaryEditor && <SiteBoundaryEditor />}
-      {showZoneBoundaryEditor && selectedZoneId && <ZoneBoundaryEditor zoneId={selectedZoneId} />}
-      {showSlabBoundaryEditor && selectedSlabId && <SlabBoundaryEditor slabId={selectedSlabId} />}
-      {showSlabHoleEditor && selectedSlabId && editingHole && (
-        <SlabHoleEditor holeIndex={editingHole.holeIndex} slabId={selectedSlabId} />
+      {movingNode?.type === 'building' && (
+        <MoveTool onNodeMoved={handlePlacedNodeSelected} onSpawnMoved={handlePlacedNodeSelected} />
       )}
-      {showCeilingBoundaryEditor && selectedCeilingId && (
-        <CeilingBoundaryEditor ceilingId={selectedCeilingId} />
-      )}
-      {showCeilingHoleEditor && selectedCeilingId && editingHole && (
-        <CeilingHoleEditor ceilingId={selectedCeilingId} holeIndex={editingHole.holeIndex} />
-      )}
-      {movingNode && <MoveTool />}
-      {!movingNode && BuildToolComponent && <BuildToolComponent />}
+
+      {/* Building-local group: all other tools are relative to the selected building.
+          Cursor visuals set positions in building-local space; this group applies the
+          building's world transform so they render at the correct world position. */}
+      <group
+        position={buildingPosition as [number, number, number]}
+        rotation={buildingRotation as [number, number, number]}
+      >
+        {showZoneBoundaryEditor && selectedZoneId && <ZoneBoundaryEditor zoneId={selectedZoneId} />}
+        {showSlabBoundaryEditor &&
+          selectedSlabId &&
+          (() => {
+            const Registry = getRegistryAffordanceTool('slab', 'boundary-edit')
+            return Registry ? (
+              <Suspense fallback={null}>
+                <Registry slabId={selectedSlabId} />
+              </Suspense>
+            ) : null
+          })()}
+        {showSlabHoleEditor &&
+          selectedSlabId &&
+          editingHole &&
+          (() => {
+            const Registry = getRegistryAffordanceTool('slab', 'hole-edit')
+            return Registry ? (
+              <Suspense fallback={null}>
+                <Registry holeIndex={editingHole.holeIndex} slabId={selectedSlabId} />
+              </Suspense>
+            ) : null
+          })()}
+        {showCeilingBoundaryEditor &&
+          selectedCeilingId &&
+          (() => {
+            const Registry = getRegistryAffordanceTool('ceiling', 'boundary-edit')
+            return Registry ? (
+              <Suspense fallback={null}>
+                <Registry ceilingId={selectedCeilingId} />
+              </Suspense>
+            ) : null
+          })()}
+        {showCeilingHoleEditor &&
+          selectedCeilingId &&
+          editingHole &&
+          (() => {
+            const Registry = getRegistryAffordanceTool('ceiling', 'hole-edit')
+            return Registry ? (
+              <Suspense fallback={null}>
+                <Registry ceilingId={selectedCeilingId} holeIndex={editingHole.holeIndex} />
+              </Suspense>
+            ) : null
+          })()}
+        {movingWallEndpoint &&
+          (() => {
+            const RegistryAffordance = getRegistryAffordanceTool(
+              movingWallEndpoint.wall.type,
+              'move-endpoint',
+            )
+            return RegistryAffordance ? (
+              <Suspense fallback={null}>
+                <RegistryAffordance target={movingWallEndpoint} />
+              </Suspense>
+            ) : null
+          })()}
+        {movingFenceEndpoint &&
+          (() => {
+            const RegistryAffordance = getRegistryAffordanceTool(
+              movingFenceEndpoint.fence.type,
+              'move-endpoint',
+            )
+            return RegistryAffordance ? (
+              <Suspense fallback={null}>
+                <RegistryAffordance target={movingFenceEndpoint} />
+              </Suspense>
+            ) : null
+          })()}
+        {curvingWall &&
+          (() => {
+            const Registry = getRegistryAffordanceTool(curvingWall.type, 'curve')
+            return Registry ? (
+              <Suspense fallback={null}>
+                <Registry node={curvingWall} />
+              </Suspense>
+            ) : null
+          })()}
+        {curvingFence &&
+          (() => {
+            const RegistryAffordance = getRegistryAffordanceTool(curvingFence.type, 'curve')
+            return RegistryAffordance ? (
+              <Suspense fallback={null}>
+                <RegistryAffordance node={curvingFence} />
+              </Suspense>
+            ) : null
+          })()}
+        {movingNode && movingNode.type !== 'building' && (
+          <MoveTool
+            onNodeMoved={handlePlacedNodeSelected}
+            onSpawnMoved={handlePlacedNodeSelected}
+          />
+        )}
+        {/* Registry-first: when the active tool's kind has a registered
+            NodeDefinition with a tool contribution, mount it here. */}
+        {!movingNode && useRegistryTool && RegistryToolComponent && (
+          <Suspense fallback={null}>
+            <RegistryToolComponent />
+          </Suspense>
+        )}
+        {!movingNode && !useRegistryTool && showBuildTool && tool === 'column' && (
+          <ColumnTool currentLevelId={activeLevelId ?? null} onPlaced={handlePlacedNodeSelected} />
+        )}
+        {!movingNode && !useRegistryTool && showBuildTool && tool === 'elevator' && (
+          <ElevatorTool
+            buildingId={buildingId as BuildingNode['id'] | null}
+            levelId={activeLevelId ?? null}
+            onPlaced={handlePlacedElevatorSelected}
+          />
+        )}
+        {!movingNode && BuildToolComponent && tool !== 'column' && tool !== 'elevator' ? (
+          <BuildToolComponent />
+        ) : null}
+      </group>
     </>
   )
 }

@@ -14,6 +14,7 @@ import { useViewer } from '@pascal-app/viewer'
 import {
   Camera,
   ChevronDown,
+  Copy,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -23,17 +24,25 @@ import {
   X,
 } from 'lucide-react'
 import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { ColorDot } from './../../../../../components/ui/primitives/color-dot'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from './../../../../../components/ui/primitives/popover'
+import {
+  buildLevelDuplicateCreateOps,
+  type LevelDuplicatePreset,
+} from './../../../../../lib/level-duplication'
+import { getDefaultLevelName } from './../../../../../lib/level-name'
 import { deleteLevelWithFallbackSelection } from './../../../../../lib/level-selection'
+import { createLocalGuideImage } from './../../../../../lib/local-guide-image'
 import { cn } from './../../../../../lib/utils'
 import useEditor from './../../../../../store/use-editor'
 import { useUploadStore } from '../../../../../store/use-upload'
+import { LevelDuplicateDialog } from '../../../level-duplicate-dialog'
 import { InlineRenameInput } from './inline-rename-input'
 import { focusTreeNode, TreeNode } from './tree-node'
 import { TreeNodeDragProvider } from './tree-node-drag'
@@ -79,7 +88,7 @@ function useSiteNode(): SiteNode | null {
   )
 }
 
-function PropertyLineSection() {
+const PropertyLineSection = memo(function PropertyLineSection() {
   const siteNode = useSiteNode()
   const updateNode = useScene((state) => state.updateNode)
   const mode = useEditor((state) => state.mode)
@@ -217,13 +226,13 @@ function PropertyLineSection() {
       )}
     </div>
   )
-}
+})
 
 // ============================================================================
 // SITE PHASE VIEW - Property line + building buttons
 // ============================================================================
 
-function CameraPopover({
+const CameraPopover = memo(function CameraPopover({
   nodeId,
   hasCamera,
   open,
@@ -302,9 +311,9 @@ function CameraPopover({
       </PopoverContent>
     </Popover>
   )
-}
+})
 
-function ReferenceItem({
+const ReferenceItem = memo(function ReferenceItem({
   refNode,
   isLastRow,
   setSelectedReferenceId,
@@ -359,7 +368,7 @@ function ReferenceItem({
         <InlineRenameInput
           defaultName={refNode.type === 'scan' ? '3D Scan' : 'Guide Image'}
           isEditing={isEditing}
-          node={refNode}
+          nodeId={refNode.id}
           onStartEditing={() => setIsEditing(true)}
           onStopEditing={() => setIsEditing(false)}
         />
@@ -374,7 +383,7 @@ function ReferenceItem({
       </button>
     </div>
   )
-}
+})
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024 // 200MB
 
@@ -386,15 +395,25 @@ interface LevelReferencesProps {
   onDeleteAsset?: (projectId: string, url: string) => void
 }
 
-function LevelReferences({
+const LevelReferences = memo(function LevelReferences({
   levelId,
   isLastLevel,
   projectId,
   onUploadAsset,
   onDeleteAsset,
 }: LevelReferencesProps) {
-  const nodes = useScene((s) => s.nodes)
+  const createNode = useScene((s) => s.createNode)
   const deleteNode = useScene((s) => s.deleteNode)
+  const setSelection = useViewer((s) => s.setSelection)
+  const setShowGuides = useViewer((s) => s.setShowGuides)
+  const references = useScene(
+    useShallow((s) =>
+      Object.values(s.nodes).filter(
+        (node): node is ScanNode | GuideNode =>
+          (node.type === 'scan' || node.type === 'guide') && node.parentId === levelId,
+      ),
+    ),
+  )
   const setSelectedReferenceId = useEditor((s) => s.setSelectedReferenceId)
   const uploadState = useUploadStore((s) => s.uploads[levelId])
   const clearUpload = useUploadStore((s) => s.clearUpload)
@@ -409,24 +428,27 @@ function LevelReferences({
 
   const scanInputRef = useRef<HTMLInputElement>(null)
 
-  const references = Object.values(nodes).filter(
-    (node): node is ScanNode | GuideNode =>
-      (node.type === 'scan' || node.type === 'guide') && node.parentId === levelId,
-  )
-
-  const handleAddAsset = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddAsset = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
 
-    if (!projectId) {
-      useUploadStore.getState().startUpload(levelId, 'scan', file.name)
-      useUploadStore.getState().setError(levelId, 'No active project. Please open a project first.')
+    // Auto-detect type based on file extension/mime type
+    const isScan =
+      file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')
+    const isImage = file.type.startsWith('image/')
+    const type = isScan ? 'scan' : 'guide'
+
+    if (!(isScan || isImage)) {
+      useUploadStore.getState().startUpload(levelId, type, file.name)
+      useUploadStore
+        .getState()
+        .setError(levelId, 'Invalid file type. Please upload a .glb/.gltf scan or an image.')
       return
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      useUploadStore.getState().startUpload(levelId, 'scan', file.name)
+      useUploadStore.getState().startUpload(levelId, type, file.name)
       useUploadStore
         .getState()
         .setError(
@@ -436,20 +458,28 @@ function LevelReferences({
       return
     }
 
-    // Auto-detect type based on file extension/mime type
-    const isScan =
-      file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')
-    const isImage = file.type.startsWith('image/')
+    if (isImage) {
+      useUploadStore.getState().startUpload(levelId, 'guide', file.name)
+      useUploadStore.getState().setStatus(levelId, 'uploading')
 
-    if (!(isScan || isImage)) {
-      useUploadStore.getState().startUpload(levelId, 'scan', file.name)
-      useUploadStore
-        .getState()
-        .setError(levelId, 'Invalid file type. Please upload a .glb/.gltf scan or an image.')
+      try {
+        const guide = await createLocalGuideImage({ createNode, file, levelId })
+        setShowGuides(true)
+        setSelectedReferenceId(guide.id)
+        setSelection({ selectedIds: [], zoneId: null })
+        useUploadStore.getState().setResult(levelId, guide.url)
+        window.setTimeout(() => useUploadStore.getState().clearUpload(levelId), 600)
+      } catch {
+        useUploadStore.getState().setError(levelId, 'Could not add that guide image.')
+      }
       return
     }
 
-    const type = isScan ? 'scan' : 'guide'
+    if (!projectId) {
+      useUploadStore.getState().startUpload(levelId, 'scan', file.name)
+      useUploadStore.getState().setError(levelId, 'No active project. Please open a project first.')
+      return
+    }
 
     clearUpload(levelId)
     onUploadAsset?.(projectId, levelId, file, type)
@@ -457,7 +487,10 @@ function LevelReferences({
 
   const handleDelete = async (nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    const refNode = nodes[nodeId as AnyNodeId] as ScanNode | GuideNode | undefined
+    const refNode = useScene.getState().nodes[nodeId as AnyNodeId] as
+      | ScanNode
+      | GuideNode
+      | undefined
 
     if (
       projectId &&
@@ -548,10 +581,11 @@ function LevelReferences({
       )}
     </div>
   )
-}
+})
 
-function LevelItem({
+const LevelItem = memo(function LevelItem({
   level,
+  levels,
   selectedLevelId,
   setSelection,
   updateNode,
@@ -561,6 +595,7 @@ function LevelItem({
   onDeleteAsset,
 }: {
   level: LevelNode
+  levels: LevelNode[]
   selectedLevelId: string | null
   setSelection: (selection: any) => void
   updateNode: (id: AnyNodeId, updates: Partial<AnyNode>) => void
@@ -570,11 +605,22 @@ function LevelItem({
   onDeleteAsset?: (projectId: string, url: string) => void
 }) {
   const [cameraPopoverOpen, setCameraPopoverOpen] = useState(false)
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const createNodes = useScene((s) => s.createNodes)
+  const updateNodes = useScene((s) => s.updateNodes)
   const itemRef = useRef<HTMLDivElement>(null)
   const isSelected = selectedLevelId === level.id
   const canDeleteLevel = level.level !== 0
   const [isExpanded, setIsExpanded] = useState(isSelected)
+  const buildingId =
+    typeof level.parentId === 'string' && level.parentId.startsWith('building_')
+      ? (level.parentId as BuildingNode['id'])
+      : undefined
+
+  const selectLevel = (levelId: LevelNode['id']) => {
+    setSelection(buildingId ? { buildingId, levelId } : { levelId })
+  }
 
   useEffect(() => {
     setIsExpanded(isSelected)
@@ -587,11 +633,32 @@ function LevelItem({
   }, [isSelected])
 
   const handleSelect = () => {
-    setSelection({ levelId: level.id })
+    selectLevel(level.id)
   }
 
   const handleDoubleClick = () => {
     focusTreeNode(level.id)
+  }
+
+  const handleDuplicateLevel = (preset: LevelDuplicatePreset = 'everything') => {
+    const { createOps, newLevelId, shiftedLevels } = buildLevelDuplicateCreateOps({
+      nodes: useScene.getState().nodes,
+      level,
+      levels,
+      preset,
+    })
+
+    if (shiftedLevels.length > 0) {
+      updateNodes(
+        shiftedLevels.map((shiftedLevel) => ({
+          id: shiftedLevel.id as AnyNodeId,
+          data: { level: shiftedLevel.level } as Partial<AnyNode>,
+        })),
+      )
+    }
+    createNodes(createOps)
+    selectLevel(newLevelId as LevelNode['id'])
+    setDuplicateDialogOpen(false)
   }
 
   return (
@@ -635,7 +702,7 @@ function LevelItem({
               if (isSelected) {
                 setIsExpanded(!isExpanded)
               } else {
-                setSelection({ levelId: level.id })
+                selectLevel(level.id)
               }
             }}
           >
@@ -657,9 +724,9 @@ function LevelItem({
             src="/icons/level.png"
           />
           <InlineRenameInput
-            defaultName={`Level ${level.level}`}
+            defaultName={getDefaultLevelName(level.level)}
             isEditing={isEditing}
-            node={level}
+            nodeId={level.id}
             onStartEditing={() => setIsEditing(true)}
             onStopEditing={() => setIsEditing(false)}
           />
@@ -744,7 +811,23 @@ function LevelItem({
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-40 p-1" side="right">
+          <PopoverContent align="start" className="w-48 p-1" side="right">
+            <button
+              className="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+              onClick={() => handleDuplicateLevel()}
+              title="Duplicate level"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Duplicate
+            </button>
+            <button
+              className="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent"
+              onClick={() => setDuplicateDialogOpen(true)}
+              title="Duplicate level with options"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Duplicate with options...
+            </button>
             <button
               className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors enabled:cursor-pointer enabled:hover:bg-accent enabled:hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!canDeleteLevel}
@@ -776,11 +859,17 @@ function LevelItem({
           </motion.div>
         )}
       </AnimatePresence>
+      <LevelDuplicateDialog
+        level={level}
+        onConfirm={handleDuplicateLevel}
+        onOpenChange={setDuplicateDialogOpen}
+        open={duplicateDialogOpen}
+      />
     </div>
   )
-}
+})
 
-function LevelsSection({
+const LevelsSection = memo(function LevelsSection({
   projectId,
   onUploadAsset,
   onDeleteAsset,
@@ -789,20 +878,27 @@ function LevelsSection({
   onUploadAsset?: (projectId: string, levelId: string, file: File, type: 'scan' | 'guide') => void
   onDeleteAsset?: (projectId: string, url: string) => void
 } = {}) {
-  const nodes = useScene((state) => state.nodes)
   const createNode = useScene((state) => state.createNode)
   const updateNode = useScene((state) => state.updateNode)
   const selectedBuildingId = useViewer((state) => state.selection.buildingId)
   const selectedLevelId = useViewer((state) => state.selection.levelId)
   const setSelection = useViewer((state) => state.setSelection)
 
-  const building = selectedBuildingId ? (nodes[selectedBuildingId] as BuildingNode) : null
+  const building = useScene((s) =>
+    selectedBuildingId ? ((s.nodes[selectedBuildingId] as BuildingNode | undefined) ?? null) : null,
+  )
+  const levels = useScene(
+    useShallow((s) => {
+      if (!selectedBuildingId) return []
+      const bldg = s.nodes[selectedBuildingId] as BuildingNode | undefined
+      if (!bldg) return []
+      return bldg.children
+        .map((id) => s.nodes[id])
+        .filter((node): node is LevelNode => node?.type === 'level')
+    }),
+  )
 
   if (!building) return null
-
-  const levels = building.children
-    .map((id) => nodes[id])
-    .filter((node): node is LevelNode => node?.type === 'level')
 
   const handleAddLevel = () => {
     const newLevel = LevelNode.parse({
@@ -811,7 +907,7 @@ function LevelsSection({
       parentId: building.id,
     })
     createNode(newLevel, building.id)
-    setSelection({ levelId: newLevel.id })
+    setSelection({ buildingId: building.id, levelId: newLevel.id })
   }
 
   return (
@@ -846,6 +942,7 @@ function LevelsSection({
             isLast={index === levels.length - 1}
             key={level.id}
             level={level}
+            levels={levels}
             onDeleteAsset={onDeleteAsset}
             onUploadAsset={onUploadAsset}
             projectId={projectId}
@@ -857,9 +954,9 @@ function LevelsSection({
       </div>
     </div>
   )
-}
+})
 
-function LayerToggle() {
+const LayerToggle = memo(function LayerToggle() {
   const structureLayer = useEditor((state) => state.structureLayer)
   const setStructureLayer = useEditor((state) => state.setStructureLayer)
   const phase = useEditor((state) => state.phase)
@@ -987,9 +1084,9 @@ function LayerToggle() {
       </button>
     </div>
   )
-}
+})
 
-function ZoneItem({ zone, isLast }: { zone: ZoneNode; isLast?: boolean }) {
+const ZoneItem = memo(function ZoneItem({ zone, isLast }: { zone: ZoneNode; isLast?: boolean }) {
   const [isEditing, setIsEditing] = useState(false)
   const [cameraPopoverOpen, setCameraPopoverOpen] = useState(false)
   const deleteNode = useScene((state) => state.deleteNode)
@@ -1074,7 +1171,7 @@ function ZoneItem({ zone, isLast }: { zone: ZoneNode; isLast?: boolean }) {
         <InlineRenameInput
           defaultName={defaultName}
           isEditing={isEditing}
-          node={zone}
+          nodeId={zone.id}
           onStartEditing={() => setIsEditing(true)}
           onStopEditing={() => setIsEditing(false)}
         />
@@ -1150,9 +1247,9 @@ function ZoneItem({ zone, isLast }: { zone: ZoneNode; isLast?: boolean }) {
       </div>
     </div>
   )
-}
+})
 
-function MultiSelectionBadge() {
+const MultiSelectionBadge = memo(function MultiSelectionBadge() {
   const selectedIds = useViewer((state) => state.selection.selectedIds)
   const setSelection = useViewer((state) => state.setSelection)
 
@@ -1172,10 +1269,9 @@ function MultiSelectionBadge() {
       </div>
     </div>
   )
-}
+})
 
-function ContentSection() {
-  const nodes = useScene((state) => state.nodes)
+const ContentSection = memo(function ContentSection() {
   const selectedLevelId = useViewer((state) => state.selection.levelId)
   const structureLayer = useEditor((state) => state.structureLayer)
   const phase = useEditor((state) => state.phase)
@@ -1183,7 +1279,25 @@ function ContentSection() {
   const setMode = useEditor((state) => state.setMode)
   const setTool = useEditor((state) => state.setTool)
 
-  const level = selectedLevelId ? (nodes[selectedLevelId] as LevelNode) : null
+  const level = useScene((s) =>
+    selectedLevelId ? ((s.nodes[selectedLevelId] as LevelNode | undefined) ?? null) : null,
+  )
+  const levelZones = useScene(
+    useShallow((s) => {
+      if (!selectedLevelId) return []
+      return Object.values(s.nodes).filter(
+        (node): node is ZoneNode => node.type === 'zone' && node.parentId === selectedLevelId,
+      )
+    }),
+  )
+  const elementChildren = useScene(
+    useShallow((s) => {
+      if (!selectedLevelId) return []
+      const lvl = s.nodes[selectedLevelId] as LevelNode | undefined
+      if (!lvl) return []
+      return lvl.children.filter((childId) => s.nodes[childId]?.type !== 'zone')
+    }),
+  )
 
   if (!level) {
     return (
@@ -1192,11 +1306,6 @@ function ContentSection() {
   }
 
   if (structureLayer === 'zones') {
-    // Show zones for this level
-    const levelZones = Object.values(nodes).filter(
-      (node): node is ZoneNode => node.type === 'zone' && node.parentId === selectedLevelId,
-    )
-
     const handleAddZone = () => {
       setPhase('structure')
       setMode('build')
@@ -1223,21 +1332,9 @@ function ContentSection() {
     )
   }
 
-  // Filter elements based on phase
-  const elementChildren = level.children.filter((childId) => {
-    const childNode = nodes[childId]
-    if (!childNode || childNode.type === 'zone') return false
-
-    // We no longer filter out structural nodes in furnish mode or furnish nodes in structure mode
-    // This allows nested items (like lights in a ceiling or cabinetry on a wall) to remain visible
-    // and selectable in both modes, ensuring seamless transition in the tree view.
-    return true
-  })
-
   if (elementChildren.length === 0) {
     return <div className="px-3 py-4 text-muted-foreground text-sm">No elements on this level</div>
   }
-
   return (
     <TreeNodeDragProvider>
       <div className="flex flex-col">
@@ -1252,9 +1349,9 @@ function ContentSection() {
       </div>
     </TreeNodeDragProvider>
   )
-}
+})
 
-function BuildingItem({
+const BuildingItem = memo(function BuildingItem({
   building,
   isBuildingActive,
   buildingCameraOpen,
@@ -1295,19 +1392,16 @@ function BuildingItem({
   }
 
   return (
-    <motion.div
+    <div
       className={cn('flex shrink-0 flex-col overflow-hidden', isBuildingActive && 'min-h-0 flex-1')}
-      layout
-      transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
     >
-      <motion.div
+      <div
         className={cn(
           'group/building flex h-10 shrink-0 cursor-pointer items-center border-border/50 border-b pr-2 transition-all duration-200',
           isBuildingActive
             ? 'bg-accent/50 text-foreground'
             : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground',
         )}
-        layout="position"
         onClick={handleSelect}
         onDoubleClick={handleDoubleClick}
         ref={itemRef}
@@ -1391,7 +1485,7 @@ function BuildingItem({
             </div>
           </PopoverContent>
         </Popover>
-      </motion.div>
+      </div>
 
       {/* Tools and content for the active building */}
       <AnimatePresence initial={false}>
@@ -1420,9 +1514,9 @@ function BuildingItem({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   )
-}
+})
 
 export interface SitePanelProps {
   projectId?: string
@@ -1431,7 +1525,6 @@ export interface SitePanelProps {
 }
 
 export function SitePanel({ projectId, onUploadAsset, onDeleteAsset }: SitePanelProps = {}) {
-  const nodes = useScene((state) => state.nodes)
   const rootNodeIds = useScene((state) => state.rootNodeIds)
   const updateNode = useScene((state) => state.updateNode)
   const selectedBuildingId = useViewer((state) => state.selection.buildingId)
@@ -1442,13 +1535,17 @@ export function SitePanel({ projectId, onUploadAsset, onDeleteAsset }: SitePanel
   const [siteCameraOpen, setSiteCameraOpen] = useState(false)
   const [buildingCameraOpen, setBuildingCameraOpen] = useState<string | null>(null)
 
-  const siteNode = rootNodeIds[0] ? nodes[rootNodeIds[0]] : null
-  const buildings = (siteNode?.type === 'site' ? siteNode.children : [])
-    .map((child) => {
-      const id = typeof child === 'string' ? child : child.id
-      return nodes[id] as BuildingNode | undefined
-    })
-    .filter((node): node is BuildingNode => node?.type === 'building')
+  const siteNode = useScene((s) =>
+    rootNodeIds[0] ? ((s.nodes[rootNodeIds[0]] as SiteNode | undefined) ?? null) : null,
+  )
+  const buildings = useScene(
+    useShallow((s) => {
+      if (!siteNode) return []
+      return siteNode.children
+        .map((childId) => s.nodes[childId as AnyNodeId] as BuildingNode | undefined)
+        .filter((node): node is BuildingNode => node?.type === 'building')
+    }),
+  )
 
   return (
     <LayoutGroup>
@@ -1515,7 +1612,7 @@ export function SitePanel({ projectId, onUploadAsset, onDeleteAsset }: SitePanel
               No buildings yet
             </motion.div>
           ) : (
-            <motion.div className="flex min-h-0 flex-1 flex-col" layout>
+            <div className="flex min-h-0 flex-1 flex-col">
               {buildings.map((building) => {
                 const isBuildingActive =
                   (phase === 'structure' || phase === 'furnish') &&
@@ -1534,7 +1631,7 @@ export function SitePanel({ projectId, onUploadAsset, onDeleteAsset }: SitePanel
                   />
                 )
               })}
-            </motion.div>
+            </div>
           )}
         </motion.div>
       </div>

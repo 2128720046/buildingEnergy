@@ -1,4 +1,4 @@
-import { emitter, useScene } from '@pascal-app/core'
+import { emitter, useScene, validateBuildJson } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { TreeView, VisualJson } from '@visual-json/react'
 import { Camera, Download, Save, Trash2, Upload } from 'lucide-react'
@@ -19,7 +19,9 @@ import {
 } from './../../../../../components/ui/primitives/dialog'
 import { Switch } from './../../../../../components/ui/primitives/switch'
 import useEditor, { selectDefaultBuildingAndLevel } from './../../../../../store/use-editor'
+import { AudioSettingsDialog } from './audio-settings-dialog'
 import { KeyboardShortcutsDialog } from './keyboard-shortcuts-dialog'
+import { LoadBuildDialog, type PendingImport } from './load-build-dialog'
 
 type SceneNode = Record<string, unknown> & {
   id?: unknown
@@ -182,7 +184,10 @@ export function SettingsPanel({
   const resetSelection = useViewer((state) => state.resetSelection)
   const exportScene = useViewer((state) => state.exportScene)
   const showGrid = useViewer((state) => state.showGrid)
+  const shadows = useViewer((state) => state.shadows)
   const setPhase = useEditor((state) => state.setPhase)
+  const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false)
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const sceneGraphValue = useMemo(
     () => buildSceneGraphValue(nodes as Record<string, SceneNode>, rootNodeIds),
     [nodes, rootNodeIds],
@@ -219,16 +224,37 @@ export function SettingsPanel({
 
     const reader = new FileReader()
     reader.onload = (event) => {
+      const text = event.target?.result as string
+      let parsed: unknown
       try {
-        const data = JSON.parse(event.target?.result as string)
-        if (data.nodes && data.rootNodeIds) {
-          setScene(data.nodes, data.rootNodeIds)
-          resetSelection()
-          setPhase('site')
-        }
-      } catch (err) {
-        console.error('Failed to load build:', err)
+        parsed = JSON.parse(text)
+      } catch {
+        setPendingImport({
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          result: {
+            ok: false,
+            parsed: null,
+            stats: { total: 0, byType: {}, unknownTypes: {}, floorAreaM2: 0 },
+            errors: [
+              {
+                severity: 'error',
+                code: 'invalid_json',
+                message: 'File could not be parsed as JSON.',
+              },
+            ],
+            warnings: [],
+            schemaIssues: [],
+            schemaIssueCount: 0,
+          },
+        })
+        return
       }
+      setPendingImport({
+        fileName: file.name,
+        fileSizeBytes: file.size,
+        result: validateBuildJson(parsed),
+      })
     }
     reader.readAsText(file)
 
@@ -236,11 +262,28 @@ export function SettingsPanel({
     e.target.value = ''
   }
 
+  const handleConfirmImport = (parsed: { nodes: Record<string, unknown>; rootNodeIds: string[] }) => {
+    setScene(
+      parsed.nodes as Parameters<typeof setScene>[0],
+      parsed.rootNodeIds as Parameters<typeof setScene>[1],
+    )
+    resetSelection()
+    setPhase('site')
+    setPendingImport(null)
+  }
+
   const handleResetToDefault = () => {
     clearScene()
     resetSelection()
     setPhase('structure')
     selectDefaultBuildingAndLevel()
+  }
+
+  const handleGenerateThumbnail = () => {
+    if (!projectId) return
+    setIsGeneratingThumbnail(true)
+    emitter.emit('camera-controls:generate-thumbnail', { projectId })
+    setTimeout(() => setIsGeneratingThumbnail(false), 3000)
   }
 
   const handleVisibilityChange = async (
@@ -255,12 +298,12 @@ export function SettingsPanel({
       {/* Visibility Section (only for cloud projects) */}
       {projectId && !isLocalProject && (
         <div className="space-y-3">
-          <label className="font-medium text-muted-foreground text-xs uppercase">显示控制</label>
+          <label className="font-medium text-muted-foreground text-xs uppercase">Visibility</label>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">公开可见</div>
+              <div className="font-medium text-sm">Public</div>
               <div className="text-muted-foreground text-xs">
-                {projectVisibility?.isPrivate ? '仅自己可见' : '任何人都可查看'}
+                {projectVisibility?.isPrivate ? 'Only you' : 'Anyone'} can view
               </div>
             </div>
             <Switch
@@ -270,8 +313,8 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">显示三维扫描</div>
-              <div className="text-muted-foreground text-xs">访客端可见</div>
+              <div className="font-medium text-sm">Show 3D Scans</div>
+              <div className="text-muted-foreground text-xs">Visible to public viewers</div>
             </div>
             <Switch
               checked={projectVisibility?.showScansPublic ?? true}
@@ -280,8 +323,8 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">显示参考图</div>
-              <div className="text-muted-foreground text-xs">访客端可见</div>
+              <div className="font-medium text-sm">Show Floorplans</div>
+              <div className="text-muted-foreground text-xs">Visible to public viewers</div>
             </div>
             <Switch
               checked={projectVisibility?.showGuidesPublic ?? true}
@@ -290,35 +333,79 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">显示网格</div>
-              <div className="text-muted-foreground text-xs">仅编辑器内可见</div>
+              <div className="font-medium text-sm">Show Grid</div>
+              <div className="text-muted-foreground text-xs">Visible only in the editor</div>
             </div>
             <Switch
               checked={showGrid}
               onCheckedChange={(checked) => useViewer.getState().setShowGrid(checked)}
             />
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-sm">Shadows</div>
+              <div className="text-muted-foreground text-xs">Cast shadows from lights</div>
+            </div>
+            <Switch
+              checked={shadows}
+              onCheckedChange={(checked) => useViewer.getState().setShadows(checked)}
+            />
+          </div>
         </div>
       )}
 
+      {/* Export Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">导出</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">Export</label>
         <Button
           className="w-full justify-start gap-2"
-          onClick={() => exportScene?.()}
+          onClick={() => exportScene?.('glb')}
           variant="outline"
         >
           <Download className="size-4" />
-          导出 GLB
+          Export GLB
+        </Button>
+        <Button
+          className="w-full justify-start gap-2"
+          onClick={() => exportScene?.('stl')}
+          variant="outline"
+        >
+          <Download className="size-4" />
+          Export STL
+        </Button>
+        <Button
+          className="w-full justify-start gap-2"
+          onClick={() => exportScene?.('obj')}
+          variant="outline"
+        >
+          <Download className="size-4" />
+          Export OBJ
         </Button>
       </div>
 
+      {/* Thumbnail Section (only for cloud projects) */}
+      {projectId && !isLocalProject && (
+        <div className="space-y-2">
+          <label className="font-medium text-muted-foreground text-xs uppercase">Thumbnail</label>
+          <Button
+            className="w-full justify-start gap-2"
+            disabled={isGeneratingThumbnail}
+            onClick={handleGenerateThumbnail}
+            variant="outline"
+          >
+            <Camera className="size-4" />
+            {isGeneratingThumbnail ? 'Generating...' : 'Generate Thumbnail'}
+          </Button>
+        </div>
+      )}
+
+      {/* Save/Load Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">保存与加载</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">Save & Load</label>
 
         <Button className="w-full justify-start gap-2" onClick={handleSaveBuild} variant="outline">
           <Save className="size-4" />
-          导出场景 JSON
+          Save Build
         </Button>
 
         <Button
@@ -327,7 +414,7 @@ export function SettingsPanel({
           variant="outline"
         >
           <Upload className="size-4" />
-          导入场景 JSON
+          Load Build
         </Button>
 
         <input
@@ -337,23 +424,37 @@ export function SettingsPanel({
           ref={fileInputRef}
           type="file"
         />
+
+        <LoadBuildDialog
+          onCancel={() => setPendingImport(null)}
+          onConfirm={handleConfirmImport}
+          pending={pendingImport}
+        />
       </div>
 
+      {/* Audio Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">快捷键</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">Audio</label>
+        <AudioSettingsDialog />
+      </div>
+
+      {/* Keyboard Section */}
+      <div className="space-y-2">
+        <label className="font-medium text-muted-foreground text-xs uppercase">Keyboard</label>
         <KeyboardShortcutsDialog />
       </div>
 
+      {/* Scene Graph */}
       <div className="space-y-1">
-        <label className="font-medium text-muted-foreground text-xs uppercase">场景结构</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">Scene Graph</label>
         <Dialog>
           <DialogTrigger asChild>
             <Button className="h-auto justify-start p-0 text-sm" variant="link">
-              查看场景结构
+              Explore scene graph
             </Button>
           </DialogTrigger>
           <DialogContent className="h-[80vh] max-w-[95vw] gap-0 overflow-hidden border-0 bg-[#1e1e1e] p-0 shadow-none sm:max-w-5xl">
-            <DialogTitle className="sr-only">场景结构</DialogTitle>
+            <DialogTitle className="sr-only">Scene Graph</DialogTitle>
             <div
               className="flex h-full min-h-0 w-full min-w-0 *:h-full *:w-full *:overflow-y-auto"
               onContextMenuCapture={blockSceneGraphMutations}
@@ -369,8 +470,9 @@ export function SettingsPanel({
         </Dialog>
       </div>
 
+      {/* Danger Zone */}
       <div className="space-y-2">
-        <label className="font-medium text-destructive text-xs uppercase">危险操作</label>
+        <label className="font-medium text-destructive text-xs uppercase">Danger Zone</label>
 
         <Button
           className="w-full justify-start gap-2"
@@ -378,7 +480,7 @@ export function SettingsPanel({
           variant="destructive"
         >
           <Trash2 className="size-4" />
-          清空并新建场景
+          Clear & Start New
         </Button>
       </div>
     </div>

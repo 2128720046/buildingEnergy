@@ -878,9 +878,11 @@ function MobileMaterialDetailDialog({
 
   const isAlert = detail.kind === 'alert'
   const item = detail.item
+  const alertItem = item as MobileAlertReport
+  const workOrderItem = item as MobileUploadedWorkOrder
   const photos = mobileMaterialPhotos(detail.kind, item.id, item.photoCount, item.imageUrls)
-  const reviewed = !isAlert && reviewedOrderIds.has(item.id)
-  const rejectionOpinion = !isAlert ? rejectionOpinions[item.id] : ''
+  const reviewed = !isAlert && reviewedOrderIds.has(workOrderItem.id)
+  const rejectionOpinion = !isAlert ? (rejectionOpinions[workOrderItem.id] ?? '') : ''
 
   return (
     <div className="operations-mobile-detail-backdrop" role="presentation" onMouseDown={onClose}>
@@ -904,12 +906,12 @@ function MobileMaterialDetailDialog({
           <div className="operations-detail-section">
             <div className="operations-detail-title">{item.title}</div>
             <div className="operations-detail-meta">
-              {item.location} · {item.reporter} · {item.submittedAt}
+              {item.location} · {alertItem.reporter} · {alertItem.submittedAt}
             </div>
             <div className="operations-detail-grid">
               <span>
                 <b>严重程度</b>
-                {severityLabel(item.severity)}
+                {severityLabel(alertItem.severity)}
               </span>
               <span>
                 <b>设备编号</b>
@@ -926,19 +928,19 @@ function MobileMaterialDetailDialog({
             </div>
             <div className="operations-detail-note">
               <b>现场说明</b>
-              <p>{item.detail}</p>
+              <p>{alertItem.detail}</p>
             </div>
           </div>
         ) : (
           <div className="operations-detail-section">
             <div className="operations-detail-title">{item.title}</div>
             <div className="operations-detail-meta">
-              {item.code} · {item.location} · 截止 {item.due}
+              {workOrderItem.code} · {item.location} · 截止 {workOrderItem.due}
             </div>
             <div className="operations-detail-grid">
               <span>
                 <b>异常来源</b>
-                {item.source}
+                {workOrderItem.source}
               </span>
               <span>
                 <b>设备编号</b>
@@ -946,20 +948,20 @@ function MobileMaterialDetailDialog({
               </span>
               <span>
                 <b>检修结果</b>
-                {item.resultStatus}
+                {workOrderItem.resultStatus}
               </span>
               <span>
                 <b>电脑端状态</b>
-                {reviewed ? '已审阅' : item.status}
+                {reviewed ? '已审阅' : workOrderItem.status}
               </span>
             </div>
             <div className="operations-detail-note">
               <b>异常说明</b>
-              <p>{item.anomaly}</p>
+              <p>{workOrderItem.anomaly}</p>
             </div>
             <div className="operations-detail-note">
               <b>处理意见</b>
-              <p>{item.resultNote}</p>
+              <p>{workOrderItem.resultNote}</p>
             </div>
             {rejectionOpinion ? (
               <div className="operations-detail-note operations-reject-note">
@@ -1958,6 +1960,7 @@ export default function SmartOperationsWorkspace({
 
   const [scope, setScope] = useState('全部设备')
   const now = useNow()
+  const [mounted, setMounted] = useState(false)
   const [lastSyncSeconds, setLastSyncSeconds] = useState(0)
   const [operators, setOperators] = useState(7)
   const [pulseAlertId, setPulseAlertId] = useState<string | null>(null)
@@ -2059,6 +2062,10 @@ export default function SmartOperationsWorkspace({
   )
 
   const reviewedOrderIdSet = useMemo(() => new Set(reviewedMobileOrderIds), [reviewedMobileOrderIds])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useIntervalTick(() => {
     setLastSyncSeconds((seconds) => (seconds >= 5 ? 0 : seconds + 1))
@@ -2360,7 +2367,9 @@ export default function SmartOperationsWorkspace({
               <span className="data-status-dot" />
               健康运行
             </span>
-            <span className="operations-header-clock">{now ? formatClockWithSeconds(now) : '--:--:--'}</span>
+            <span className="operations-header-clock">
+              {mounted && now ? formatClockWithSeconds(now) : '--:--:--'}
+            </span>
             <span className="operations-weather">
               <CloudSun className="h-4 w-4" strokeWidth={1.8} />
               多云 26°C

@@ -32,7 +32,7 @@ function estimateItemKw(name: string): number {
 /** 计算编辑前后 item 能耗差异 */
 function computeItemDelta(
   currentNodes: Record<string, AnyNode>,
-  snapshot: Record<string, AnyNode> | null,
+  snapshot: Record<string, AnyNode> | null | undefined,
 ): number {
   if (!snapshot) return 0
   const currentItems = Object.values(currentNodes).filter((n) => n.type === 'item')

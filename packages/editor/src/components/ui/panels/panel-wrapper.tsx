@@ -2,16 +2,22 @@
 
 import { ChevronLeft, RotateCcw, X } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect } from 'react'
+import { useIsMobile } from '../../../hooks/use-mobile'
 import { cn } from '../../../lib/utils'
 
 interface PanelWrapperProps {
   title: string
-  icon?: string
+  /** Either a URL path (legacy panels pass `/icons/floor.png` etc.,
+   *  rendered via next/image) OR a React node (registry-driven
+   *  inspector renders `<Icon icon="lucide:fence" />` from
+   *  `def.presentation.icon`). */
+  icon?: string | React.ReactNode
   onClose?: () => void
   onReset?: () => void
   onBack?: () => void
   children: React.ReactNode
+  /** Pinned below the scrollable body, inside the panel card. */
+  footer?: React.ReactNode
   className?: string
   width?: number | string
 }
@@ -23,77 +29,86 @@ export function PanelWrapper({
   onReset,
   onBack,
   children,
+  footer,
   className,
   width = 320, // default width
 }: PanelWrapperProps) {
-  const panelTop = 'var(--host-editor-panel-top, 380px)'
-  const resolvedWidth = typeof width === 'number' ? `${width}px` : String(width)
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--host-editor-panel-width', resolvedWidth)
-    document.documentElement.style.setProperty('--host-editor-panel-visible', '1')
-
-    return () => {
-      document.documentElement.style.setProperty('--host-editor-panel-visible', '0')
-    }
-  }, [resolvedWidth])
+  const isMobile = useIsMobile()
 
   return (
     <div
       className={cn(
-        'pointer-events-auto fixed right-4 z-[240] flex flex-col overflow-hidden rounded-xl border border-border/50 bg-sidebar/95 shadow-2xl backdrop-blur-xl transition-[right] duration-200 dark:text-foreground',
+        isMobile
+          ? 'flex h-full w-full flex-col overflow-hidden bg-transparent dark:text-foreground'
+          // Cap height at `100dvh - 154px` so a tall panel's bottom edge
+          // aligns flush with the top of the floating bottom action bar.
+          // Combined with `top-20` (80px), the panel's bottom sits at
+          // `100dvh - 74px` — just clearing the bar without leaving a
+          // visible gap. The inner `flex-1 overflow-y-auto` content area
+          // (below) handles vertical scrolling when content exceeds the
+          // cap.
+          : 'pointer-events-auto fixed top-20 right-4 z-50 flex max-h-[calc(100dvh-154px)] flex-col overflow-hidden rounded-xl border border-border/50 bg-sidebar/95 shadow-2xl backdrop-blur-xl dark:text-foreground',
         className,
       )}
-      style={{
-        width,
-        ['--host-editor-panel-width' as string]: resolvedWidth,
-        top: panelTop,
-        height: `calc((100dvh - ${panelTop}) / 1.7)`,
-        right: 'calc(1rem + var(--host-editor-panel-avoid-right, 0px))',
-      }}
+      style={isMobile ? undefined : { width }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-border/50 border-b px-3 py-3">
-        <div className="flex items-center gap-2">
-          {onBack && (
-            <button
-              className="mr-1 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
-              onClick={onBack}
-              type="button"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          )}
-          {icon && (
-            <Image alt="" className="shrink-0 object-contain" height={16} src={icon} width={16} />
-          )}
-          <h2 className="truncate font-semibold text-foreground text-sm tracking-tight">{title}</h2>
-        </div>
+      {/* Header — desktop only; mobile sheet provides its own header */}
+      {!isMobile && (
+        <div className="flex items-center justify-between border-border/50 border-b px-3 py-3">
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                className="mr-1 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
+                onClick={onBack}
+                type="button"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            )}
+            {icon &&
+              (typeof icon === 'string' ? (
+                <Image
+                  alt=""
+                  className="shrink-0 object-contain"
+                  height={16}
+                  src={icon}
+                  width={16}
+                />
+              ) : (
+                <span className="flex shrink-0 items-center justify-center">{icon}</span>
+              ))}
+            <h2 className="truncate font-semibold text-foreground text-sm tracking-tight">
+              {title}
+            </h2>
+          </div>
 
-        <div className="flex items-center gap-1">
-          {onReset && (
-            <button
-              className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2C2C2E] text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
-              onClick={onReset}
-              type="button"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          )}
-          {onClose && (
-            <button
-              className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2C2C2E] text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
-              onClick={onClose}
-              type="button"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {onReset && (
+              <button
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2C2C2E] text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
+                onClick={onReset}
+                type="button"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            )}
+            {onClose && (
+              <button
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2C2C2E] text-muted-foreground transition-colors hover:bg-[#3e3e3e] hover:text-foreground"
+                onClick={onClose}
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
+
+      {footer && <div className="shrink-0 border-border/50 border-t p-3">{footer}</div>}
     </div>
   )
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import type { AnyNodeId, BuildingNode, LevelNode, ZoneNode } from '@pascal-app/core'
 import { resolveLevelId, sceneRegistry, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import useEditor, {
@@ -15,10 +14,10 @@ export type SceneGraph = {
 }
 
 type PersistedSelectionPath = {
-  buildingId: BuildingNode['id'] | null
-  levelId: LevelNode['id'] | null
-  zoneId: ZoneNode['id'] | null
-  selectedIds: AnyNodeId[]
+  buildingId: string | null
+  levelId: string | null
+  zoneId: string | null
+  selectedIds: string[]
 }
 
 const EMPTY_PERSISTED_SELECTION: PersistedSelectionPath = {
@@ -76,10 +75,10 @@ function normalizePersistedSelectionPath(
 ): PersistedSelectionPath {
   return {
     buildingId: typeof selection?.buildingId === 'string' ? selection.buildingId : null,
-    levelId: typeof selection?.levelId === 'string' ? selection.levelId as LevelNode['id'] : null,
-    zoneId: typeof selection?.zoneId === 'string' ? selection.zoneId as ZoneNode['id'] : null,
+    levelId: typeof selection?.levelId === 'string' ? selection.levelId : null,
+    zoneId: typeof selection?.zoneId === 'string' ? selection.zoneId : null,
     selectedIds: Array.isArray(selection?.selectedIds)
-      ? selection.selectedIds.filter((id): id is AnyNodeId => typeof id === 'string')
+      ? selection.selectedIds.filter((id): id is string => typeof id === 'string')
       : [],
   }
 }
@@ -117,10 +116,10 @@ function readPersistedSelection(): PersistedSelectionPath | null {
 }
 
 export function writePersistedSelection(selection: {
-  buildingId: BuildingNode['id'] | null
-  levelId: LevelNode['id'] | null
-  zoneId: ZoneNode['id'] | null
-  selectedIds: AnyNodeId[]
+  buildingId: string | null
+  levelId: string | null
+  zoneId: string | null
+  selectedIds: string[]
 }) {
   if (typeof window === 'undefined') {
     return
@@ -284,7 +283,11 @@ export function syncEditorSelectionFromCurrentScene() {
 
     if (shouldRestoreEditorUiState) {
       if (restoredSelection) {
-        useViewer.getState().setSelection(restoredSelection)
+        // PersistedSelectionPath carries plain `string` ids (read from
+        // localStorage, no branded-template-literal guarantee). The viewer's
+        // SelectionPath expects branded ids. The runtime values match the
+        // brand; the cast bridges the static gap.
+        useViewer.getState().setSelection(restoredSelection as never)
         useEditor.setState(
           restoredEditorUiState.phase === 'site'
             ? (selectionDrivenEditorUiState ?? restoredEditorUiState)
@@ -306,7 +309,7 @@ export function syncEditorSelectionFromCurrentScene() {
     }
 
     if (restoredSelection) {
-      useViewer.getState().setSelection(restoredSelection)
+      useViewer.getState().setSelection(restoredSelection as never)
       if (selectionDrivenEditorUiState) {
         useEditor.setState(selectionDrivenEditorUiState)
       }

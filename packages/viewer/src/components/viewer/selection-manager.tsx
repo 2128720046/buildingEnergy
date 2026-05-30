@@ -4,7 +4,9 @@ import {
   type AnyNode,
   type AnyNodeId,
   type BuildingNode,
+  type ColumnNode,
   emitter,
+  getSelectableKinds,
   type ItemNode,
   type LevelNode,
   type NodeEvent,
@@ -24,19 +26,25 @@ const tempWorldPos = new Vector3()
 // Tolerance for edge detection (in meters)
 const EDGE_TOLERANCE = 0.5
 
+// Hardcoded kinds the viewer's selection manager knows about. Registry kinds
+// (any NodeDefinition with `capabilities.selectable`) are merged in at
+// runtime via getSelectableKinds() — Phase 6 collapses this into a single
+// registry-driven list.
 type SelectableNodeType =
   | 'building'
   | 'level'
   | 'zone'
   | 'wall'
+  | 'fence'
   | 'window'
   | 'door'
+  | 'column'
   | 'item'
   | 'slab'
   | 'ceiling'
   | 'roof'
   | 'roof-segment'
-  | 'scan'
+  | (string & {})
 
 // Expand polygon outward by a small amount to include items on edges
 const expandPolygon = (polygon: [number, number][], tolerance: number): [number, number][] => {
@@ -132,10 +140,22 @@ const isNodeInZone = (node: AnyNode, levelId: string, zoneId: string): boolean =
     return pointInPolygonWithTolerance(item.position[0], item.position[2], zone.polygon)
   }
 
+  if (node.type === 'column') {
+    const column = node as ColumnNode
+    return pointInPolygonWithTolerance(column.position[0], column.position[2], zone.polygon)
+  }
+
   if (node.type === 'wall') {
     const wall = node as WallNode
     const startIn = pointInPolygonWithTolerance(wall.start[0], wall.start[1], zone.polygon)
     const endIn = pointInPolygonWithTolerance(wall.end[0], wall.end[1], zone.polygon)
+    return startIn || endIn
+  }
+
+  if (node.type === 'fence') {
+    const fence = node as { start: [number, number]; end: [number, number] }
+    const startIn = pointInPolygonWithTolerance(fence.start[0], fence.start[1], zone.polygon)
+    const endIn = pointInPolygonWithTolerance(fence.end[0], fence.end[1], zone.polygon)
     return startIn || endIn
   }
 
@@ -220,9 +240,20 @@ const getStrategy = (): SelectionStrategy | null => {
     }
   }
 
-  // Zone selected -> can select/hover contents (walls, items, slabs, ceilings, roofs, windows, doors)
+  // Zone selected -> can select/hover contents (walls, items, columns, slabs, ceilings, roofs, windows, doors)
   return {
-    types: ['wall', 'item', 'slab', 'ceiling', 'roof', 'roof-segment', 'window', 'door'],
+    types: [
+      'wall',
+      'fence',
+      'item',
+      'column',
+      'slab',
+      'ceiling',
+      'roof',
+      'roof-segment',
+      'window',
+      'door',
+    ],
     handleClick: (node, nativeEvent) => {
       let nodeToSelect = node
       if (node.type === 'roof-segment' && node.parentId) {
@@ -249,7 +280,9 @@ const getStrategy = (): SelectionStrategy | null => {
     isValid: (node) => {
       const validTypes = [
         'wall',
+        'fence',
         'item',
+        'column',
         'slab',
         'ceiling',
         'roof',
@@ -271,8 +304,17 @@ export const SelectionManager = () => {
     const onEnter = (event: NodeEvent) => {
       const strategy = getStrategy()
       if (!strategy) return
+      // Ceilings are selected via their floor-plan helper and the
+      // boundary-editor vertex handles, never via a direct 3D click on
+      // the polygon. Skipping selection routing here means a click on a
+      // ceiling falls through to the item / wall / floor below it.
+      if (event.node.type === 'ceiling') return
       if (strategy.isValid(event.node)) {
         event.stopPropagation()
+        if (event.node.type === 'slab') {
+          useViewer.setState({ hoveredId: null })
+          return
+        }
         useViewer.setState({ hoveredId: event.node.id })
       }
     }
@@ -280,6 +322,7 @@ export const SelectionManager = () => {
     const onLeave = (event: NodeEvent) => {
       const strategy = getStrategy()
       if (!strategy) return
+      if (event.node.type === 'ceiling') return
       if (strategy.isValid(event.node)) {
         event.stopPropagation()
         useViewer.setState({ hoveredId: null })
@@ -287,16 +330,9 @@ export const SelectionManager = () => {
     }
 
     const onClick = (event: NodeEvent) => {
-      // Scan nodes: stop propagation to prevent deselection of current selection
-      if (event.node.type === 'scan') {
-        event.stopPropagation()
-        clickHandledRef.current = true
-        useViewer.setState({ hoveredId: null })
-        return
-      }
-
       const strategy = getStrategy()
       if (!strategy) return
+      if (event.node.type === 'ceiling') return
       if (!strategy.isValid(event.node)) return
 
       event.stopPropagation()
@@ -306,32 +342,40 @@ export const SelectionManager = () => {
       useViewer.setState({ hoveredId: null })
     }
 
-    // Subscribe to all node types
+    // Subscribe to all node types. Hardcoded kinds + registry-supplied kinds
+    // (any NodeDefinition declaring `capabilities.selectable`). Phase 6
+    // collapses these into a single registry-driven list.
     const allTypes: SelectableNodeType[] = [
       'building',
       'level',
       'zone',
       'wall',
+      'fence',
       'item',
+      'column',
       'slab',
       'ceiling',
       'roof',
       'roof-segment',
       'window',
       'door',
-      'scan',
     ]
-    for (const type of allTypes) {
-      emitter.on(`${type}:enter`, onEnter)
-      emitter.on(`${type}:leave`, onLeave)
-      emitter.on(`${type}:click`, onClick)
+    const registryKinds = getSelectableKinds().filter(
+      (k) => !(allTypes as readonly string[]).includes(k),
+    ) as SelectableNodeType[]
+    const subscribedKinds = [...allTypes, ...registryKinds]
+
+    for (const type of subscribedKinds) {
+      emitter.on(`${type}:enter` as any, onEnter as any)
+      emitter.on(`${type}:leave` as any, onLeave as any)
+      emitter.on(`${type}:click` as any, onClick as any)
     }
 
     return () => {
-      for (const type of allTypes) {
-        emitter.off(`${type}:enter`, onEnter)
-        emitter.off(`${type}:leave`, onLeave)
-        emitter.off(`${type}:click`, onClick)
+      for (const type of subscribedKinds) {
+        emitter.off(`${type}:enter` as any, onEnter as any)
+        emitter.off(`${type}:leave` as any, onLeave as any)
+        emitter.off(`${type}:click` as any, onClick as any)
       }
     }
   }, [])
@@ -354,7 +398,8 @@ const PointerMissedHandler = ({
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       // Only handle left clicks
-      if (useViewer.getState().cameraDragging) return
+      const viewerState = useViewer.getState()
+      if (viewerState.cameraDragging || viewerState.inputDragging) return
       if (event.button !== 0) return
 
       // Use requestAnimationFrame to check after R3F event handlers
@@ -388,11 +433,14 @@ const OutlinerSync = () => {
   const selection = useViewer((s) => s.selection)
   const hoveredId = useViewer((s) => s.hoveredId)
   const outliner = useViewer((s) => s.outliner)
+  const nodes = useScene((s) => s.nodes)
 
   useEffect(() => {
     // Sync selected objects
     outliner.selectedObjects.length = 0
     for (const id of selection.selectedIds) {
+      const node = nodes[id as AnyNodeId]
+      if (node?.type === 'slab') continue
       const obj = sceneRegistry.nodes.get(id)
       if (obj) outliner.selectedObjects.push(obj)
     }
@@ -400,10 +448,12 @@ const OutlinerSync = () => {
     // Sync hovered objects
     outliner.hoveredObjects.length = 0
     if (hoveredId) {
+      const hoveredNode = nodes[hoveredId as AnyNodeId]
+      if (hoveredNode?.type === 'slab') return
       const obj = sceneRegistry.nodes.get(hoveredId)
       if (obj) outliner.hoveredObjects.push(obj)
     }
-  }, [selection, hoveredId, outliner])
+  }, [selection, hoveredId, outliner, nodes])
 
   return null
 }

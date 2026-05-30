@@ -7,17 +7,17 @@ import {
   spatialGridManager,
   useScene,
 } from '@pascal-app/core'
-import { useViewer, Viewer } from '@pascal-app/viewer'
+import { type HoverStyles, InteractiveSystem, useViewer, Viewer } from '@pascal-app/viewer'
 import {
+  memo,
   type ReactNode,
-  type PointerEvent as ReactPointerEvent,
-  startTransition,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react'
-import '../../three-types'
+import { ViewerOverlay } from '../../components/viewer-overlay'
 import { ViewerZoneSystem } from '../../components/viewer-zone-system'
 import { type SaveStatus, useAutoSave } from '../../hooks/use-auto-save'
 import { useKeyboard } from '../../hooks/use-keyboard'
@@ -27,7 +27,9 @@ import {
   type SceneGraph,
   writePersistedSelection,
 } from '../../lib/scene'
+import { initSFXBus } from '../../lib/sfx-bus'
 import useEditor from '../../store/use-editor'
+import { CeilingSelectionAffordanceSystem } from '../systems/ceiling/ceiling-selection-affordance-system'
 import { CeilingSystem } from '../systems/ceiling/ceiling-system'
 import { RoofEditSystem } from '../systems/roof/roof-edit-system'
 import { StairEditSystem } from '../systems/stair/stair-edit-system'
@@ -54,17 +56,39 @@ import { CustomCameraControls } from './custom-camera-controls'
 import { EditorLayoutV2 } from './editor-layout-v2'
 import { EnergyFloatingOverlay } from './energy-floating-overlay'
 import { ExportManager } from './export-manager'
+import { FirstPersonControls, FirstPersonOverlay } from './first-person-controls'
 import { FloatingActionMenu } from './floating-action-menu'
+import { FloatingBuildingActionMenu } from './floating-building-action-menu'
 import { FloorplanPanel } from './floorplan-panel'
 import { Grid } from './grid'
+import { NodeArrowHandles } from './node-arrow-handles'
 import { SelectionManager } from './selection-manager'
 import { SiteEdgeLabels } from './site-edge-labels'
+import { SnapshotCaptureOverlay } from './snapshot-capture-overlay'
+import { type SnapshotCameraData, ThumbnailGenerator } from './thumbnail-generator'
 import { WallMeasurementLabel } from './wall-measurement-label'
+import { WallMoveSideHandles } from './wall-move-side-handles'
 
 const CAMERA_CONTROLS_HINT_DISMISSED_STORAGE_KEY = 'editor-camera-controls-hint-dismissed:v1'
 const DELETE_CURSOR_BADGE_COLOR = '#ef4444'
 const DELETE_CURSOR_BADGE_OFFSET_X = 14
 const DELETE_CURSOR_BADGE_OFFSET_Y = 14
+const PAINT_CURSOR_BADGE_COLOR = '#f59e0b'
+const PAINT_CURSOR_BADGE_DISABLED_COLOR = '#94a3b8'
+const PAINT_CURSOR_BADGE_OFFSET_X = 14
+const PAINT_CURSOR_BADGE_OFFSET_Y = 14
+const EDITOR_HOVER_STYLES: HoverStyles = {
+  default: { visibleColor: 0x00_aa_ff, hiddenColor: 0xf3_ff_47, strength: 5, pulse: true },
+  delete: { visibleColor: 0xef_44_44, hiddenColor: 0x99_1b_1b, strength: 6, pulse: false },
+  'paint-ready': { visibleColor: 0xf5_9e_0b, hiddenColor: 0xfd_e0_68, strength: 5, pulse: true },
+  'paint-disabled': {
+    visibleColor: 0x94_a3_b8,
+    hiddenColor: 0x47_55_69,
+    strength: 4,
+    pulse: false,
+  },
+}
+const EDITOR_DEFAULT_RENDER = { shading: 'solid' } as const
 
 /**
  * Wire up module-level singletons (spatial grid, space detection, SFX) for
@@ -76,6 +100,7 @@ const DELETE_CURSOR_BADGE_OFFSET_Y = 14
 function initializeEditorRuntime(): () => void {
   const unsubscribeSpatialGrid = initSpatialGridSync()
   const unsubscribeSpaceDetection = initSpaceDetectionSync(useScene, useEditor)
+  initSFXBus()
 
   return () => {
     unsubscribeSpatialGrid()
@@ -101,6 +126,13 @@ export interface EditorProps {
   sidebarTabs?: (SidebarTab & { component: React.ComponentType })[]
   viewerToolbarLeft?: ReactNode
   viewerToolbarRight?: ReactNode
+  viewerOverlayOptions?: ViewerOverlayOptions
+  /**
+   * Docked below the node inspector (v2). Hosts mount the "save as preset"
+   * affordance here so it reads as part of the inspector surface and shows
+   * only while a node is selected.
+   */
+  inspectorFooter?: ReactNode
 
   projectId?: string | null
 
@@ -110,8 +142,19 @@ export interface EditorProps {
   onDirty?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
 
+  // Version preview
+  previewScene?: SceneGraph
+  isVersionPreviewMode?: boolean
+
   // Loading indicator (e.g. project fetching in community mode)
   isLoading?: boolean
+
+  // Thumbnail
+  onThumbnailCapture?: (blob: Blob, cameraData: SnapshotCameraData) => void
+
+  // Version preview overlays (rendered by host app)
+  sidebarOverlay?: ReactNode
+  viewerBanner?: ReactNode
 
   // Panel config (passed through to sidebar panels — v1 only)
   settingsPanelProps?: SettingsPanelProps
@@ -120,93 +163,38 @@ export interface EditorProps {
 
   // Command palette fallback when no commands match
   commandPaletteEmptyAction?: CommandPaletteEmptyAction
+}
 
-  /**
-   * 控制默认悬浮覆盖层是否显示。
-   * 宿主前端如果要把工具栏、动作菜单重新组装到外部面板，应通过这里关闭默认覆盖层。
-   */
-  viewerOverlayOptions?: {
-    showFloatingLevelSelector?: boolean
-    showActionMenu?: boolean
-    showFloatingActionMenu?: boolean
-    showPanelManager?: boolean
-    showHelperManager?: boolean
-  }
+export interface ViewerOverlayOptions {
+  showActionMenu?: boolean
+  showFloatingActionMenu?: boolean
+  showFloatingLevelSelector?: boolean
+  showHelperManager?: boolean
+  showPanelManager?: boolean
 }
 
 function EditorSceneCrashFallback() {
-  const [cleared, setCleared] = useState(false)
-  const hasSnapshot =
-    typeof window !== 'undefined' && !!(window as any).__preImportSceneSnapshot
-
-  const handleRestore = useCallback(() => {
-    const snapshot =
-      typeof window !== 'undefined' ? (window as any).__preImportSceneSnapshot : null
-    const rootSnapshot =
-      typeof window !== 'undefined' ? (window as any).__preImportRootSnapshot : null
-    if (snapshot) {
-      useScene.setState({ nodes: snapshot, rootNodeIds: rootSnapshot ?? [] })
-      Object.keys(snapshot).forEach((id) => useScene.getState().markDirty(id as any))
-      useScene.temporal.getState().clear()
-    }
-    delete (window as any).__preImportSceneSnapshot
-    delete (window as any).__preImportRootSnapshot
-    setCleared(true)
-  }, [])
-
-  const handleReset = useCallback(() => {
-    delete (window as any).__preImportSceneSnapshot
-    delete (window as any).__preImportRootSnapshot
-    try {
-      useScene.getState().unloadScene()
-      useScene.getState().loadScene()
-    } catch {
-      // fallback: full reload
-    }
-    useScene.temporal.getState().clear()
-    setCleared(true)
-  }, [])
-
-  if (cleared) {
-    return null
-  }
-
   return (
     <div className="fixed inset-0 z-80 flex items-center justify-center bg-background/95 p-4 text-foreground">
       <div className="w-full max-w-md rounded-2xl border border-border/60 bg-background p-6 shadow-xl">
-        <h2 className="font-semibold text-lg text-red-400">场景渲染出错</h2>
-        <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
-          编辑器遇到了渲染错误，可能原因：
+        <h2 className="font-semibold text-lg">The editor scene failed to render</h2>
+        <p className="mt-2 text-muted-foreground text-sm">
+          You can retry the scene or return home without reloading the whole app shell.
         </p>
-        <ul className="mt-1 space-y-1 text-muted-foreground text-xs leading-relaxed">
-          <li>• 导入的模型文件格式不支持或已损坏</li>
-          <li>• 场景数据异常（如节点类型不匹配）</li>
-          <li>• 浏览器 WebGL 资源耗尽</li>
-        </ul>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {hasSnapshot ? (
-            <button
-              className="rounded-md border border-[#00F5FF]/40 bg-[#00F5FF]/15 px-3 py-2 font-medium text-sm text-[#00F5FF] hover:bg-[#00F5FF]/25"
-              onClick={handleRestore}
-              type="button"
-            >
-              恢复导入前场景
-            </button>
-          ) : null}
+        <div className="mt-4 flex items-center gap-2">
           <button
             className="rounded-md border border-border bg-accent px-3 py-2 font-medium text-sm hover:bg-accent/80"
-            onClick={handleReset}
-            type="button"
-          >
-            重置为空场景
-          </button>
-          <button
-            className="rounded-md border border-border bg-background px-3 py-2 font-medium text-sm hover:bg-accent/40"
             onClick={() => window.location.reload()}
             type="button"
           >
-            刷新页面
+            Reload editor
           </button>
+          <a
+            className="rounded-md border border-border bg-background px-3 py-2 font-medium text-sm hover:bg-accent/40"
+            href="/"
+          >
+            Back to home
+          </a>
         </div>
       </div>
     </div>
@@ -339,7 +327,7 @@ function SelectionPersistenceManager({ enabled }: { enabled: boolean }) {
       return
     }
 
-    writePersistedSelection(selection as Parameters<typeof writePersistedSelection>[0])
+    writePersistedSelection(selection)
   }, [enabled, selection])
 
   return null
@@ -489,7 +477,7 @@ function ViewerCanvasControlsHint({
     <div className="pointer-events-none absolute top-14 left-1/2 z-40 max-w-[calc(100%-2rem)] -translate-x-1/2">
       <section
         aria-label="Camera controls hint"
-        className="pointer-events-auto flex items-start gap-3 rounded-2xl border border-border/35 bg-background/90 px-3.5 py-2.5 shadow-[0_22px_40px_-28px_rgba(15,23,42,0.65),0_10px_24px_-20px_rgba(15,23,42,0.55)] backdrop-blur-xl"
+        className="pointer-events-auto flex items-start gap-3 rounded-2xl border border-border/35 bg-background/90 px-3.5 py-2.5 shadow-elevation-4 backdrop-blur-xl"
       >
         <div className="grid min-w-0 flex-1 grid-cols-3 items-start divide-x divide-border/18">
           {hints.map((hint) => (
@@ -551,58 +539,307 @@ function DeleteCursorBadge({ position }: { position: { x: number; y: number } })
   )
 }
 
-export default function Editor({
-  layoutVersion = 'v1',
-  appMenuButton,
-  sidebarTop,
-  navbarSlot,
-  sidebarTabs,
-  viewerToolbarLeft,
-  viewerToolbarRight,
-  projectId,
-  onLoad,
-  onSave,
-  onDirty,
-  onSaveStatusChange,
-  isLoading = false,
-  settingsPanelProps,
-  sitePanelProps,
-  extraSidebarPanels,
-  commandPaletteEmptyAction,
-  viewerOverlayOptions,
-}: EditorProps) {
-  useKeyboard({ isVersionPreviewMode: false })
+function PaintCursorBadge({
+  position,
+  label,
+  disabled,
+  icon,
+}: {
+  position: { x: number; y: number }
+  label: string
+  disabled: boolean
+  icon: string
+}) {
+  const accentColor = disabled ? PAINT_CURSOR_BADGE_DISABLED_COLOR : PAINT_CURSOR_BADGE_COLOR
 
-  const { isLoadingSceneRef } = useAutoSave({
-    onSave,
-    onDirty,
-    onSaveStatusChange,
-    isVersionPreviewMode: false,
-  })
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute z-40"
+      style={{
+        left: position.x + PAINT_CURSOR_BADGE_OFFSET_X,
+        top: position.y + PAINT_CURSOR_BADGE_OFFSET_Y,
+      }}
+    >
+      <div
+        className="flex items-center gap-2 rounded-xl border border-white/5 bg-zinc-900/95 px-3 py-2 shadow-[0_8px_16px_-4px_rgba(0,0,0,0.3),0_4px_8px_-4px_rgba(0,0,0,0.2)]"
+        style={{
+          boxShadow: `0 8px 16px -4px rgba(0,0,0,0.3), 0 4px 8px -4px rgba(0,0,0,0.2), 0 0 18px ${accentColor}22`,
+        }}
+      >
+        <Icon
+          aria-hidden="true"
+          className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+          color={accentColor}
+          height={16}
+          icon={icon}
+          width={16}
+        />
+        <span className="font-medium text-[11px]" style={{ color: accentColor }}>
+          {label}
+        </span>
+      </div>
+    </div>
+  )
+}
 
-  const [isSceneLoading, setIsSceneLoading] = useState(false)
-  const [hasLoadedInitialScene, setHasLoadedInitialScene] = useState(false)
+// Subscribes to `gridSnapStep` so the visible grid cell size matches whatever
+// the wall draft tool snaps to — otherwise the cursor lands between visible
+// grid lines when the user picks a finer snap (0.25 / 0.1 / 0.05).
+function SnapAwareGrid() {
+  const gridSnapStep = useEditor((s) => s.gridSnapStep)
+  return <Grid cellColor="#aaa" cellSize={gridSnapStep} fadeDistance={500} sectionColor="#ccc" />
+}
+
+// ── Viewer scene content: memoized so <Viewer> doesn't re-render on mode/viewMode changes ──
+
+const ViewerSceneContent = memo(function ViewerSceneContent({
+  isVersionPreviewMode,
+  isLoading,
+  isFirstPersonMode,
+  overlayOptions,
+  onThumbnailCapture,
+}: {
+  isVersionPreviewMode: boolean
+  isLoading: boolean
+  isFirstPersonMode: boolean
+  overlayOptions?: ViewerOverlayOptions
+  onThumbnailCapture?: (blob: Blob, cameraData: SnapshotCameraData) => void
+}) {
+  const showFloatingActionMenu = overlayOptions?.showFloatingActionMenu ?? true
+
+  return (
+    <>
+      {!isFirstPersonMode && <SelectionManager />}
+      {!(isVersionPreviewMode || isFirstPersonMode) && <BoxSelectTool />}
+      {!(isVersionPreviewMode || isFirstPersonMode) && <NodeArrowHandles />}
+      {!(isVersionPreviewMode || isFirstPersonMode) && <WallMoveSideHandles />}
+      {!(isVersionPreviewMode || isFirstPersonMode) && showFloatingActionMenu && (
+        <FloatingActionMenu />
+      )}
+      {!(isVersionPreviewMode || isFirstPersonMode) && <FloatingBuildingActionMenu />}
+      {!(isVersionPreviewMode || isFirstPersonMode) && <EnergyFloatingOverlay />}
+      {!isFirstPersonMode && <WallMeasurementLabel />}
+      <ExportManager />
+      {isFirstPersonMode ? <ViewerZoneSystem /> : <ZoneSystem />}
+      <CeilingSystem />
+      <CeilingSelectionAffordanceSystem />
+      <RoofEditSystem />
+      <StairEditSystem />
+      {!(isLoading || isFirstPersonMode) && <SnapAwareGrid />}
+      {!(isLoading || isVersionPreviewMode || isFirstPersonMode) && <ToolManager />}
+      {isFirstPersonMode && <FirstPersonControls />}
+      <CustomCameraControls />
+      <ThumbnailGenerator onThumbnailCapture={onThumbnailCapture} />
+      {!isFirstPersonMode && <SiteEdgeLabels />}
+      <InteractiveSystem />
+    </>
+  )
+})
+
+// ── Delete cursor badge: isolated component so cursor moves don't re-render ViewerCanvas ──
+// Subscribes to mode itself and manages cursor position state independently.
+
+function DeleteCursorLayer({
+  containerRef,
+  isVersionPreviewMode,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>
+  isVersionPreviewMode: boolean
+}) {
+  const mode = useEditor((s) => s.mode)
+  const badgeRef = useRef<HTMLDivElement>(null)
+  const active = mode === 'delete' && !isVersionPreviewMode
+
+  useEffect(() => {
+    if (!active) {
+      if (badgeRef.current) {
+        badgeRef.current.style.display = 'none'
+      }
+      return
+    }
+    const el = containerRef.current
+    if (!el) return
+    let frame = 0
+    let nextX = 0
+    let nextY = 0
+    const badge = badgeRef.current
+
+    const flushPosition = () => {
+      frame = 0
+      if (!badge) return
+      badge.style.display = 'block'
+      badge.style.transform = `translate(${nextX + DELETE_CURSOR_BADGE_OFFSET_X}px, ${nextY + DELETE_CURSOR_BADGE_OFFSET_Y}px)`
+    }
+
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect()
+      nextX = e.clientX - rect.left
+      nextY = e.clientY - rect.top
+
+      if (frame === 0) {
+        frame = window.requestAnimationFrame(flushPosition)
+      }
+    }
+    const onLeave = () => {
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame)
+        frame = 0
+      }
+      if (badge) {
+        badge.style.display = 'none'
+      }
+    }
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerleave', onLeave)
+    return () => {
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame)
+      }
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerleave', onLeave)
+    }
+  }, [active, containerRef])
+
+  if (!active) return null
+
+  return (
+    <div
+      className="pointer-events-none"
+      ref={badgeRef}
+      style={{ display: 'none', position: 'absolute', left: 0, top: 0 }}
+    >
+      <DeleteCursorBadge position={{ x: 0, y: 0 }} />
+    </div>
+  )
+}
+
+function PaintCursorLayer({
+  containerRef,
+  isVersionPreviewMode,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>
+  isVersionPreviewMode: boolean
+}) {
+  const mode = useEditor((s) => s.mode)
+  const activePaintMaterial = useEditor((s) => s.activePaintMaterial)
+  const activePaintTarget = useEditor((s) => s.activePaintTarget)
+  const badgeRef = useRef<HTMLDivElement>(null)
+  const active = mode === 'material-paint' && !isVersionPreviewMode
+
+  useEffect(() => {
+    if (!active) {
+      if (badgeRef.current) {
+        badgeRef.current.style.display = 'none'
+      }
+      return
+    }
+    const el = containerRef.current
+    if (!el) return
+    let frame = 0
+    let nextX = 0
+    let nextY = 0
+    const badge = badgeRef.current
+
+    const flushPosition = () => {
+      frame = 0
+      if (!badge) return
+      badge.style.display = 'block'
+      badge.style.transform = `translate(${nextX + PAINT_CURSOR_BADGE_OFFSET_X}px, ${nextY + PAINT_CURSOR_BADGE_OFFSET_Y}px)`
+    }
+
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect()
+      nextX = e.clientX - rect.left
+      nextY = e.clientY - rect.top
+
+      if (frame === 0) {
+        frame = window.requestAnimationFrame(flushPosition)
+      }
+    }
+    const onLeave = () => {
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame)
+        frame = 0
+      }
+      if (badge) {
+        badge.style.display = 'none'
+      }
+    }
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerleave', onLeave)
+    return () => {
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame)
+      }
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerleave', onLeave)
+    }
+  }, [active, containerRef])
+
+  const hasMaterial = Boolean(
+    activePaintMaterial &&
+      (activePaintMaterial.material !== undefined ||
+        activePaintMaterial.materialPreset !== undefined),
+  )
+  const label = hasMaterial ? `Paint ${activePaintTarget}` : 'Choose material'
+  const icon = 'mdi:format-color-fill'
+
+  useLayoutEffect(() => {
+    if (!active && badgeRef.current) {
+      badgeRef.current.style.display = 'none'
+    }
+  }, [active])
+
+  if (!active) return null
+
+  return (
+    <div
+      className="pointer-events-none"
+      ref={badgeRef}
+      style={{ display: 'none', position: 'absolute', left: 0, top: 0 }}
+    >
+      <PaintCursorBadge
+        disabled={!hasMaterial}
+        icon={icon}
+        label={label}
+        position={{ x: 0, y: 0 }}
+      />
+    </div>
+  )
+}
+
+// ── Viewer canvas: memoized, subscribes to viewMode/floorplanPaneRatio internally ──
+// This prevents Editor from re-rendering when those values change.
+
+const ViewerCanvas = memo(function ViewerCanvas({
+  isVersionPreviewMode,
+  isLoading,
+  isFirstPersonMode,
+  hasLoadedInitialScene,
+  showLoader,
+  overlayOptions,
+  onThumbnailCapture,
+}: {
+  isVersionPreviewMode: boolean
+  isLoading: boolean
+  isFirstPersonMode: boolean
+  hasLoadedInitialScene: boolean
+  showLoader: boolean
+  overlayOptions?: ViewerOverlayOptions
+  onThumbnailCapture?: (blob: Blob, cameraData: SnapshotCameraData) => void
+}) {
+  const viewMode = useEditor((s) => s.viewMode)
+  const floorplanPaneRatio = useEditor((s) => s.floorplanPaneRatio)
+  const setFloorplanPaneRatio = useEditor((s) => s.setFloorplanPaneRatio)
+  const isPreviewMode = useEditor((s) => s.isPreviewMode)
+
   const [isCameraControlsHintVisible, setIsCameraControlsHintVisible] = useState<boolean | null>(
     null,
   )
-  const mode = useEditor((s) => s.mode)
-  const floorplanPaneRatio = useEditor((s) => s.floorplanPaneRatio)
-  const setFloorplanPaneRatio = useEditor((s) => s.setFloorplanPaneRatio)
-  const [viewerCursorPosition, setViewerCursorPosition] = useState<{ x: number; y: number } | null>(
-    null,
-  )
 
-  const {
-    showFloatingLevelSelector = true,
-    showActionMenu = true,
-    showFloatingActionMenu = true,
-    showPanelManager = true,
-    showHelperManager = true,
-  } = viewerOverlayOptions ?? {}
-
-  const sidebarWidth = useSidebarStore((s) => s.width)
-  const isSidebarCollapsed = useSidebarStore((s) => s.isCollapsed)
   const viewerAreaRef = useRef<HTMLDivElement>(null)
+  const viewer3dRef = useRef<HTMLDivElement>(null)
   const isResizingFloorplan = useRef(false)
 
   const handleFloorplanDividerDown = useCallback((e: React.PointerEvent) => {
@@ -631,137 +868,21 @@ export default function Editor({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [])
-
-  useEffect(() => {
-    const teardown = initializeEditorRuntime()
-    return teardown
-  }, [])
-
-  useEffect(() => {
-    useViewer.getState().setProjectId(projectId ?? null)
-
-    return () => {
-      useViewer.getState().setProjectId(null)
-    }
-  }, [projectId])
-
-  // Load scene on mount (or when onLoad identity changes, e.g. project switch)
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      isLoadingSceneRef.current = true
-      setHasLoadedInitialScene(false)
-      setIsSceneLoading(true)
-
-      try {
-        const sceneGraph = onLoad ? await onLoad() : loadSceneFromLocalStorage()
-        if (!cancelled) {
-          // Use startTransition to keep the UI responsive during scene switch.
-          // The scene graph application can be expensive (many nodes), so React
-          // will yield to more urgent updates like paint/layout.
-          startTransition(() => {
-            applySceneGraphToEditor(sceneGraph)
-          })
-        }
-      } catch {
-        if (!cancelled) {
-          startTransition(() => {
-            applySceneGraphToEditor(null)
-          })
-        }
-      } finally {
-        if (!cancelled) {
-          // Delay clearing loading state slightly so the new scene has a chance
-          // to render its first frame before we remove the loader.
-          setIsSceneLoading(false)
-          setHasLoadedInitialScene(true)
-          requestAnimationFrame(() => {
-            isLoadingSceneRef.current = false
-          })
-        }
-      }
-    }
-
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [onLoad, isLoadingSceneRef])
-
-  useEffect(() => {
-    document.body.classList.add('dark')
-    return () => {
-      document.body.classList.remove('dark')
-    }
-  }, [])
+  }, [setFloorplanPaneRatio])
 
   useEffect(() => {
     setIsCameraControlsHintVisible(!readCameraControlsHintDismissed())
   }, [])
 
-  const showLoader = isLoading || isSceneLoading
   const dismissCameraControlsHint = useCallback(() => {
     setIsCameraControlsHintVisible(false)
     writeCameraControlsHintDismissed(true)
   }, [])
 
-  // ── Shared viewer scene content ──
-  const viewerSceneContent = (
-    <>
-      <SelectionManager />
-      <BoxSelectTool />
-      {showFloatingActionMenu ? <FloatingActionMenu /> : null}
-      <EnergyFloatingOverlay />
-      <WallMeasurementLabel />
-      <ExportManager />
-      <ZoneSystem />
-      <CeilingSystem />
-      <RoofEditSystem />
-      <StairEditSystem />
-      {!isLoading && <Grid cellColor="#aaa" fadeDistance={500} sectionColor="#ccc" />}
-      {!isLoading && <ToolManager />}
-      <CustomCameraControls />
-      <SiteEdgeLabels />
-    </>
-  )
-
-  // ── Shared viewer canvas (handles split/2d/3d) ──
-  const viewMode = useEditor((s) => s.viewMode)
-
   const show2d = viewMode === '2d' || viewMode === 'split'
   const show3d = viewMode === '3d' || viewMode === 'split'
-  const showDeleteCursorBadge = mode === 'delete'
 
-  useEffect(() => {
-    if (!(showDeleteCursorBadge && show3d)) {
-      setViewerCursorPosition(null)
-    }
-  }, [show3d, showDeleteCursorBadge])
-
-  const handleViewerPointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!showDeleteCursorBadge) {
-        setViewerCursorPosition(null)
-        return
-      }
-
-      const rect = event.currentTarget.getBoundingClientRect()
-      setViewerCursorPosition({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-      })
-    },
-    [showDeleteCursorBadge],
-  )
-
-  const handleViewerPointerLeave = useCallback(() => {
-    setViewerCursorPosition(null)
-  }, [])
-
-  const viewerCanvas = (
+  return (
     <ErrorBoundary fallback={<EditorSceneCrashFallback />}>
       <div className="flex h-full" ref={viewerAreaRef}>
         {/* 2D floorplan — always mounted once shown, hidden via CSS to preserve state */}
@@ -788,26 +909,228 @@ export default function Editor({
         {/* 3D viewer — always mounted, hidden via CSS to avoid destroying the WebGL context */}
         <div
           className="relative min-w-0 flex-1 overflow-hidden"
-          onPointerEnter={handleViewerPointerMove}
-          onPointerLeave={handleViewerPointerLeave}
-          onPointerMove={handleViewerPointerMove}
+          ref={viewer3dRef}
           style={{ display: show3d ? undefined : 'none' }}
         >
-          {showDeleteCursorBadge && viewerCursorPosition ? (
-            <DeleteCursorBadge position={viewerCursorPosition} />
-          ) : null}
-          {!showLoader && isCameraControlsHintVisible ? (
+          <DeleteCursorLayer
+            containerRef={viewer3dRef}
+            isVersionPreviewMode={isVersionPreviewMode}
+          />
+          <PaintCursorLayer
+            containerRef={viewer3dRef}
+            isVersionPreviewMode={isVersionPreviewMode}
+          />
+          {!showLoader && isCameraControlsHintVisible && !isFirstPersonMode ? (
             <ViewerCanvasControlsHint
-              isPreviewMode={false}
+              isPreviewMode={isPreviewMode}
               onDismiss={dismissCameraControlsHint}
             />
           ) : null}
           <SelectionPersistenceManager enabled={hasLoadedInitialScene && !showLoader} />
-          <Viewer selectionManager="custom">{viewerSceneContent}</Viewer>
+          <Viewer
+            defaultRender={EDITOR_DEFAULT_RENDER}
+            hoverStyles={EDITOR_HOVER_STYLES}
+            renderContext="editor"
+            selectionManager={isFirstPersonMode ? 'default' : 'custom'}
+          >
+            <ViewerSceneContent
+              isFirstPersonMode={isFirstPersonMode}
+              isLoading={isLoading}
+              isVersionPreviewMode={isVersionPreviewMode}
+              overlayOptions={overlayOptions}
+              onThumbnailCapture={onThumbnailCapture}
+            />
+          </Viewer>
         </div>
       </div>
-      {!isLoading && <ZoneLabelEditorSystem />}
+      {!(isLoading || isVersionPreviewMode) && <ZoneLabelEditorSystem />}
     </ErrorBoundary>
+  )
+})
+
+export default function Editor({
+  layoutVersion = 'v1',
+  appMenuButton,
+  sidebarTop,
+  navbarSlot,
+  sidebarTabs,
+  viewerToolbarLeft,
+  viewerToolbarRight,
+  viewerOverlayOptions,
+  inspectorFooter,
+  projectId,
+  onLoad,
+  onSave,
+  onDirty,
+  onSaveStatusChange,
+  previewScene,
+  isVersionPreviewMode = false,
+  isLoading = false,
+  onThumbnailCapture,
+  sidebarOverlay,
+  viewerBanner,
+  settingsPanelProps,
+  sitePanelProps,
+  extraSidebarPanels,
+  commandPaletteEmptyAction,
+}: EditorProps) {
+  const isFirstPersonMode = useEditor((s) => s.isFirstPersonMode)
+
+  useKeyboard({ isVersionPreviewMode, disabled: isFirstPersonMode })
+
+  const { isLoadingSceneRef } = useAutoSave({
+    onSave,
+    onDirty,
+    onSaveStatusChange,
+    isVersionPreviewMode,
+  })
+
+  const [isSceneLoading, setIsSceneLoading] = useState(false)
+  const [hasLoadedInitialScene, setHasLoadedInitialScene] = useState(false)
+  const isPreviewMode = useEditor((s) => s.isPreviewMode)
+  const isCaptureMode = useEditor((s) => s.isCaptureMode)
+
+  const sidebarWidth = useSidebarStore((s) => s.width)
+  const isSidebarCollapsed = useSidebarStore((s) => s.isCollapsed)
+
+  useEffect(() => {
+    const teardown = initializeEditorRuntime()
+    return teardown
+  }, [])
+
+  useEffect(() => {
+    useViewer.getState().setProjectId(projectId ?? null)
+
+    return () => {
+      useViewer.getState().setProjectId(null)
+    }
+  }, [projectId])
+
+  // Load scene on mount (or when onLoad identity changes, e.g. project switch)
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      isLoadingSceneRef.current = true
+      setHasLoadedInitialScene(false)
+      setIsSceneLoading(true)
+
+      try {
+        const sceneGraph = onLoad ? await onLoad() : loadSceneFromLocalStorage()
+        if (!cancelled) {
+          applySceneGraphToEditor(sceneGraph)
+        }
+      } catch {
+        if (!cancelled) applySceneGraphToEditor(null)
+      } finally {
+        if (!cancelled) {
+          setIsSceneLoading(false)
+          setHasLoadedInitialScene(true)
+          requestAnimationFrame(() => {
+            isLoadingSceneRef.current = false
+          })
+        }
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [onLoad, isLoadingSceneRef])
+
+  // Apply preview scene when version preview mode changes
+  useEffect(() => {
+    if (isVersionPreviewMode && previewScene) {
+      applySceneGraphToEditor(previewScene)
+    }
+  }, [isVersionPreviewMode, previewScene])
+
+  // Lock scene graph and reset to select mode when entering version preview
+  useEffect(() => {
+    useScene.getState().setReadOnly(isVersionPreviewMode)
+    if (isVersionPreviewMode) {
+      useEditor.getState().setMode('select')
+    }
+    return () => {
+      useScene.getState().setReadOnly(false)
+    }
+  }, [isVersionPreviewMode])
+
+  useEffect(() => {
+    document.body.classList.add('dark')
+    return () => {
+      document.body.classList.remove('dark')
+    }
+  }, [])
+
+  const showLoader = isLoading || isSceneLoading
+
+  const firstPersonPreviousLevelRef = useRef(useViewer.getState().selection.levelId)
+  const wasFirstPersonModeRef = useRef(isFirstPersonMode)
+
+  useEffect(() => {
+    const wasFirstPersonMode = wasFirstPersonModeRef.current
+    wasFirstPersonModeRef.current = isFirstPersonMode
+
+    if (isFirstPersonMode && !wasFirstPersonMode) {
+      const viewer = useViewer.getState()
+      firstPersonPreviousLevelRef.current = viewer.selection.levelId
+      viewer.setCameraMode('perspective')
+      viewer.setWallMode('up')
+      viewer.setWalkthroughMode(true)
+      viewer.setSelection({ selectedIds: [], zoneId: null })
+      return
+    }
+
+    if (!(wasFirstPersonMode && !isFirstPersonMode)) return
+
+    const viewer = useViewer.getState()
+    const previousLevelId = firstPersonPreviousLevelRef.current
+    firstPersonPreviousLevelRef.current = null
+    viewer.setWalkthroughMode(false)
+
+    if (!previousLevelId) return
+
+    const previousLevelNode = useScene.getState().nodes[previousLevelId]
+    if (previousLevelNode?.type === 'level') {
+      viewer.setSelection({
+        levelId: previousLevelId,
+        zoneId: null,
+        selectedIds: [],
+      })
+    }
+  }, [isFirstPersonMode])
+
+  const previewViewerContent = (
+    <Viewer
+      defaultRender={EDITOR_DEFAULT_RENDER}
+      hoverStyles={EDITOR_HOVER_STYLES}
+      renderContext="editor"
+      selectionManager="default"
+    >
+      <ExportManager />
+      <ViewerZoneSystem />
+      <CeilingSystem />
+      <RoofEditSystem />
+      <StairEditSystem />
+      <CustomCameraControls />
+      <ThumbnailGenerator onThumbnailCapture={onThumbnailCapture} />
+      <InteractiveSystem />
+    </Viewer>
+  )
+
+  const viewerCanvas = (
+    <ViewerCanvas
+      hasLoadedInitialScene={hasLoadedInitialScene}
+      isFirstPersonMode={isFirstPersonMode}
+      isLoading={isLoading}
+      isVersionPreviewMode={isVersionPreviewMode}
+      onThumbnailCapture={onThumbnailCapture}
+      overlayOptions={viewerOverlayOptions}
+      showLoader={showLoader}
+    />
   )
 
   // ── V2 layout ──
@@ -829,7 +1152,14 @@ export default function Editor({
       return <Component />
     }
 
-    const tabBarTabs = sidebarTabs?.map(({ id, label }) => ({ id, label })) ?? []
+    const tabBarTabs =
+      sidebarTabs?.map(({ id, label, mobileDefaultSnap, mobileIcon, icon }) => ({
+        id,
+        label,
+        mobileDefaultSnap,
+        mobileIcon,
+        icon,
+      })) ?? []
 
     return (
       <>
@@ -839,36 +1169,58 @@ export default function Editor({
           </div>
         )}
 
-        <EditorLayoutV2
-          navbarSlot={navbarSlot}
-          overlays={
-            <>
-              {showFloatingLevelSelector ? <FloatingLevelSelector /> : null}
-              {showActionMenu ? (
-                <div className="pointer-events-auto">
-                  <ActionMenu />
-                </div>
-              ) : null}
-              {showPanelManager ? (
-                <div className="pointer-events-auto">
-                  <PanelManager />
-                </div>
-              ) : null}
-              {showHelperManager ? (
-                <div className="pointer-events-auto">
-                  <HelperManager />
-                </div>
-              ) : null}
-            </>
-          }
-          renderTabContent={renderTabContent}
-          sidebarTabs={tabBarTabs}
-          viewerContent={viewerCanvas}
-          viewerToolbarLeft={viewerToolbarLeft}
-          viewerToolbarRight={viewerToolbarRight}
-        />
-        <EditorCommands />
-        <CommandPalette emptyAction={commandPaletteEmptyAction} />
+        {!isLoading && isPreviewMode ? (
+          <div className="dark flex h-full w-full flex-col bg-neutral-100 text-foreground">
+            <ViewerOverlay onBack={() => useEditor.getState().setPreviewMode(false)} />
+            <div className="h-full w-full">{previewViewerContent}</div>
+          </div>
+        ) : (
+          <>
+            <EditorLayoutV2
+              navbarSlot={navbarSlot}
+              overlays={
+                <>
+                  {!isCaptureMode &&
+                    (viewerOverlayOptions?.showFloatingLevelSelector ?? true) && (
+                      <FloatingLevelSelector />
+                    )}
+                  {!(isVersionPreviewMode || isCaptureMode) &&
+                    (viewerOverlayOptions?.showActionMenu ?? true) && (
+                    <div className="pointer-events-auto">
+                      <ActionMenu />
+                    </div>
+                  )}
+                  {!(isVersionPreviewMode || isCaptureMode) &&
+                    (viewerOverlayOptions?.showPanelManager ?? true) && (
+                    <div className="pointer-events-auto">
+                      <PanelManager inspectorFooter={inspectorFooter} />
+                    </div>
+                  )}
+                  {!isCaptureMode && (viewerOverlayOptions?.showHelperManager ?? true) && (
+                    <div className="pointer-events-auto">
+                      <HelperManager />
+                    </div>
+                  )}
+                  {isFirstPersonMode && (
+                    <FirstPersonOverlay
+                      onExit={() => useEditor.getState().setFirstPersonMode(false)}
+                    />
+                  )}
+                  {viewerBanner}
+                  {projectId ? <SnapshotCaptureOverlay projectId={projectId} /> : null}
+                </>
+              }
+              renderTabContent={renderTabContent}
+              sidebarOverlay={sidebarOverlay}
+              sidebarTabs={tabBarTabs}
+              viewerContent={viewerCanvas}
+              viewerToolbarLeft={viewerToolbarLeft}
+              viewerToolbarRight={viewerToolbarRight}
+            />
+            <EditorCommands />
+            <CommandPalette emptyAction={commandPaletteEmptyAction} />
+          </>
+        )}
       </>
     )
   }
@@ -887,37 +1239,51 @@ export default function Editor({
         </div>
       )}
 
-      <>
-        {/* Sidebar */}
-        <SidebarSlot>
-          <AppSidebar
-            appMenuButton={appMenuButton}
-            commandPaletteEmptyAction={commandPaletteEmptyAction}
-            extraPanels={extraSidebarPanels}
-            settingsPanelProps={settingsPanelProps}
-            sidebarTop={sidebarTop}
-            sitePanelProps={sitePanelProps}
-          />
-        </SidebarSlot>
+      {!isLoading && isPreviewMode ? (
+        <>
+          <ViewerOverlay onBack={() => useEditor.getState().setPreviewMode(false)} />
+          <div className="h-full w-full">{previewViewerContent}</div>
+        </>
+      ) : (
+        <>
+          {/* Sidebar */}
+          <SidebarSlot>
+            <AppSidebar
+              appMenuButton={appMenuButton}
+              commandPaletteEmptyAction={commandPaletteEmptyAction}
+              extraPanels={extraSidebarPanels}
+              settingsPanelProps={settingsPanelProps}
+              sidebarTop={sidebarTop}
+              sitePanelProps={sitePanelProps}
+            />
+          </SidebarSlot>
 
-        {/* Viewer area */}
-        <div className="relative flex-1 overflow-hidden rounded-xl" ref={viewerAreaRef}>
-          {viewerCanvas}
-        </div>
+          {/* Viewer area */}
+          <div className="relative flex-1 overflow-hidden rounded-xl">{viewerCanvas}</div>
 
-        {/* Fixed UI overlays scoped to the viewer area */}
-        <ViewerOverlays left={overlayLeft}>
-          <div className="pointer-events-auto">
-            <ActionMenu />
-          </div>
-          <div className="pointer-events-auto">
-            <PanelManager />
-          </div>
-          <div className="pointer-events-auto">
-            <HelperManager />
-          </div>
-        </ViewerOverlays>
-      </>
+          {/* Fixed UI overlays scoped to the viewer area */}
+          <ViewerOverlays left={overlayLeft}>
+            {(viewerOverlayOptions?.showActionMenu ?? true) && (
+              <div className="pointer-events-auto">
+              <ActionMenu />
+              </div>
+            )}
+            {(viewerOverlayOptions?.showPanelManager ?? true) && (
+              <div className="pointer-events-auto">
+              <PanelManager />
+              </div>
+            )}
+            {(viewerOverlayOptions?.showHelperManager ?? true) && (
+              <div className="pointer-events-auto">
+              <HelperManager />
+              </div>
+            )}
+            {isFirstPersonMode && (
+              <FirstPersonOverlay onExit={() => useEditor.getState().setFirstPersonMode(false)} />
+            )}
+          </ViewerOverlays>
+        </>
+      )}
     </div>
   )
 }

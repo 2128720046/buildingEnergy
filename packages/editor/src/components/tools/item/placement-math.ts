@@ -1,22 +1,58 @@
-import { isObject } from '@pascal-app/core'
+import { type AssetInput, isObject } from '@pascal-app/core'
+import { Euler, Matrix3, type Matrix4, Quaternion, Vector3 } from 'three'
+import useEditor from '../../../store/use-editor'
 
-/**
- * Snaps a position to 0.5 grid, with an offset to align item edges to grid lines.
- * For items with dimensions like 2.5, the center would be at 1.25 from the edge,
- * which doesn't align with 0.5 grid. This adds an offset so edges align instead.
- */
-export function snapToGrid(position: number, dimension: number): number {
-  const halfDim = dimension / 2
-  const needsOffset = Math.abs(((halfDim * 2) % 1) - 0.5) < 0.01
-  const offset = needsOffset ? 0.25 : 0
-  return Math.round((position - offset) * 2) / 2 + offset
+function getGridSnapStep(): number {
+  return useEditor.getState().gridSnapStep
+}
+
+function positiveModulo(value: number, divisor: number): number {
+  return ((value % divisor) + divisor) % divisor
 }
 
 /**
- * Snap a value to 0.5 increments (used for wall-local positions).
+ * Snaps a position to the active grid step, aligning item edges to grid lines.
  */
-export function snapToHalf(value: number): number {
-  return Math.round(value * 2) / 2
+export function snapToGrid(position: number, dimension: number, step = getGridSnapStep()): number {
+  const halfDim = dimension / 2
+  const offset = positiveModulo(halfDim, step)
+  return Math.round((position - offset) / step) * step + offset
+}
+
+/**
+ * Snap a value to the active grid step (used for wall-local positions).
+ */
+export function snapToHalf(value: number, step = getGridSnapStep()): number {
+  return Math.round(value / step) * step
+}
+
+/**
+ * Round a value up to the next multiple of `step`, with a minimum of `step`.
+ */
+export function snapUpToGridStep(value: number, step = getGridSnapStep()): number {
+  return Math.max(step, Math.ceil(value / step) * step)
+}
+
+/**
+ * Expand an item's scaled dimensions up to the active grid step on the axes
+ * the placement grid covers. Used for the placement wireframe, snap math, and
+ * collision against the draft so a small item visually reserves a full grid
+ * cell.
+ *
+ * - Floor / ceiling / item-surface: X + Z (footprint) expand; Y stays exact.
+ * - Wall / wall-side: X (along wall) + Y (height) expand; Z (depth) stays exact
+ *   so wall-thickness offsets aren't disturbed.
+ */
+export function getGridAlignedDimensions(
+  scaledDims: [number, number, number],
+  attachTo: AssetInput['attachTo'] | null | undefined,
+  step = getGridSnapStep(),
+): [number, number, number] {
+  const [w, h, d] = scaledDims
+  if (attachTo === 'wall' || attachTo === 'wall-side') {
+    return [snapUpToGridStep(w, step), snapUpToGridStep(h, step), d]
+  }
+  return [snapUpToGridStep(w, step), h, snapUpToGridStep(d, step)]
 }
 
 /**
@@ -82,4 +118,29 @@ export function stripTransient(meta: any): any {
   if (!isObject(meta)) return meta
   const { isTransient, ...rest } = meta as Record<string, any>
   return rest
+}
+
+const _up = new Vector3(0, 1, 0)
+const _normal = new Vector3()
+const _quat = new Quaternion()
+const _euler = new Euler()
+
+/**
+ * Compute euler rotation that tilts an item so its local +Y aligns with a
+ * roof surface normal. The normal is in the hit mesh's local space and is
+ * transformed to world space via the mesh's matrixWorld.
+ */
+export function calculateRoofRotation(
+  normal: [number, number, number] | undefined,
+  objectMatrixWorld: Matrix4,
+): [number, number, number] {
+  if (!normal) return [0, 0, 0]
+
+  _normal.set(normal[0], normal[1], normal[2])
+  _normal.applyNormalMatrix(new Matrix3().getNormalMatrix(objectMatrixWorld)).normalize()
+
+  _quat.setFromUnitVectors(_up, _normal)
+  _euler.setFromQuaternion(_quat, 'XYZ')
+
+  return [_euler.x, _euler.y, _euler.z]
 }

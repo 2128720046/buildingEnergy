@@ -2,9 +2,14 @@ import { loadAssetUrl } from '@pascal-app/core'
 
 export const ASSETS_CDN_URL = process.env.NEXT_PUBLIC_ASSETS_CDN_URL || ''
 
-function resolveStaticUrl(url: string): string {
-  const normalizedPath = url.startsWith('/') ? url : `/${url}`
-  return ASSETS_CDN_URL ? `${ASSETS_CDN_URL}${normalizedPath}` : normalizedPath
+function resolveBundledItemUrl(url: string): string | null {
+  const match = url.match(/\/items\/(?:system\/)?([^/?#]+)\/(model\.glb|thumbnail\.webp)(?:[?#].*)?$/)
+  if (!match) return null
+  return `/items/${match[1]}/${match[2]}`
+}
+
+function isRemoteUserAsset(url: string): boolean {
+  return /\/storage\/v1\/object\/public\/items\/users\//.test(url)
 }
 
 /**
@@ -17,13 +22,15 @@ function resolveStaticUrl(url: string): string {
 export async function resolveAssetUrl(url: string | undefined | null): Promise<string | null> {
   if (!url) return null
 
-  // External/blob/data URL - use as-is
-  if (
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('blob:') ||
-    url.startsWith('data:')
-  ) {
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+
+  const bundledItemUrl = resolveBundledItemUrl(url)
+  if (bundledItemUrl) return bundledItemUrl
+
+  // External URL - use as-is, except uploaded item assets that cannot be
+  // fetched in the offline energy-query shell.
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (isRemoteUserAsset(url)) return null
     return url
   }
 
@@ -32,8 +39,9 @@ export async function resolveAssetUrl(url: string | undefined | null): Promise<s
     return loadAssetUrl(url)
   }
 
-  // Absolute or relative path - use configured CDN or the app's public root.
-  return resolveStaticUrl(url)
+  // Absolute or relative path - prepend CDN URL
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`
+  return ASSETS_CDN_URL ? `${ASSETS_CDN_URL}${normalizedPath}` : normalizedPath
 }
 
 /**
@@ -43,13 +51,15 @@ export async function resolveAssetUrl(url: string | undefined | null): Promise<s
 export function resolveCdnUrl(url: string | undefined | null): string | null {
   if (!url) return null
 
-  // External/blob/data URL - use as-is
-  if (
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('blob:') ||
-    url.startsWith('data:')
-  ) {
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+
+  const bundledItemUrl = resolveBundledItemUrl(url)
+  if (bundledItemUrl) return bundledItemUrl
+
+  // External URL - use as-is, except uploaded item assets that cannot be
+  // fetched in the offline energy-query shell.
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (isRemoteUserAsset(url)) return null
     return url
   }
 
@@ -59,6 +69,7 @@ export function resolveCdnUrl(url: string | undefined | null): string | null {
     return null
   }
 
-  // Absolute or relative path - use configured CDN or the app's public root.
-  return resolveStaticUrl(url)
+  // Absolute or relative path - prepend CDN URL
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`
+  return ASSETS_CDN_URL ? `${ASSETS_CDN_URL}${normalizedPath}` : normalizedPath
 }

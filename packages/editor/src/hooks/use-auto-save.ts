@@ -1,7 +1,7 @@
 'use client'
 
 import { useScene } from '@pascal-app/core'
-import { type MutableRefObject, useCallback, useEffect, useRef, useState } from 'react'
+import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { type SceneGraph, saveSceneToLocalStorage } from '../lib/scene'
 
 const AUTOSAVE_DEBOUNCE_MS = 1000
@@ -26,10 +26,8 @@ export function useAutoSave({
   onDirty,
   onSaveStatusChange,
   isVersionPreviewMode = false,
-}: UseAutoSaveOptions): { saveStatus: SaveStatus; isLoadingSceneRef: MutableRefObject<boolean> } {
-  const [saveStatus, _setSaveStatus] = useState<SaveStatus>('idle')
-
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+}: UseAutoSaveOptions): { isLoadingSceneRef: MutableRefObject<boolean> } {
+  const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const isSavingRef = useRef(false)
   const isLoadingSceneRef = useRef(false)
   const pendingSaveRef = useRef(false)
@@ -56,13 +54,13 @@ export function useAutoSave({
   }, [isVersionPreviewMode])
 
   const setSaveStatus = useCallback((status: SaveStatus) => {
-    _setSaveStatus(status)
     onSaveStatusChangeRef.current?.(status)
   }, [])
 
   // Stable subscription to scene changes
   useEffect(() => {
     let lastNodesSnapshot = JSON.stringify(useScene.getState().nodes)
+    let lastNodeCount = Object.keys(useScene.getState().nodes).length
 
     async function executeSave() {
       if (isLoadingSceneRef.current || isVersionPreviewModeRef.current) {
@@ -73,6 +71,19 @@ export function useAutoSave({
 
       const { nodes, rootNodeIds } = useScene.getState()
       const sceneGraph = { nodes, rootNodeIds } as SceneGraph
+
+      // Guard: refuse to autosave if the scene went from populated to nearly empty.
+      // This catches accidental full deletions before they're persisted.
+      const currentNodeCount = Object.keys(nodes).length
+      const STRUCTURAL_NODE_COUNT = 4 // site + building + levels (empty scene skeleton)
+      if (lastNodeCount > STRUCTURAL_NODE_COUNT && currentNodeCount <= STRUCTURAL_NODE_COUNT) {
+        console.warn(
+          `[autosave] Blocked: scene dropped from ${lastNodeCount} to ${currentNodeCount} nodes. Likely accidental deletion.`,
+        )
+        setSaveStatus('error')
+        return
+      }
+      lastNodeCount = currentNodeCount
 
       isSavingRef.current = true
       pendingSaveRef.current = false
@@ -190,5 +201,5 @@ export function useAutoSave({
     setSaveStatus('saved')
   }, [isVersionPreviewMode, setSaveStatus])
 
-  return { saveStatus, isLoadingSceneRef }
+  return { isLoadingSceneRef }
 }

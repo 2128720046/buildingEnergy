@@ -32,83 +32,83 @@ const KEY_DISPLAY_MAP: Record<string, string> = {
 
 const SHORTCUT_CATEGORIES: ShortcutCategory[] = [
   {
-    title: '编辑器导航',
+    title: 'Editor Navigation',
     shortcuts: [
-      { keys: ['1'], action: '切换到场地阶段' },
-      { keys: ['2'], action: '切换到结构阶段' },
-      { keys: ['3'], action: '切换到布置阶段' },
-      { keys: ['S'], action: '切换到结构层' },
-      { keys: ['F'], action: '切换到布置层' },
-      { keys: ['Z'], action: '切换到区域层' },
+      { keys: ['1'], action: 'Switch to Site phase' },
+      { keys: ['2'], action: 'Switch to Structure phase' },
+      { keys: ['3'], action: 'Switch to Furnish phase' },
+      { keys: ['S'], action: 'Switch to Structure layer' },
+      { keys: ['F'], action: 'Switch to Furnish layer' },
+      { keys: ['Z'], action: 'Switch to Zones layer' },
       {
         keys: ['Cmd/Ctrl', 'Arrow Up'],
-        action: '选择当前建筑的上一层',
+        action: 'Select next level in the active building',
       },
       {
         keys: ['Cmd/Ctrl', 'Arrow Down'],
-        action: '选择当前建筑的下一层',
+        action: 'Select previous level in the active building',
       },
-      { keys: ['Cmd/Ctrl', 'B'], action: '切换侧边栏显示状态' },
+      { keys: ['Cmd/Ctrl', 'B'], action: 'Toggle sidebar' },
     ],
   },
   {
-    title: '模式与历史',
+    title: 'Modes & History',
     shortcuts: [
-      { keys: ['V'], action: '切换到选择模式' },
-      { keys: ['B'], action: '切换到建模模式' },
+      { keys: ['V'], action: 'Switch to Select mode' },
+      { keys: ['B'], action: 'Switch to Build mode' },
       {
         keys: ['Esc'],
-        action: '取消当前工具并回到选择模式',
+        action: 'Cancel the active tool and return to Select mode',
       },
-      { keys: ['Delete / Backspace'], action: '删除当前选中对象' },
-      { keys: ['Cmd/Ctrl', 'Z'], action: '撤销' },
-      { keys: ['Cmd/Ctrl', 'Shift', 'Z'], action: '重做' },
+      { keys: ['Delete / Backspace'], action: 'Delete selected objects' },
+      { keys: ['Cmd/Ctrl', 'Z'], action: 'Undo' },
+      { keys: ['Cmd/Ctrl', 'Shift', 'Z'], action: 'Redo' },
     ],
   },
   {
-    title: '选择',
+    title: 'Selection',
     shortcuts: [
       {
         keys: ['Cmd/Ctrl', 'Left click'],
-        action: '将对象加入或移出多选集合',
-        note: '仅在选择模式下生效。',
+        action: 'Add or remove an object from multi-selection',
+        note: 'Works while in Select mode.',
       },
     ],
   },
   {
-    title: '绘制工具',
+    title: 'Drawing Tools',
     shortcuts: [
       {
         keys: ['Shift'],
-        action: '绘制墙体、楼板、吊顶时临时关闭角度吸附',
-        note: '绘制过程中按住不放。',
+        action: 'Temporarily disable angle snapping while drawing walls, slabs, and ceilings',
+        note: 'Hold while drawing.',
       },
     ],
   },
   {
-    title: '构件放置',
+    title: 'Item Placement',
     shortcuts: [
-      { keys: ['R'], action: '将构件顺时针旋转 90 度' },
-      { keys: ['T'], action: '将构件逆时针旋转 90 度' },
+      { keys: ['R'], action: 'Rotate item clockwise, or toggle selected door open/closed' },
+      { keys: ['T'], action: 'Rotate item counter-clockwise, or close selected door' },
       {
         keys: ['Shift'],
-        action: '临时跳过放置约束校验',
-        note: '放置过程中按住不放。',
+        action: 'Temporarily bypass placement validation constraints',
+        note: 'Hold while placing.',
       },
     ],
   },
   {
-    title: '相机',
+    title: 'Camera',
     shortcuts: [
       {
         keys: ['Middle click'],
-        action: '平移相机',
-        note: '按住鼠标中键拖动，或按住空格后用左键拖动。',
+        action: 'Pan camera',
+        note: 'Drag with the middle mouse button, or hold Space while dragging with the left mouse button.',
       },
       {
         keys: ['Right click'],
-        action: '环绕相机',
-        note: '按住鼠标右键拖动。',
+        action: 'Orbit camera',
+        note: 'Drag with the right mouse button.',
       },
     ],
   },
@@ -145,14 +145,14 @@ export function KeyboardShortcutsDialog() {
       <DialogTrigger asChild>
         <Button className="w-full justify-start gap-2" variant="outline">
           <Keyboard className="size-4" />
-          查看快捷键
+          Keyboard Shortcuts
         </Button>
       </DialogTrigger>
       <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-3xl">
         <DialogHeader className="shrink-0 border-b px-6 py-4">
-          <DialogTitle>快捷键说明</DialogTitle>
+          <DialogTitle>Keyboard Shortcuts</DialogTitle>
           <DialogDescription>
-            快捷键与当前阶段、当前工具有关，不同上下文下行为会不同。
+            Shortcuts are context-aware and depend on the current phase or tool.
           </DialogDescription>
         </DialogHeader>
 

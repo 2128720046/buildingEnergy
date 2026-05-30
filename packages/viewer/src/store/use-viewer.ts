@@ -5,6 +5,10 @@ import type { Object3D } from 'three'
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { EdgeMode } from '../lib/edge-style'
+import type { ColorPreset, RenderShading } from '../lib/materials'
+
+export type RenderContext = 'editor' | 'viewer'
 
 type SelectionPath = {
   buildingId: BuildingNode['id'] | null
@@ -22,16 +26,35 @@ type ViewerState = {
   selection: SelectionPath
   previewSelectedIds: BaseNode['id'][]
   setPreviewSelectedIds: (ids: BaseNode['id'][]) => void
-  hoverHighlightMode: 'default' | 'delete'
-  setHoverHighlightMode: (mode: 'default' | 'delete') => void
+  hoverHighlightMode: string
+  setHoverHighlightMode: (mode: string) => void
   hoveredId: AnyNode['id'] | ZoneNode['id'] | null
   setHoveredId: (id: AnyNode['id'] | ZoneNode['id'] | null) => void
 
   cameraMode: 'perspective' | 'orthographic'
   setCameraMode: (mode: 'perspective' | 'orthographic') => void
 
-  theme: 'light' | 'dark'
-  setTheme: (theme: 'light' | 'dark') => void
+  sceneTheme: string
+  setSceneTheme: (id: string) => void
+
+  renderContext: RenderContext
+  setRenderContext: (context: RenderContext) => void
+
+  shading: RenderShading
+  shadingByContext: Partial<Record<RenderContext, RenderShading>>
+  setShading: (shading: RenderShading) => void
+
+  textures: boolean
+  setTextures: (textures: boolean) => void
+
+  colorPreset: ColorPreset
+  setColorPreset: (preset: ColorPreset) => void
+
+  edges: EdgeMode
+  setEdges: (edges: EdgeMode) => void
+
+  shadows: boolean
+  setShadows: (shadows: boolean) => void
 
   unit: 'metric' | 'imperial'
   setUnit: (unit: 'metric' | 'imperial') => void
@@ -76,6 +99,19 @@ type ViewerState = {
 
   cameraDragging: boolean
   setCameraDragging: (dragging: boolean) => void
+
+  /**
+   * True while a host-driven drag is in progress (editor handles —
+   * height arrow, width arrow, etc.). Suppresses node pointer event
+   * routing so the synthetic click on pointerup doesn't reroute
+   * selection to whatever mesh the cursor lands on at release.
+   * Conceptually a sibling of `cameraDragging` — both mean "user is
+   * dragging; don't treat the next pointerup as a click on the
+   * scene." Set by the host (e.g. `NodeArrowHandles` in the editor);
+   * the viewer only reads it.
+   */
+  inputDragging: boolean
+  setInputDragging: (dragging: boolean) => void
 }
 
 const useViewer = create<ViewerState>()(
@@ -85,15 +121,39 @@ const useViewer = create<ViewerState>()(
       previewSelectedIds: [],
       setPreviewSelectedIds: (ids) => set({ previewSelectedIds: ids }),
       hoverHighlightMode: 'default',
-      setHoverHighlightMode: (mode) => set({ hoverHighlightMode: mode }),
+      setHoverHighlightMode: (mode) =>
+        set((state) => (state.hoverHighlightMode === mode ? state : { hoverHighlightMode: mode })),
       hoveredId: null,
-      setHoveredId: (id) => set({ hoveredId: id }),
+      setHoveredId: (id) => set((state) => (state.hoveredId === id ? state : { hoveredId: id })),
 
       cameraMode: 'perspective',
       setCameraMode: (mode) => set({ cameraMode: mode }),
 
-      theme: 'light',
-      setTheme: (theme) => set({ theme }),
+      sceneTheme: 'studio',
+      setSceneTheme: (id) => set({ sceneTheme: id }),
+
+      renderContext: 'editor',
+      setRenderContext: (context) => set({ renderContext: context }),
+
+      shading: 'rendered',
+      shadingByContext: {},
+      setShading: (shading) =>
+        set((state) => ({
+          shading,
+          shadingByContext: { ...state.shadingByContext, [state.renderContext]: shading },
+        })),
+
+      textures: true,
+      setTextures: (textures) => set({ textures }),
+
+      colorPreset: 'clay',
+      setColorPreset: (preset) => set({ colorPreset: preset }),
+
+      edges: 'soft',
+      setEdges: (edges) => set({ edges }),
+
+      shadows: true,
+      setShadows: (shadows) => set({ shadows }),
 
       unit: 'metric',
       setUnit: (unit) => set({ unit }),
@@ -202,12 +262,19 @@ const useViewer = create<ViewerState>()(
 
       cameraDragging: false,
       setCameraDragging: (dragging) => set({ cameraDragging: dragging }),
+      inputDragging: false,
+      setInputDragging: (dragging) => set({ inputDragging: dragging }),
     }),
     {
       name: 'viewer-preferences',
       partialize: (state) => ({
         cameraMode: state.cameraMode,
-        theme: state.theme,
+        sceneTheme: state.sceneTheme,
+        shadingByContext: state.shadingByContext,
+        textures: state.textures,
+        colorPreset: state.colorPreset,
+        edges: state.edges,
+        shadows: state.shadows,
         unit: state.unit,
         levelMode: state.levelMode,
         wallMode: state.wallMode,

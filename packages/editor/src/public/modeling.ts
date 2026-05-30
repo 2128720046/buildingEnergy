@@ -6,5 +6,6 @@ export {
   type ModelingEditorModuleProps,
   type ModelingSelectionSnapshot,
 } from '../components/modeling-editor-module'
-export { ViewerToolbarLeft, ViewerToolbarRight } from '../components/ui/viewer-toolbar'
+export { CameraActions as ViewerToolbarRight } from '../components/ui/action-menu/camera-actions'
+export { ViewToggles as ViewerToolbarLeft } from '../components/ui/action-menu/view-toggles'
 export type { SceneGraph } from '../lib/scene'

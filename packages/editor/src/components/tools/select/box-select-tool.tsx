@@ -1,7 +1,10 @@
+import '../../../three-types'
+
 import { Icon } from '@iconify/react'
 import {
   type AnyNodeId,
   type CeilingNode,
+  type ColumnNode,
   emitter,
   type GridEvent,
   type ItemNode,
@@ -13,6 +16,7 @@ import {
   type ZoneNode,
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import type { ThreeElements } from '@react-three/fiber'
 import { useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import {
@@ -33,6 +37,12 @@ import { EDITOR_LAYER } from '../../../lib/constants'
 import { sfxEmitter } from '../../../lib/sfx-bus'
 import useEditor from '../../../store/use-editor'
 import { CursorSphere } from '../shared/cursor-sphere'
+
+declare module 'react/jsx-runtime' {
+  namespace JSX {
+    interface IntrinsicElements extends ThreeElements {}
+  }
+}
 
 /**
  * Module-level flag to prevent the SelectionManager from deselecting
@@ -192,12 +202,22 @@ function collectNodeIdsInBounds(bounds: Bounds): string[] {
 
   const result: string[] = []
 
-  if (phase === 'structure' && structureLayer === 'elements') {
+  if (phase === 'structure' && structureLayer === 'zones') {
+    for (const childId of levelNode.children) {
+      const node = nodes[childId as AnyNodeId]
+      if (!node || node.type !== 'zone') continue
+      const zone = node as ZoneNode
+      if (polygonIntersectsBounds(zone.polygon, bounds)) {
+        result.push(zone.id)
+      }
+    }
+  } else {
+    // structure (elements) and furnish: collect all node types
     for (const childId of levelNode.children) {
       const node = nodes[childId as AnyNodeId]
       if (!node) continue
 
-      if (node.type === 'wall') {
+      if (node.type === 'wall' || node.type === 'fence') {
         const wall = node as WallNode
         if (
           segmentIntersectsBounds(wall.start[0], wall.start[1], wall.end[0], wall.end[1], bounds)
@@ -205,7 +225,7 @@ function collectNodeIdsInBounds(bounds: Bounds): string[] {
           result.push(wall.id)
         }
         // Check wall children (doors/windows)
-        for (const itemId of wall.children) {
+        for (const itemId of Array.isArray(wall.children) ? wall.children : []) {
           const child = nodes[itemId as AnyNodeId]
           if (!child) continue
           if (
@@ -240,22 +260,12 @@ function collectNodeIdsInBounds(bounds: Bounds): string[] {
         if (objectBoundsIntersectsBounds(node.id, bounds)) {
           result.push(node.id)
         }
-      }
-    }
-  } else if (phase === 'structure' && structureLayer === 'zones') {
-    for (const childId of levelNode.children) {
-      const node = nodes[childId as AnyNodeId]
-      if (!node || node.type !== 'zone') continue
-      const zone = node as ZoneNode
-      if (polygonIntersectsBounds(zone.polygon, bounds)) {
-        result.push(zone.id)
-      }
-    }
-  } else if (phase === 'furnish') {
-    for (const childId of levelNode.children) {
-      const node = nodes[childId as AnyNodeId]
-      if (!node) continue
-      if (node.type === 'item') {
+      } else if (node.type === 'column') {
+        const column = node as ColumnNode
+        if (objectBoundsIntersectsBounds(column.id, bounds)) {
+          result.push(column.id)
+        }
+      } else if (node.type === 'item') {
         const item = node as ItemNode
         if (item.asset.category === 'door' || item.asset.category === 'window') continue
         const xz = getNodeWorldXZ(item.id)
@@ -536,7 +546,7 @@ const BoxSelectToolInner: React.FC = () => {
       canvas.removeEventListener('pointerdown', onCanvasPointerDown)
       canvas.removeEventListener('pointerup', onCanvasPointerUp)
     }
-  }, [camera, gl])
+  }, [gl, raycastToGround, syncPreviewSelectedIds])
 
   // grid:move for cursor tracking + rectangle update during drag
   useEffect(() => {
@@ -593,7 +603,7 @@ const BoxSelectToolInner: React.FC = () => {
     return () => {
       emitter.off('grid:move', onMove)
     }
-  }, [])
+  }, [syncPreviewSelectedIds])
 
   return (
     <group>
